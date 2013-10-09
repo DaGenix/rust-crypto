@@ -8,9 +8,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std;
 use std::num::{One, Zero, CheckedAdd};
 use std::vec::bytes::{MutableByteVector, copy_memory};
 
+use buffer::{ReadBuffer, WriteBuffer, BufferResult, BufferUnderflow, BufferOverflow};
+use symmetriccipher::{SynchronousStreamCipher, SymmetricCipherError};
 
 /// Write a u64 into a vector, which must be 8 bytes long. The value is written in big-endian
 /// format.
@@ -207,6 +210,23 @@ pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
 }
 
 
+/// symm_enc_or_dec() implements the necessary functionality to turn a SynchronousStreamCipher into
+/// an Encryptor or Decryptor
+pub fn symm_enc_or_dec<S: SynchronousStreamCipher, R: ReadBuffer, W: WriteBuffer>(
+        c: &mut S,
+        input: &mut R,
+        output: &mut W) ->
+        Result<BufferResult, SymmetricCipherError> {
+    let count = std::cmp::min(input.remaining(), output.remaining());
+    c.process(input.take_next(count), output.take_next(count));
+    if input.is_empty() {
+        return Ok(BufferUnderflow);
+    } else {
+        return Ok(BufferOverflow);
+    }
+}
+
+
 trait ToBits {
     /// Convert the value in bytes to the number of bits, a tuple where the 1st item is the
     /// high-order value and the 2nd item is the low order value.
@@ -304,6 +324,9 @@ pub trait FixedBuffer {
     /// Get the current buffer. The buffer must already be full. This clears the buffer as well.
     fn full_buffer<'s>(&'s mut self) -> &'s [u8];
 
+     /// Get the current buffer.
+    fn current_buffer<'s>(&'s mut self) -> &'s [u8];
+
     /// Get the current position of the buffer.
     fn position(&self) -> uint;
 
@@ -380,6 +403,12 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             return self.buffer.slice_to($size);
         }
 
+        fn current_buffer<'s>(&'s mut self) -> &'s [u8] {
+            let tmp = self.buffer_idx;
+            self.buffer_idx = 0;
+            return self.buffer.slice_to(tmp);
+        }
+
         fn position(&self) -> uint { self.buffer_idx }
 
         fn remaining(&self) -> uint { $size - self.buffer_idx }
@@ -387,7 +416,6 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
         fn size(&self) -> uint { $size }
     }
 ))
-
 
 /// A fixed size buffer of 64 bytes useful for cryptographic operations.
 pub struct FixedBuffer64 {
