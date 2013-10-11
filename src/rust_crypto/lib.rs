@@ -14,7 +14,6 @@
 
 extern mod extra;
 
-mod checkedcast;
 mod cryptoutil;
 pub mod digest;
 pub mod hmac;
