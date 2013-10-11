@@ -10,6 +10,8 @@
        url = "https://github.com/DaGenix/rust-crypto/src/rust-crypto")];
 #[license = "MIT/ASL2"];
 
+#[feature(macro_rules)];
+
 extern mod extra;
 
 mod checkedcast;
