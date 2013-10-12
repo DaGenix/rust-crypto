@@ -13,7 +13,7 @@
  */
 
 use std::num::ToPrimitive;
-use std::rand::{IsaacRng, Rng};
+use std::rand::{OSRng, Rng};
 use std::sys::size_of;
 use std::vec;
 use std::vec::MutableCloneableVector;
@@ -275,7 +275,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
  *
  */
 pub fn scrypt_simple(password: &str, params: &ScryptParams) -> ~str {
-    let mut rng = IsaacRng::new();
+    let mut rng = OSRng::new();
 
     // 128-bit salt
     let salt: ~[u8] = rng.gen_vec(16);

@@ -9,7 +9,7 @@
  * http://tools.ietf.org/html/rfc2898.
  */
 
-use std::rand::{IsaacRng, Rng};
+use std::rand::{OSRng, Rng};
 use std::vec;
 use std::vec::MutableCloneableVector;
 
@@ -131,7 +131,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
  *
  */
 pub fn pbkdf2_simple(password: &str, c: u32) -> ~str {
-    let mut rng = IsaacRng::new();
+    let mut rng = OSRng::new();
 
     // 128-bit salt
     let salt: ~[u8] = rng.gen_vec(16);
