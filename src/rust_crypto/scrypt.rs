@@ -12,6 +12,7 @@
  *       http://www.tarsnap.com/scrypt/scrypt.pdf
  */
 
+use std::num::ToPrimitive;
 use std::rand::{IsaacRng, Rng};
 use std::sys::size_of;
 use std::vec;
@@ -20,7 +21,6 @@ use std::vec::MutableCloneableVector;
 use extra::base64;
 use extra::base64::{FromBase64, ToBase64};
 
-use checkedcast::CheckedNumCast;
 use cryptoutil::{fixed_time_eq, read_u32_le, read_u32v_le, write_u32_le};
 use hmac::Hmac;
 use pbkdf2::pbkdf2;
@@ -193,8 +193,8 @@ impl ScryptParams {
         // These checks guarantee that we can cast these values safely to uints and perform all the
         // math that we need to on them. This guarantees that the values r and p can both fit within
         // a uint as well.
-        assert!(rp128.checked_to_uint().is_some());
-        assert!(nr128.checked_to_uint().is_some());
+        assert!(rp128.to_uint().is_some());
+        assert!(nr128.to_uint().is_some());
 
         // This check required by Scrypt:
         // check: n < 2^(128 * r / 8)

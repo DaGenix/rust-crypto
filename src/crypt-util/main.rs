@@ -11,7 +11,7 @@ use std::io;
 use std::os;
 use std::vec;
 
-use extra::getopts::*;
+use extra::getopts::{optopt, optflag, getopts, Matches};
 
 use rust_crypto::scrypt;
 
