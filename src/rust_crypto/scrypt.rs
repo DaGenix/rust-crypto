@@ -14,7 +14,7 @@
 
 use std::num::ToPrimitive;
 use std::rand::{OSRng, Rng};
-use std::sys::size_of;
+use std::mem::size_of;
 use std::vec;
 use std::vec::MutableCloneableVector;
 
