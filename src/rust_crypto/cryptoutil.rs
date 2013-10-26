@@ -453,7 +453,8 @@ impl <T: FixedBuffer> StandardPadding for T {
 
 #[cfg(test)]
 pub mod test {
-    use std::rand::{IsaacRng, Rng};
+    use std::rand::IsaacRng;
+    use std::rand::distributions::{IndependentSample, Range};
     use std::vec;
 
     use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple, fixed_time_eq};
@@ -465,12 +466,13 @@ pub mod test {
         let total_size = 1000000;
         let buffer = vec::from_elem(blocksize * 2, 'a' as u8);
         let mut rng = IsaacRng::new_unseeded();
+        let range = Range::new(0, 2 * blocksize + 1);
         let mut count = 0;
 
         digest.reset();
 
         while count < total_size {
-            let next: uint = rng.gen_integer_range(0, 2 * blocksize + 1);
+            let next = range.ind_sample(&mut rng);
             let remaining = total_size - count;
             let size = if next > remaining { remaining } else { next };
             digest.input(buffer.slice_to(size));
