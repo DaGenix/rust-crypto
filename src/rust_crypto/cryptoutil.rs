@@ -122,6 +122,8 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
 #[cfg(target_arch = "x86")]
 #[cfg(target_arch = "x86_64")]
 #[inline(never)]
+#[allow(unused_variable)]
+#[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
     use std::unstable::intrinsics::uninit;
 
@@ -142,7 +144,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bo
             jnz fixed_time_eq_loop
         "
         : "=&r" (result), "=&r" (lhsp), "=&r" (rhsp), "=&r" (count), "=&r" (tmp) // output
-        : "0" (result), "1" (lhsp), "2" (rhsp), "3" (count), "4" (tmp) // input
+        : "0" (result), "1" (lhsp), "2" (rhsp), "3" (count) // input
         : "cc" // clobbers
         : // flags
     );
@@ -152,6 +154,8 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bo
 
 #[cfg(target_arch = "arm")]
 #[inline(never)]
+#[allow(unused_variable)]
+#[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
     use std::unstable::intrinsics::uninit;
 
@@ -175,7 +179,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bo
         "
         // output
         : "=&r" (result), "=&r" (lhsp), "=&r" (rhsp), "=&r" (count), "=&r" (tmp1), "=&r" (tmp2)
-        : "0" (result), "1" (lhsp), "2" (rhsp), "3" (count), "4" (tmp1), "5" (tmp2) // input
+        : "0" (result), "1" (lhsp), "2" (rhsp), "3" (count) // input
         : "cc" // clobbers
         : // flags
     );
