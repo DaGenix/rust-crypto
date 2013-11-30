@@ -104,7 +104,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
     let mut t = [0u8, ..64];
 
 
-    for (i, chunk) in input.chunk_iter(64).enumerate() {
+    for (i, chunk) in input.chunks(64).enumerate() {
         xor(x, chunk, t);
         salsa20_8(t, x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
@@ -323,7 +323,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> ~str {
 pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static str> {
     static ERR_STR: &'static str = "Hash is not in Rust Scrypt format.";
 
-    let mut iter = hashed_value.split_iter('$');
+    let mut iter = hashed_value.split('$');
 
     // Check that there are no characters before the first "$"
     match iter.next() {

@@ -169,7 +169,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> ~str {
 pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static str> {
     static ERR_STR: &'static str = "Hash is not in Rust PBKDF2 format.";
 
-    let mut iter = hashed_value.split_iter('$');
+    let mut iter = hashed_value.split('$');
 
     // Check that there are no characters before the first "$"
     match iter.next() {
