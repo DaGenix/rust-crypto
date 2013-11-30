@@ -130,7 +130,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
 
     let len = b.len();
 
-    for chunk in v.mut_chunk_iter(len) {
+    for chunk in v.mut_chunks(len) {
         chunk.copy_from(b);
         scrypt_block_mix(chunk, b);
     }
@@ -245,7 +245,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     let mut v = vec::from_elem(n * r * 128, 0u8);
     let mut t = vec::from_elem(r * 128, 0u8);
 
-    for chunk in b.mut_chunk_iter(r * 128) {
+    for chunk in b.mut_chunks(r * 128) {
         scrypt_ro_mix(chunk, v, t, n);
     }
 

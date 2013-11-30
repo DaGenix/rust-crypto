@@ -93,7 +93,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
 
     let mut idx: u32 = 0;
 
-    for chunk in output.mut_chunk_iter(os) {
+    for chunk in output.mut_chunks(os) {
         if idx == Bounded::max_value() {
             fail!("PBKDF2 size limit exceeded.");
         } else {
