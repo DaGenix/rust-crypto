@@ -21,11 +21,15 @@ pub struct MutChunkIter<'self, T> {
 impl<'self, T> Iterator<&'self mut [T]> for MutChunkIter<'self, T> {
     #[inline]
     fn next(&mut self) -> Option<&'self mut [T]> {
+        use std::cast::transmute;
         if self.pos >= self.len {
             None
         } else {
             let chunksz = cmp::min(self.len - self.pos, self.size);
-            let out = self.v.mut_slice(self.pos, self.pos + chunksz);
+            let out: &'self mut [T];
+            unsafe {
+                out = transmute(self.v.mut_slice(self.pos, self.pos + chunksz));
+            }
             self.pos += chunksz;
             Some(out)
         }
@@ -50,12 +54,12 @@ pub trait MutChunkIterable<'self, T> {
      * length of the vector, then the last chunk will not have length
      * `size`. The chunk are mutable.
      */
-    fn mut_chunk_iter(self, size: uint) -> MutChunkIter<'self, T>;
+    fn mut_chunks(self, size: uint) -> MutChunkIter<'self, T>;
 }
 
 impl<'self, T> MutChunkIterable<'self, T> for &'self mut [T] {
     #[inline]
-    fn mut_chunk_iter(self, size: uint) -> MutChunkIter<'self, T> {
+    fn mut_chunks(self, size: uint) -> MutChunkIter<'self, T> {
         assert!(size != 0);
         let len = self.len();
         MutChunkIter { v: self, len: len, size: size, pos: 0 }
@@ -66,7 +70,7 @@ impl<'self, T> MutChunkIterable<'self, T> for &'self mut [T] {
 fn test_mut_chunk_iterator() {
     let mut v = [0u8, 1, 2, 3, 4, 5];
 
-    for (i, chunk) in v.mut_chunk_iter(3).enumerate() {
+    for (i, chunk) in v.mut_chunks(3).enumerate() {
         chunk[0] = i as u8;
         chunk[1] = i as u8;
         chunk[2] = i as u8;
@@ -80,5 +84,5 @@ fn test_mut_chunk_iterator() {
 #[should_fail]
 fn test_mut_chunk_iterator_0() {
     let mut v = [1, 2, 3, 4];
-    let _it = v.mut_chunk_iter(0);
+    let _it = v.mut_chunks(0);
 }

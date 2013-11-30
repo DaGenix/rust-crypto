@@ -44,7 +44,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         } }
     )
 
-    do (rounds / 2).times() {
+    (rounds / 2).times( || {
         run_round!(
             0x4, 0x0, 0xc, 7;
             0x8, 0x4, 0x0, 9;
@@ -79,7 +79,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
             0xe, 0xd, 0xc, 13;
             0xf, 0xe, 0xd, 18
         )
-    }
+    });
 
     for i in range(0u, 16) {
         write_u32_le(
@@ -104,7 +104,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
     let mut t = [0u8, ..64];
 
 
-    for (i, chunk) in input.chunk_iter(64).enumerate() {
+    for (i, chunk) in input.chunks(64).enumerate() {
         xor(x, chunk, t);
         salsa20_8(t, x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
@@ -130,16 +130,16 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
 
     let len = b.len();
 
-    for chunk in v.mut_chunk_iter(len) {
+    for chunk in v.mut_chunks(len) {
         chunk.copy_from(b);
         scrypt_block_mix(chunk, b);
     }
 
-    do n.times() {
+    n.times( || {
         let j = integerify(b, n);
         xor(b, v.slice(j * len, (j + 1) * len), t);
         scrypt_block_mix(t, b);
-    }
+    });
 }
 
 /**
@@ -245,7 +245,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     let mut v = vec::from_elem(n * r * 128, 0u8);
     let mut t = vec::from_elem(r * 128, 0u8);
 
-    for chunk in b.mut_chunk_iter(r * 128) {
+    for chunk in b.mut_chunks(r * 128) {
         scrypt_ro_mix(chunk, v, t, n);
     }
 
@@ -323,7 +323,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> ~str {
 pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static str> {
     static ERR_STR: &'static str = "Hash is not in Rust Scrypt format.";
 
-    let mut iter = hashed_value.split_iter('$');
+    let mut iter = hashed_value.split('$');
 
     // Check that there are no characters before the first "$"
     match iter.next() {
