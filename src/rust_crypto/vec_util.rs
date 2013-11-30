@@ -21,11 +21,15 @@ pub struct MutChunkIter<'self, T> {
 impl<'self, T> Iterator<&'self mut [T]> for MutChunkIter<'self, T> {
     #[inline]
     fn next(&mut self) -> Option<&'self mut [T]> {
+        use std::cast::transmute;
         if self.pos >= self.len {
             None
         } else {
             let chunksz = cmp::min(self.len - self.pos, self.size);
-            let out = self.v.mut_slice(self.pos, self.pos + chunksz);
+            let out: &'self mut [T];
+            unsafe {
+                out = transmute(self.v.mut_slice(self.pos, self.pos + chunksz));
+            }
             self.pos += chunksz;
             Some(out)
         }
