@@ -56,11 +56,11 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     unsafe {
         let mut x: *mut i64 = transmute(dst.unsafe_mut_ref(0));
         let mut y: *i64 = transmute(input.unsafe_ref(0));
-        do dst.len().times() {
+        dst.len().times( || {
             *x = to_be64(*y);
             x = x.offset(1);
             y = y.offset(1);
-        }
+        });
     }
 }
 
@@ -72,11 +72,11 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     unsafe {
         let mut x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
         let mut y: *i32 = transmute(input.unsafe_ref(0));
-        do dst.len().times() {
+        dst.len().times( || {
             *x = to_be32(*y);
             x = x.offset(1);
             y = y.offset(1);
-        }
+        });
     }
 }
 
@@ -88,11 +88,11 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     unsafe {
         let mut x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
         let mut y: *i32 = transmute(input.unsafe_ref(0));
-        do dst.len().times() {
+        dst.len().times( || {
             *x = to_le32(*y);
             x = x.offset(1);
             y = y.offset(1);
-        }
+        });
     }
 }
 

@@ -44,7 +44,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         } }
     )
 
-    do (rounds / 2).times() {
+    (rounds / 2).times( || {
         run_round!(
             0x4, 0x0, 0xc, 7;
             0x8, 0x4, 0x0, 9;
@@ -79,7 +79,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
             0xe, 0xd, 0xc, 13;
             0xf, 0xe, 0xd, 18
         )
-    }
+    });
 
     for i in range(0u, 16) {
         write_u32_le(
@@ -135,11 +135,11 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
         scrypt_block_mix(chunk, b);
     }
 
-    do n.times() {
+    n.times( || {
         let j = integerify(b, n);
         xor(b, v.slice(j * len, (j + 1) * len), t);
         scrypt_block_mix(t, b);
-    }
+    });
 }
 
 /**
