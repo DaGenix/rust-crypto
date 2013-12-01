@@ -24,4 +24,3 @@ pub mod pbkdf2;
 pub mod scrypt;
 pub mod sha1;
 pub mod sha2;
-mod vec_util;
