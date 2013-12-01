@@ -20,7 +20,6 @@ use cryptoutil::{read_u32_be, write_u32_be, fixed_time_eq};
 use hmac::Hmac;
 use mac::Mac;
 use sha2::Sha256;
-use vec_util::MutChunkIterable;
 
 // Calculate a block of the output of size equal to the output_bytes of the underlying Mac function
 // mac - The Mac function to use
