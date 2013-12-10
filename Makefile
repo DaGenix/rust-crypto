@@ -11,17 +11,17 @@ RUSTFLAGS=-O
 all: rust-crypto
 
 rust-crypto:
-	$(RUSTPKG) install $(RUSTFLAGS) rust_crypto
+	$(RUSTPKG) install $(RUSTFLAGS) rust-crypto
 
-crypt-util: rust-crypto
-	$(RUSTPKG) install $(RUSTFLAGS) crypt-util
+rust-crypto-util: rust-crypto
+	$(RUSTPKG) install $(RUSTFLAGS) rust-crypto-util
 
 test:
-	$(RUSTPKG) test rust_crypto
+	$(RUSTPKG) test rust-crypto
 
-test-tool: crypt-util
+test-tool: rust-crypto-util
 	cd tools/rust-crypto-tester; \
-	$(MVN) exec:java -Dexec.mainClass="com.palmercox.rustcryptotester.App" -Dexec.args="--rustexec ../../bin/crypt-util"
+	$(MVN) exec:java -Dexec.mainClass="com.palmercox.rustcryptotester.App" -Dexec.args="--rustexec ../../bin/rust-crypto-util"
 
 clean:
-	rm -rf build bin .lib
+	$(RUSTPKG) clean

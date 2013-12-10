@@ -5,7 +5,7 @@
 // except according to those terms.
 
 extern mod extra;
-extern mod rust_crypto;
+extern mod rust_crypto = "rust-crypto";
 
 use std::io;
 use std::os;
@@ -16,7 +16,7 @@ use extra::getopts::{optopt, optflag, getopts, Matches};
 use rust_crypto::scrypt;
 
 fn print_usage() {
-    println("Usage: rust-crypt-util <algorithm> [options]");
+    println("Usage: rust-crypto-util <algorithm> [options]");
     println("-h, --help\tUsage");
     println("");
     println("Algorithms:");
