@@ -17,15 +17,15 @@ all: rust-crypto
 check: check-rust-crypto
 
 rust-crypto-util: src/rust-crypto/librust-crypto-78d3c8e4-0.1.so
-	$(RUSTC) $(RUSTFLAGS) -L src/rust-crypto/ --dep-info src/rust-crypto-util/main.rs -o rust-crypto-util
-	mv main.d src/rust-crypto-util/
+	$(RUSTC) $(RUSTFLAGS) -L src/rust-crypto/ --dep-info src/rust-crypto-util/tool.rs -o rust-crypto-util
+	mv tool.d src/rust-crypto-util/
 
--include src/rust-crypto-util/main.d
+-include src/rust-crypto-util/tool.d
 
 .PHONY : clean
 clean: clean-rust-crypto
 	rm -f rust-crypto-util
-	rm -f src/rust-crypto-util/main.d
+	rm -f src/rust-crypto-util/tool.d
 
 .PHONY : test-tool
 test-tool: rust-crypto-util
