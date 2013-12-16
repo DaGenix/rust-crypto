@@ -10,6 +10,7 @@
        uuid = "e8b901bb-dcef-4d06-8e78-1ff2872822dc",
        url = "https://github.com/DaGenix/rust-crypto/tree/master/src/rust-crypto")];
 #[license = "MIT/ASL2"];
+#[pkgid = "github.com/DaGenix/rust-crypto#0.1"];
 
 #[feature(asm)];
 #[feature(macro_rules)];
