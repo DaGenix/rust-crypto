@@ -4,24 +4,33 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-RUSTPKG=rustpkg
-MVN=mvn
-RUSTFLAGS=-O
+include rust.mk
 
+RUSTC ?= rustc
+MVN ?= mvn
+RUSTFLAGS ?= -O
+
+.PHONY : all
 all: rust-crypto
 
-rust-crypto:
-	$(RUSTPKG) install $(RUSTFLAGS) rust-crypto
+.PHONY : check
+check: check-rust-crypto
 
-rust-crypto-util: rust-crypto
-	$(RUSTPKG) install $(RUSTFLAGS) rust-crypto-util
+rust-crypto-util: src/rust-crypto/librust-crypto-78d3c8e4-0.1.so
+	$(RUSTC) $(RUSTFLAGS) -L src/rust-crypto/ --dep-info src/rust-crypto-util/main.rs -o rust-crypto-util
+	mv main.d src/rust-crypto-util/
 
-test:
-	$(RUSTPKG) test rust-crypto
+-include src/rust-crypto-util/main.d
 
+.PHONY : clean
+clean: clean-rust-crypto
+	rm -f rust-crypto-util
+	rm -f src/rust-crypto-util/main.d
+
+.PHONY : test-tool
 test-tool: rust-crypto-util
 	cd tools/rust-crypto-tester; \
-	$(MVN) exec:java -Dexec.mainClass="com.palmercox.rustcryptotester.App" -Dexec.args="--rustexec ../../bin/rust-crypto-util"
+	$(MVN) exec:java -Dexec.mainClass="com.palmercox.rustcryptotester.App" -Dexec.args="--rustexec ../../rust-crypto-util"
 
-clean:
-	$(RUSTPKG) clean
+$(eval $(call RUST_CRATE, src/rust-crypto/))
+
