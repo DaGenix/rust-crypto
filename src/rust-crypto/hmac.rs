@@ -36,7 +36,7 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> ~[u8] {
     let bs = digest.block_size();
     let mut expanded_key = vec::from_elem(bs, 0u8);
     if key.len() <= bs {
-        vec::bytes::copy_memory(expanded_key, key, key.len());
+        vec::bytes::copy_memory(expanded_key, key);
         for elem in expanded_key.mut_slice_from(key.len()).mut_iter() {
             *elem = 0;
         }
