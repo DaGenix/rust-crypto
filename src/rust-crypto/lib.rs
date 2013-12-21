@@ -4,13 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[link(name = "rust-crypto",
-       package_id = "rust-crypto",
-       vers = "0.1",
-       uuid = "e8b901bb-dcef-4d06-8e78-1ff2872822dc",
-       url = "https://github.com/DaGenix/rust-crypto/tree/master/src/rust-crypto")];
 #[license = "MIT/ASL2"];
-#[pkgid = "github.com/DaGenix/rust-crypto#0.1"];
+#[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto:0.1"];
 
 #[feature(asm)];
 #[feature(macro_rules)];

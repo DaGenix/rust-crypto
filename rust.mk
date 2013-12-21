@@ -7,7 +7,7 @@
 # This file was taken from the rust-geom project with some minor modifications,
 # including adding the license header.
 
-RUST_CRATE_PKGID = $(shell sed -ne 's/^\#\[ *pkgid *= *"\(.*\)" *];$$/\1/p' $(firstword $(1)))
+RUST_CRATE_CRATEID = $(shell rustc --crate-id $1)
 RUST_CRATE_PATH = $(shell printf $(1) | sed -ne 's/^\([^\#]*\)\/.*$$/\1/p')
 RUST_CRATE_NAME = $(shell printf $(1) | sed -ne 's/^\([^\#]*\/\)\{0,1\}\([^\#]*\).*$$/\2/p')
 RUST_CRATE_VERSION = $(shell printf $(1) | sed -ne 's/^[^\#]*\#\(.*\)$$/\1/p')
@@ -25,7 +25,7 @@ _rust_crate_dir = $(dir $(1))
 _rust_crate_lib = $$(_rust_crate_dir)lib.rs
 _rust_crate_test = $$(_rust_crate_dir)test.rs
 
-_rust_crate_pkgid = $$(call RUST_CRATE_PKGID, $$(_rust_crate_lib))
+_rust_crate_pkgid = $$(call RUST_CRATE_CRATEID, $$(_rust_crate_lib))
 _rust_crate_name = $$(call RUST_CRATE_NAME, $$(_rust_crate_pkgid))
 _rust_crate_version = $$(call RUST_CRATE_VERSION, $$(_rust_crate_pkgid))
 _rust_crate_hash = $$(call RUST_CRATE_HASH, $$(_rust_crate_pkgid))
