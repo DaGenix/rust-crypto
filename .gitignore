@@ -1,7 +1,23 @@
+# Generated dependancy files
 **/*.d
+
+# Eclipse files
 .classpath
 .project
 .settings/
+
+# rustpkg files
 build
 bin
 .rust
+
+# Output library files
+*.dylib
+*.so
+
+# Output files
+rust-crypto-test
+rust-crypto-util
+
+# mvn build files
+tools/rust-crypto-tester/target/
