@@ -975,6 +975,7 @@ mod tests {
 #[cfg(test)]
 mod bench {
     use extra::test::BenchHarness;
+    use digest::Digest;
     use sha2::{Sha256,Sha512};
 
     #[bench]

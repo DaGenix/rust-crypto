@@ -297,6 +297,7 @@ mod tests {
 #[cfg(test)]
 mod bench {
     use extra::test::BenchHarness;
+    use digest::Digest;
     use sha1::Sha1;
 
     #[bench]
