@@ -292,6 +292,7 @@ mod tests {
 mod bench {
     use extra::test::BenchHarness;
 
+    use digest::Digest;
     use md5::Md5;
 
 
