@@ -9,6 +9,7 @@
  * http://tools.ietf.org/html/rfc2898.
  */
 
+use std::num::Bounded;
 use std::rand::{OSRng, Rng};
 use std::vec;
 use std::vec::MutableCloneableVector;
