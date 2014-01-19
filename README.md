@@ -19,15 +19,10 @@ These algorithms are already implemented in the main branch.
 * HMAC
 * PBKDF2
 * Scrypt
-
-## In Development
-
-These algorithms are under development. Development branches might be rebased before being merged
-into master, so be careful.
-
 * AES
-* ECB, CBC, and CTR Block Cipher Modes
-* PKCS7 Padding and No Padding modes for CBC Block Cipher Mode
+* RC4
+* ECB, CBC, and CTR block cipher modes
+* PKCS padding for CBC block cipher mode
 
 ## Desired Algorithms
 
@@ -37,7 +32,6 @@ These algorithms are planned.
 * DSA
 * Bcrypt
 * AES-GCM
-* RC4
 * Diffie-Hellman
 * CFB and OFB Cipher Block Modes
 * PKCS Password Based Encryption
@@ -53,3 +47,4 @@ The algorithms aren't really planned, but would probably be suitable additions t
 * Blowfish
 * Twofish
 * CTS Padding for CBC Block Cipher Mode
+
