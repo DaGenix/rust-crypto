@@ -124,7 +124,6 @@ finite field which allows for efficient computation of the AES S-Boxes. See [7] 
 */
 
 use std::iter::range_step;
-use std::num::Zero;
 
 use cryptoutil::{read_u32v_le, write_u32_le};
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDecryptorX8};
@@ -848,7 +847,7 @@ trait Gf8Ops<T> {
     fn change_basis(&self, arr: &[[T, ..8], ..8]) -> Self;
 }
 
-impl <T: BitXor<T, T> + BitAnd<T, T> + Clone + Zero> Gf8Ops<T> for Bs8State<T> {
+impl <T: BitXor<T, T> + BitAnd<T, T> + Clone + Default> Gf8Ops<T> for Bs8State<T> {
     fn inv(&self) -> Bs8State<T> {
         let (b, a) = self.split();
         let c = a.xor(&b).sq_scl();
@@ -862,14 +861,14 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Clone + Zero> Gf8Ops<T> for Bs8State<T> {
     fn change_basis(&self, arr: &[[T, ..8], ..8]) -> Bs8State<T> {
         let Bs8State(ref x0, ref x1, ref x2, ref x3, ref x4, ref x5, ref x6, ref x7) = *self;
 
-        let mut x0_out: T = Zero::zero();
-        let mut x1_out: T = Zero::zero();
-        let mut x2_out: T = Zero::zero();
-        let mut x3_out: T = Zero::zero();
-        let mut x4_out: T = Zero::zero();
-        let mut x5_out: T = Zero::zero();
-        let mut x6_out: T = Zero::zero();
-        let mut x7_out: T = Zero::zero();
+        let mut x0_out: T = Default::default();
+        let mut x1_out: T = Default::default();
+        let mut x2_out: T = Default::default();
+        let mut x3_out: T = Default::default();
+        let mut x4_out: T = Default::default();
+        let mut x5_out: T = Default::default();
+        let mut x6_out: T = Default::default();
+        let mut x7_out: T = Default::default();
 
         /*
         // FIXME - #XXXX: This is prettier, but ICEs
@@ -1078,7 +1077,7 @@ impl <T: AesBitValueOps> AesOps for Bs8State<T> {
     }
 }
 
-trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Clone + Zero {
+trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Clone + Default {
     fn a2x() -> &'static [[Self, ..8], ..8];
     fn x2s() -> &'static [[Self, ..8], ..8];
     fn s2x() -> &'static [[Self, ..8], ..8];
@@ -1212,13 +1211,9 @@ impl BitAnd<u32x4, u32x4> for u32x4 {
     }
 }
 
-impl Zero for u32x4 {
-    fn zero() -> u32x4 {
+impl Default for u32x4 {
+    fn default() -> u32x4 {
         return u32x4(0, 0, 0, 0);
-    }
-
-    fn is_zero(&self) -> bool {
-        fail!("Not implemented.");
     }
 }
 
