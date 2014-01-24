@@ -432,7 +432,7 @@ impl PaddingProcessor for PkcsPadding {
         let last_byte: u8;
         {
             let data = output_buffer.peek_remaining();
-            last_byte = *data.last();
+            last_byte = *data.last().unwrap();
             for &x in data.iter().invert().take(last_byte as uint) {
                 if x != last_byte {
                     return false;
