@@ -17,7 +17,7 @@ all: rust-crypto
 check: check-rust-crypto
 
 rust-crypto-util: src/rust-crypto/librust-crypto-78d3c8e4-0.1.$(RUST_DYLIB_EXT)
-	$(RUSTC) $(RUSTFLAGS) -L src/rust-crypto/ --dep-info src/rust-crypto-util/tool.rs -o rust-crypto-util
+	$(RUSTC) $(RUSTFLAGS) -L src/rust-crypto/ --dep-info -o rust-crypto-util src/rust-crypto-util/tool.rs
 	mv tool.d src/rust-crypto-util/
 
 -include src/rust-crypto-util/tool.d
