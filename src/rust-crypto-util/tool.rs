@@ -16,20 +16,20 @@ use extra::getopts::{optopt, optflag, getopts, Matches};
 use rust_crypto::scrypt;
 
 fn print_usage() {
-    println("Usage: rust-crypto-util <algorithm> [options]");
-    println("-h, --help\tUsage");
-    println("");
-    println("Algorithms:");
-    println(" * Scrypt (scrypt)");
-    println("");
-    println("Scrypt options:");
-    println("--logn\t\tThe Log N parameter");
-    println("-r\t\tThe R parameter");
-    println("-p\t\tThe P parameter");
-    println("--dklen\t\tThe DkLen parameter");
-    println("--rawsalt\tThe salt parameter is supplied on STDIN");
-    println("--rawpassword\tThe password parameter is supplied on STDIN");
-    println("--rawoutput\tThe resulting value should be output directly to STDOUT");
+    println!("Usage: rust-crypto-util <algorithm> [options]");
+    println!("-h, --help\tUsage");
+    println!("");
+    println!("Algorithms:");
+    println!(" * Scrypt (scrypt)");
+    println!("");
+    println!("Scrypt options:");
+    println!("--logn\t\tThe Log N parameter");
+    println!("-r\t\tThe R parameter");
+    println!("-p\t\tThe P parameter");
+    println!("--dklen\t\tThe DkLen parameter");
+    println!("--rawsalt\tThe salt parameter is supplied on STDIN");
+    println!("--rawpassword\tThe password parameter is supplied on STDIN");
+    println!("--rawoutput\tThe resulting value should be output directly to STDOUT");
 }
 
 fn run_scrypt(matches: &Matches) {
@@ -45,7 +45,7 @@ fn run_scrypt(matches: &Matches) {
 
     if !matches.opt_present("rawsalt") || !matches.opt_present("rawpassword") ||
        !matches.opt_present("rawoutput") {
-        println("Required options missing.");
+        println!("Required options missing.");
         return;
     }
 
