@@ -433,7 +433,7 @@ impl PaddingProcessor for PkcsPadding {
         {
             let data = output_buffer.peek_remaining();
             last_byte = *data.last().unwrap();
-            for &x in data.iter().flip().take(last_byte as uint) {
+            for &x in data.iter().rev().take(last_byte as uint) {
                 if x != last_byte {
                     return false;
                 }
@@ -645,7 +645,7 @@ impl <T: BlockDecryptor, X: PaddingProcessor> Decryptor for CbcDecryptor<T, X> {
 }
 
 fn add_ctr(ctr: &mut [u8], mut ammount: u8) {
-    for i in ctr.mut_iter().flip() {
+    for i in ctr.mut_iter().rev() {
         let prev = *i;
         *i += ammount;
         if *i >= prev {
