@@ -9,6 +9,7 @@
 
 #[feature(asm)];
 #[feature(macro_rules)];
+#[feature(simd)];
 
 extern mod extra;
 
