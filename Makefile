@@ -16,21 +16,17 @@ all: rust-crypto
 .PHONY : check
 check: check-rust-crypto
 
-rust-crypto-util: src/rust-crypto/librust-crypto-78d3c8e4-0.1.$(RUST_DYLIB_EXT)
-	$(RUSTC) $(RUSTFLAGS) -L src/rust-crypto/ --dep-info -o rust-crypto-util src/rust-crypto-util/tool.rs
-	mv tool.d src/rust-crypto-util/
-
--include src/rust-crypto-util/tool.d
-
 .PHONY : clean
-clean: clean-rust-crypto
-	rm -f rust-crypto-util
-	rm -f src/rust-crypto-util/tool.d
+clean: clean-rust-crypto clean-rust-crypto-util
 
 .PHONY : test-tool
 test-tool: rust-crypto-util
-	cd tools/rust-crypto-tester; \
-	$(MVN) exec:java -Dexec.mainClass="com.palmercox.rustcryptotester.App" -Dexec.args="--rustexec ../../rust-crypto-util"
+	@cd tools/rust-crypto-tester; \
+	$(MVN) compile exec:java -Dexec.mainClass="com.palmercox.rustcryptotester.App" -Dexec.args="--rustexec ../../rust-crypto-util"
 
-$(eval $(call RUST_CRATE, src/rust-crypto/))
+$(eval $(call RUST_CRATE,1,src/rust-crypto/lib.rs,rlib,))
+$(eval $(call RUST_CRATE,2,src/rust-crypto-util/tool.rs,bin,-L .))
 
+# RUST_CRATE doesn't know how to express dependancies between targets, so
+# just do it manually here.
+rust-crypto-util: librust-crypto-78d3c8e4-0.1.rlib

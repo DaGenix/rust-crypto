@@ -4,14 +4,9 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-# This file was taken from the rust-geom project with some minor modifications,
-# including adding the license header.
-
-RUST_CRATE_CRATEID = $(shell rustc --crate-id $1)
-RUST_CRATE_PATH = $(shell printf $(1) | sed -ne 's/^\([^\#]*\)\/.*$$/\1/p')
-RUST_CRATE_NAME = $(shell printf $(1) | sed -ne 's/^\([^\#]*\/\)\{0,1\}\([^\#]*\).*$$/\2/p')
-RUST_CRATE_VERSION = $(shell printf $(1) | sed -ne 's/^[^\#]*\#\(.*\)$$/\1/p')
-RUST_CRATE_HASH = $(shell printf $(strip $(1)) | shasum -a 256 | sed -ne 's/^\(.\{8\}\).*$$/\1/p')
+# This file was taken from the rust-geom project with some major modifications,
+# including adding the license header (which corresponds to the licensing of
+# the rust-geom project at the time that this file was taken from it).
 
 ifeq ($(shell uname),Darwin)
 RUST_DYLIB_EXT=dylib
@@ -19,48 +14,51 @@ else
 RUST_DYLIB_EXT=so
 endif
 
+# param 1 - Some value to make all of the variables defined unique
+# param 2 - The path to the main file in the crate
+# param 3 - The output type
+# param 4 - Any extra parameters to pass to $(RUSTC)
+
 define RUST_CRATE
 
-_rust_crate_dir = $(dir $(1))
-_rust_crate_lib = $$(_rust_crate_dir)lib.rs
-_rust_crate_test = $$(_rust_crate_dir)test.rs
+$(1)_rust_crate_dir = $(dir $(2))
+$(1)_rust_crate_main = $(2)
+$(1)_rust_crate_test = $$($(1)_rust_crate_dir)test.rs
 
-_rust_crate_pkgid = $$(call RUST_CRATE_CRATEID, $$(_rust_crate_lib))
-_rust_crate_name = $$(call RUST_CRATE_NAME, $$(_rust_crate_pkgid))
-_rust_crate_version = $$(call RUST_CRATE_VERSION, $$(_rust_crate_pkgid))
-_rust_crate_hash = $$(call RUST_CRATE_HASH, $$(_rust_crate_pkgid))
-_rust_crate_dylib = lib$$(_rust_crate_name)-$$(_rust_crate_hash)-$$(_rust_crate_version).$(RUST_DYLIB_EXT)
+$(1)_rust_crate_name = $$(shell $$(RUSTC) --crate-name $$($(1)_rust_crate_main))
+$(1)_rust_crate_out = $$(shell $$(RUSTC) --crate-file-name --crate-type=$(3) $$($(1)_rust_crate_main))
 
-_rust_lib_d = $$(patsubst %.rs,%.d,$$(_rust_crate_lib))
-_rust_test_d = $$(patsubst %.rs,%.d,$$(_rust_crate_test))
+# If compiling a binary, these two variables will be equal, so it doesn't make
+# any sense to create a rule that lists itself as its dependancy.
+ifneq ($$($(1)_rust_crate_name),$$($(1)_rust_crate_out))
+.PHONY : $$($(1)_rust_crate_name)
+$$($(1)_rust_crate_name) : $$($(1)_rust_crate_out)
+endif
 
-.PHONY : $$(_rust_crate_name)
-$$(_rust_crate_name) : $$(_rust_crate_dir)$$(_rust_crate_dylib)
+$$($(1)_rust_crate_out) : $$($(1)_rust_crate_main)
+	$$(RUSTC) $$(RUSTFLAGS) $(4) --dep-info $$($(1)_rust_crate_main).d --crate-type=$(3) --out-dir . $$<
 
-$$(_rust_crate_dir)$$(_rust_crate_dylib) : $$(_rust_crate_lib)
-	$$(RUSTC) $$(RUSTFLAGS) --dep-info --lib $$<
+-include $$($(1)_rust_crate_main).d
 
--include $$(_rust_lib_d)
+ifneq ($$(wildcard $$($(1)_rust_crate_test)),"")
 
-ifneq ($$(wildcard $$(_rust_crate_test)),"")
+.PHONY : check-$$($(1)_rust_crate_name)
+check-$$($(1)_rust_crate_name): $$($(1)_rust_crate_name)-test
+	./$$($(1)_rust_crate_name)-test
 
-.PHONY : check-$$(_rust_crate_name)
-check-$$(_rust_crate_name): $$(_rust_crate_name)-test
-	./$$(_rust_crate_name)-test
+$$($(1)_rust_crate_name)-test : $$($(1)_rust_crate_test)
+	$$(RUSTC) $$(RUSTFLAGS) $(4) --dep-info $$($(1)_rust_crate_test).d --test $$< -o $$($(1)_rust_crate_name)-test
 
-$$(_rust_crate_name)-test : $$(_rust_crate_test)
-	$$(RUSTC) $$(RUSTFLAGS) --dep-info --test $$< -o $(_rust_crate_dir)$$@
-	mv test.d $$(_rust_crate_dir)
+-include $$($(1)_rust_crate_test).d
 
--include $$(_rust_test_d)
-
-.PHONY : clean-$$(_rust_crate_name)
-clean-$$(_rust_crate_name):
-	rm -f $$(_rust_crate_dir)$$(_rust_crate_dylib)
-	rm -f $$(_rust_lib_d)
-	rm -f $$(_rust_create_dir)$$(_rust_crate_name)-test
-	rm -f $$(_rust_test_d)
-
+.PHONY : clean-$$($(1)_rust_crate_name)
+clean-$$($(1)_rust_crate_name):
+	@rm -f $$($(1)_rust_crate_out)
+	@rm -f $$($(1)_rust_crate_main).d
+	@rm -f $$($(1)_rust_crate_name)-test
+	@rm -f $$($(1)_rust_crate_test).d
+	@rm -f $$($(1)_rust_crate_dir)/*.o
 endif
 
 endef
+

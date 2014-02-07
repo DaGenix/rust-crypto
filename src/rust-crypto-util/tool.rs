@@ -4,6 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[license = "MIT/ASL2"];
+#[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"];
+
 extern mod extra;
 extern mod rust_crypto = "rust-crypto";
 
