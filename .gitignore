@@ -13,7 +13,9 @@ bin
 
 # Output library files
 *.dylib
+*.rlib
 *.so
+*.o
 
 # Output files
 rust-crypto-test

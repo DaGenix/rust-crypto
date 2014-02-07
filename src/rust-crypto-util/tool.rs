@@ -4,14 +4,18 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[license = "MIT/ASL2"];
+#[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"];
+
 extern mod extra;
+extern mod getopts;
 extern mod rust_crypto = "rust-crypto";
 
 use std::io;
 use std::os;
 use std::vec;
 
-use extra::getopts::{optopt, optflag, getopts, Matches};
+use getopts::{optopt, optflag, getopts, Matches};
 
 use rust_crypto::scrypt;
 
@@ -49,16 +53,19 @@ fn run_scrypt(matches: &Matches) {
         return;
     }
 
-    let salt_len = io::stdin().read_be_u32();
-    let salt = io::stdin().read_bytes(salt_len as uint);
-    let pass_len = io::stdin().read_be_u32();
-    let pass = io::stdin().read_bytes(pass_len as uint);
+    let salt_len = io::stdin().read_be_u32().unwrap();
+    let salt = io::stdin().read_bytes(salt_len as uint).unwrap();
+    let pass_len = io::stdin().read_be_u32().unwrap();
+    let pass = io::stdin().read_bytes(pass_len as uint).unwrap();
 
     let params = scrypt::ScryptParams::new(logn, r, p);
     let mut output = vec::from_elem(dklen, 0u8);
     scrypt::scrypt(pass, salt, &params, output);
 
-    io::stdout().write(output);
+    match io::stdout().write(output) {
+        Ok(_) => { },
+        Err(_) => fail!("Error writing result")
+    }
 }
 
 fn main() {
@@ -66,17 +73,16 @@ fn main() {
 
     let opts = ~[
         // General parameters:
-        optflag("h"),
-        optflag("help"),
+        optflag("h", "help", "Print help"),
 
         // Scrypt parameters:
-        optopt("logn"),
-        optopt("r"),
-        optopt("p"),
-        optopt("dklen"),
-        optflag("rawsalt"),
-        optflag("rawpassword"),
-        optflag("rawoutput"),
+        optopt("", "logn", "Log-N parameter for Scrypt", ""),
+        optopt("r", "", "R parameter for Scrypt", ""),
+        optopt("p", "", "P parameter for Scrypt", ""),
+        optopt("", "dklen", "Length of the derived key", ""),
+        optflag("", "rawsalt", "Use a raw salt value"),
+        optflag("", "rawpassword", "Use a raw password value"),
+        optflag("", "rawoutput", "Use raw output mode"),
     ];
 
     let matches = match getopts(args.tail(), opts) {
