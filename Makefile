@@ -29,4 +29,4 @@ $(eval $(call RUST_CRATE,2,src/rust-crypto-util/tool.rs,bin,-L .))
 
 # RUST_CRATE doesn't know how to express dependancies between targets, so
 # just do it manually here.
-rust-crypto-util: librust-crypto-78d3c8e4-0.1.rlib
+rust-crypto-util: $(1_rust_crate_out)
