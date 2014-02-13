@@ -140,11 +140,14 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             &mut self,
             input: &mut R,
             output: &mut W) -> BlockEngineState {
-        let has_next = || {
+        fn has_next<R: ReadBuffer, W: WriteBuffer>(
+                input: &mut R,
+                output: &mut W,
+                block_size: uint) -> bool {
             // Not the greater than - very important since this method must never process the last
             // block.
-            let enough_input = input.remaining() > self.block_size;
-            let enough_output = output.remaining() >= self.block_size;
+            let enough_input = input.remaining() > block_size;
+            let enough_output = output.remaining() >= block_size;
             enough_input && enough_output
         };
         fn split_at<'a>(vec: &'a [u8], at: uint) -> (&'a [u8], &'a [u8]) {
@@ -153,7 +156,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
 
         // First block processing. We have to retrieve the history information from self.in_hist and
         // self.out_hist.
-        if !has_next() {
+        if !has_next(input, output, self.block_size) {
             if input.is_empty() {
                 return FastMode;
             } else {
@@ -173,7 +176,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
         // do any copies
         let next_in_size = self.in_hist.len() + self.block_size;
         let next_out_size = self.out_hist.len() + self.block_size;
-        while has_next() {
+        while has_next(input, output, self.block_size) {
             input.rewind(self.in_hist.len());
             let (in_hist, next_in) = split_at(input.take_next(next_in_size), self.in_hist.len());
             output.rewind(self.out_hist.len());
@@ -209,23 +212,23 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             eof: bool) -> Result<BufferResult, SymmetricCipherError> {
         // Process a block of data from in_scratch and write the result to out_write_scratch.
         // Finally, convert out_write_scratch into out_read_scratch.
-        let process_scratch = || {
-            let mut rin = self.in_scratch.take_read_buffer();
-            let mut wout = self.out_write_scratch.take_unwrap();
+        fn process_scratch<P: BlockProcessor, X: PaddingProcessor>(me: &mut BlockEngine<P, X>) {
+            let mut rin = me.in_scratch.take_read_buffer();
+            let mut wout = me.out_write_scratch.take_unwrap();
 
             {
                 let next_in = rin.take_remaining();
                 let next_out = wout.take_remaining();
-                self.processor.process_block(
-                    self.in_hist.as_slice(),
-                    self.out_hist.as_slice(),
+                me.processor.process_block(
+                    me.in_hist.as_slice(),
+                    me.out_hist.as_slice(),
                     next_in,
                     next_out);
-                update_history(self.in_hist, self.out_hist, next_in, next_out);
+                update_history(me.in_hist, me.out_hist, next_in, next_out);
             }
 
             let rb = wout.into_read_buffer();
-            self.out_read_scratch = Some(rb);
+            me.out_read_scratch = Some(rb);
         };
 
         loop {
@@ -255,7 +258,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                     if !input.is_empty() {
                         // !is_empty() guarantees two things - in_scratch is full and its not the
                         // last block. This state must never process the last block.
-                        process_scratch();
+                        process_scratch(self);
                         self.state = NeedOutput;
                     } else {
                         if eof {
@@ -313,7 +316,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                     if !self.in_scratch.is_full() {
                         self.padding.pad_input(&mut self.in_scratch);
                         if self.in_scratch.is_full() {
-                            process_scratch();
+                            process_scratch(self);
                             if self.padding.strip_output(self.out_read_scratch.get_mut_ref()) {
                                 self.state = Finished;
                             } else {
@@ -325,7 +328,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                             self.state = Error(InvalidLength);
                         }
                     } else {
-                        process_scratch();
+                        process_scratch(self);
                         self.padding.pad_input(&mut self.in_scratch);
                         if self.in_scratch.is_full() {
                             self.state = LastInput2;
@@ -349,7 +352,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                     rout.push_to(output);
                     if rout.is_empty() {
                         self.out_write_scratch = Some(rout.into_write_buffer());
-                        process_scratch();
+                        process_scratch(self);
                         if self.padding.strip_output(self.out_read_scratch.get_mut_ref()) {
                             self.state = Finished;
                         } else {
@@ -1011,6 +1014,7 @@ mod test {
             next_in_len: || -> uint,
             next_out_len: || -> uint,
             immediate_eof: bool) {
+        use std::cell::Cell;
         use std::num::{max, min};
 
         let in_len = input.len();
@@ -1019,20 +1023,20 @@ mod test {
         let mut state: Result<BufferResult, SymmetricCipherError> = Ok(BufferUnderflow);
         let mut in_pos = 0u;
         let mut out_pos = 0u;
-        let mut eof = false;
+        let eof = Cell::new(false);
 
-        let in_end = |primary: bool| {
-            if eof {
+        let in_end = |in_pos: uint, primary: bool| {
+            if eof.get() {
                 return in_len;
             }
             let x = next_in_len();
             if x >= in_len && immediate_eof {
-                eof = true;
+                eof.set(true);
             }
             min(in_len, in_pos + max(x, if primary { 1 } else { 0 }))
         };
 
-        let out_end = || {
+        let out_end = |out_pos: uint| {
             let x = next_out_len();
             min(out_len, out_pos + max(x, 1))
         };
@@ -1043,9 +1047,10 @@ mod test {
                     if in_pos == input.len() {
                         break;
                     }
-                    let mut tmp_in = RefReadBuffer::new(input.slice(in_pos, in_end(true)));
-                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end()));
-                    state = op(&mut tmp_in, &mut tmp_out, eof);
+                    let mut tmp_in = RefReadBuffer::new(input.slice(in_pos, in_end(in_pos, true)));
+                    let out_end = out_end(out_pos);
+                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end));
+                    state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferUnderflow) => assert!(tmp_in.is_empty()),
                         _ => {}
@@ -1054,9 +1059,10 @@ mod test {
                     out_pos += tmp_out.position();
                 }
                 Ok(BufferOverflow) => {
-                    let mut tmp_in = RefReadBuffer::new(input.slice(in_pos, in_end(false)));
-                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end()));
-                    state = op(&mut tmp_in, &mut tmp_out, eof);
+                    let mut tmp_in = RefReadBuffer::new(input.slice(in_pos, in_end(in_pos, false)));
+                    let out_end = out_end(out_pos);
+                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end));
+                    state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferOverflow) => assert!(tmp_out.is_full()),
                         _ => {}
@@ -1069,10 +1075,10 @@ mod test {
             }
         }
 
-        if !eof {
-            eof = true;
-            let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end()));
-            state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof);
+        if !eof.get() {
+            eof.set(true);
+            let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end(out_pos)));
+            state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
             out_pos += tmp_out.position();
         }
 
@@ -1082,8 +1088,9 @@ mod test {
                     break;
                 }
                 Ok(BufferOverflow) => {
-                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end()));
-                    state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof);
+                    let out_end = out_end(out_pos);
+                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end));
+                    state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
                     assert!(tmp_out.is_full());
                     out_pos += tmp_out.position();
                 }
@@ -1130,11 +1137,12 @@ mod test {
         use std::rand::Rng;
         use std::num::max;
 
-        let mut rng: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
+        let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
+        let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
         let max_size = max(test.get_plain().len(), test.get_cipher().len());
 
         let r = || {
-            rng.gen_range(0, max_size)
+            rng1.gen_range(0, max_size)
         };
 
         for _ in range(0, 1000) {
@@ -1150,7 +1158,7 @@ mod test {
                 },
                 || { r() },
                 || { r() },
-                rng.gen());
+                rng2.gen());
             assert!(test.get_cipher() == cipher_out);
 
             let mut plain_out = vec::from_elem(test.get_plain().len(), 0u8);
@@ -1162,7 +1170,7 @@ mod test {
                 },
                 || { r() },
                 || { r() },
-                rng.gen());
+                rng2.gen());
             assert!(test.get_plain() == plain_out);
         }
     }
