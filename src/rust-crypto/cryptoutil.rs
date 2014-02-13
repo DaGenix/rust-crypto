@@ -19,7 +19,7 @@ use symmetriccipher::{SynchronousStreamCipher, SymmetricCipherError};
 /// format.
 pub fn write_u64_be(dst: &mut[u8], input: u64) {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_be64;
+    use std::mem::to_be64;
     assert!(dst.len() == 8);
     unsafe {
         let x: *mut i64 = transmute(dst.unsafe_mut_ref(0));
@@ -31,7 +31,7 @@ pub fn write_u64_be(dst: &mut[u8], input: u64) {
 /// format.
 pub fn write_u32_be(dst: &mut[u8], input: u32) {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_be32;
+    use std::mem::to_be32;
     assert!(dst.len() == 4);
     unsafe {
         let x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
@@ -43,7 +43,7 @@ pub fn write_u32_be(dst: &mut[u8], input: u32) {
 /// format.
 pub fn write_u32_le(dst: &mut[u8], input: u32) {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_le32;
+    use std::mem::to_le32;
     assert!(dst.len() == 4);
     unsafe {
         let x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
@@ -54,7 +54,7 @@ pub fn write_u32_le(dst: &mut[u8], input: u32) {
 /// Read a vector of bytes into a vector of u64s. The values are read in big-endian format.
 pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_be64;
+    use std::mem::to_be64;
     assert!(dst.len() * 8 == input.len());
     unsafe {
         let mut x: *mut i64 = transmute(dst.unsafe_mut_ref(0));
@@ -70,7 +70,7 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
 /// Read a vector of bytes into a vector of u32s. The values are read in big-endian format.
 pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_be32;
+    use std::mem::to_be32;
     assert!(dst.len() * 4 == input.len());
     unsafe {
         let mut x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
@@ -86,7 +86,7 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
 /// Read a vector of bytes into a vector of u32s. The values are read in little-endian format.
 pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_le32;
+    use std::mem::to_le32;
     assert!(dst.len() * 4 == input.len());
     unsafe {
         let mut x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
@@ -102,7 +102,7 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
 /// Read the value of a vector of bytes as a u32 value in little-endian format.
 pub fn read_u32_le(input: &[u8]) -> u32 {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_le32;
+    use std::mem::to_le32;
     assert!(input.len() == 4);
     unsafe {
         let tmp: *i32 = transmute(input.unsafe_ref(0));
@@ -113,7 +113,7 @@ pub fn read_u32_le(input: &[u8]) -> u32 {
 /// Read the value of a vector of bytes as a u32 value in big-endian format.
 pub fn read_u32_be(input: &[u8]) -> u32 {
     use std::cast::transmute;
-    use std::unstable::intrinsics::to_be32;
+    use std::mem::to_be32;
     assert!(input.len() == 4);
     unsafe {
         let tmp: *i32 = transmute(input.unsafe_ref(0));
