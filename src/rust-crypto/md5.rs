@@ -181,7 +181,8 @@ impl Digest for Md5 {
         // Unlike Sha1 and Sha2, the length value in MD5 is defined as the length of the message mod
         // 2^64 - ie: integer overflow is OK.
         self.length_bytes += input.len() as u64;
-        self.buffer.input(input, |d: &[u8]| { self.state.process_block(d); });
+        let self_state = &mut self.state;
+        self.buffer.input(input, |d: &[u8]| { self_state.process_block(d); });
     }
 
     fn reset(&mut self) {
@@ -193,10 +194,11 @@ impl Digest for Md5 {
 
     fn result(&mut self, out: &mut [u8]) {
         if !self.finished {
-            self.buffer.standard_padding(8, |d: &[u8]| { self.state.process_block(d); });
+            let self_state = &mut self.state;
+            self.buffer.standard_padding(8, |d: &[u8]| { self_state.process_block(d); });
             write_u32_le(self.buffer.next(4), (self.length_bytes << 3) as u32);
             write_u32_le(self.buffer.next(4), (self.length_bytes >> 29) as u32);
-            self.state.process_block(self.buffer.full_buffer());
+            self_state.process_block(self.buffer.full_buffer());
             self.finished = true;
         }
 
