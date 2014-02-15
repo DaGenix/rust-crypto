@@ -12,6 +12,7 @@
 #[feature(simd)];
 
 extern mod extra;
+extern mod serialize;
 
 pub mod aes;
 pub mod aesni;

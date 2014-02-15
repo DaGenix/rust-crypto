@@ -14,8 +14,8 @@ use std::rand::{OSRng, Rng};
 use std::vec;
 use std::vec::MutableCloneableVector;
 
-use extra::base64;
-use extra::base64::{FromBase64, ToBase64};
+use serialize::base64;
+use serialize::base64::{FromBase64, ToBase64};
 
 use cryptoutil::{read_u32_be, write_u32_be, fixed_time_eq};
 use hmac::Hmac;

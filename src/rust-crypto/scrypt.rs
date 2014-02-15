@@ -18,8 +18,8 @@ use std::mem::size_of;
 use std::vec;
 use std::vec::MutableCloneableVector;
 
-use extra::base64;
-use extra::base64::{FromBase64, ToBase64};
+use serialize::base64;
+use serialize::base64::{FromBase64, ToBase64};
 
 use cryptoutil::{fixed_time_eq, read_u32_le, read_u32v_le, write_u32_le};
 use hmac::Hmac;
