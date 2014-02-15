@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::num;
+use std::cmp;
 use std::vec;
 
 pub enum BufferResult {
@@ -35,7 +35,7 @@ pub trait ReadBuffer {
     }
 
     fn push_to<W: WriteBuffer>(&mut self, output: &mut W) {
-        let count = num::min(output.remaining(), self.remaining());
+        let count = cmp::min(output.remaining(), self.remaining());
         vec::bytes::copy_memory(output.take_next(count), self.take_next(count));
     }
 }
