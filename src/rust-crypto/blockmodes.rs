@@ -1001,10 +1001,10 @@ mod test {
     /// * op - A closure that runs either an encryption or decryption operation
     /// * next_in_len - A closure that returns the length to use for the next input buffer; If the
     ///                 returned value is not in a valid range, it will be fixed up by this
-    //                  function.
+    ///                 function.
     /// * next_out_len - A closure that returns the length to use for the next output buffer; If the
     ///                  returned value is not in a valid range, it will be fixed up by this
-    //                   function.
+    ///                  function.
     /// * immediate_eof - Whether eof should be set immediately upon running out of input or if eof
     ///                   should be passed only after all input has been consumed.
     fn run_inc(
