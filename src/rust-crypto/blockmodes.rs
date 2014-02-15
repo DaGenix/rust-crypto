@@ -8,7 +8,7 @@
 // TODO - Maybe use macros to specialize BlockEngine for encryption or decryption?
 // TODO - I think padding could be done better. Maybe macros for BlockEngine would help this too.
 
-use std;
+use std::cmp;
 use std::vec;
 
 use buffer::{ReadBuffer, WriteBuffer, OwnedReadBuffer, OwnedWriteBuffer, BufferResult,
@@ -689,7 +689,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
                 self.algo.encrypt_block(self.ctr, wb.take_remaining());
                 add_ctr(self.ctr, 1);
             }
-            let count = std::cmp::min(self.bytes.remaining(), len - i);
+            let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input.slice_from(i).iter();
             let out_it = output.mut_slice_from(i).mut_iter();
@@ -764,7 +764,7 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
                     add_ctr(ctr_i, 8);
                 }
             }
-            let count = std::cmp::min(self.bytes.remaining(), len - i);
+            let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input.slice_from(i).iter();
             let out_it = output.mut_slice_from(i).mut_iter();
@@ -805,6 +805,7 @@ mod test {
         RefWriteBuffer, BufferResult};
     use symmetriccipher::{Encryptor, Decryptor, SymmetricCipherError, InvalidLength, InvalidPadding};
 
+    use std::cmp;
     use std::vec;
     use extra::test::BenchHarness;
 
@@ -1015,7 +1016,6 @@ mod test {
             next_out_len: || -> uint,
             immediate_eof: bool) {
         use std::cell::Cell;
-        use std::num::{max, min};
 
         let in_len = input.len();
         let out_len = output.len();
@@ -1033,12 +1033,12 @@ mod test {
             if x >= in_len && immediate_eof {
                 eof.set(true);
             }
-            min(in_len, in_pos + max(x, if primary { 1 } else { 0 }))
+            cmp::min(in_len, in_pos + cmp::max(x, if primary { 1 } else { 0 }))
         };
 
         let out_end = |out_pos: uint| {
             let x = next_out_len();
-            min(out_len, out_pos + max(x, 1))
+            cmp::min(out_len, out_pos + cmp::max(x, 1))
         };
 
         loop {
@@ -1135,11 +1135,10 @@ mod test {
             new_dec: || -> D) {
         use std::rand;
         use std::rand::Rng;
-        use std::num::max;
 
         let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
         let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
-        let max_size = max(test.get_plain().len(), test.get_cipher().len());
+        let max_size = cmp::max(test.get_plain().len(), test.get_cipher().len());
 
         let r = || {
             rng1.gen_range(0, max_size)
