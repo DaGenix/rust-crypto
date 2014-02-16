@@ -7,9 +7,9 @@
 #[license = "MIT/ASL2"];
 #[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"];
 
-extern mod extra;
-extern mod getopts;
-extern mod rust_crypto = "rust-crypto";
+extern crate extra;
+extern crate getopts;
+extern crate rust_crypto = "rust-crypto";
 
 use std::io;
 use std::os;
