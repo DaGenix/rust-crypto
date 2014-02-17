@@ -11,8 +11,8 @@
 #[feature(macro_rules)];
 #[feature(simd)];
 
-extern mod extra;
-extern mod serialize;
+extern crate extra;
+extern crate serialize;
 
 pub mod aes;
 pub mod aesni;
