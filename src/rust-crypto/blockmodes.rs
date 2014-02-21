@@ -807,7 +807,7 @@ mod test {
 
     use std::cmp;
     use std::vec;
-    use extra::test::BenchHarness;
+    use test::BenchHarness;
 
     trait CipherTest {
         fn get_plain<'a>(&'a self) -> &'a [u8];

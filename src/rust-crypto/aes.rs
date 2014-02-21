@@ -745,7 +745,7 @@ mod test {
 
 #[cfg(test)]
 mod bench {
-    use extra::test::BenchHarness;
+    use test::BenchHarness;
 
     #[cfg(target_arch = "x86")]
     #[cfg(target_arch = "x86_64")]

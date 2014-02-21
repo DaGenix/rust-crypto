@@ -10,6 +10,7 @@
 
 extern crate extra;
 extern crate serialize;
+extern crate test;
 
 pub mod aes;
 pub mod aesni;

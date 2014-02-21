@@ -112,7 +112,7 @@ mod test {
 
 #[cfg(test)]
 mod bench {
-    use extra::test::BenchHarness;
+    use test::BenchHarness;
     use symmetriccipher::SynchronousStreamCipher;
     use rc4::Rc4;
 
