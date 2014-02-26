@@ -123,6 +123,7 @@ finite field which allows for efficient computation of the AES S-Boxes. See [7] 
       http://www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA434781.
 */
 
+use std::default::Default;
 use std::iter::range_step;
 
 use cryptoutil::{read_u32v_le, write_u32_le};
