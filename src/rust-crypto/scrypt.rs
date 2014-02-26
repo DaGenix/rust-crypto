@@ -168,7 +168,7 @@ impl ScryptParams {
         assert!(log_n > 0);
         assert!((log_n as uint) < size_of::<uint>() * 8);
 
-        let n = (1u32 << log_n);
+        let n = 1u32 << log_n;
 
         let rp = match r.checked_mul(&p) {
             Some(x) => x,
