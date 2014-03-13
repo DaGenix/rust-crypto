@@ -10,9 +10,10 @@
  */
 
 use std::num::Bounded;
-use std::rand::{OSRng, Rng};
 use std::vec;
 use std::vec::MutableCloneableVector;
+
+use rand::{OSRng, Rng};
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};

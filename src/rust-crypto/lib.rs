@@ -12,6 +12,7 @@
 #[feature(simd)];
 
 extern crate extra;
+extern crate rand;
 extern crate serialize;
 
 pub mod aes;
