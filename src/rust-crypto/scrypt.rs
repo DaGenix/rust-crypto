@@ -13,10 +13,11 @@
  */
 
 use std::num::ToPrimitive;
-use std::rand::{OSRng, Rng};
 use std::mem::size_of;
 use std::vec;
 use std::vec::MutableCloneableVector;
+
+use rand::{OSRng, Rng};
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};

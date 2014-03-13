@@ -9,6 +9,7 @@
 #[feature(simd)];
 
 extern crate extra;
+extern crate rand;
 extern crate serialize;
 extern crate test;
 
