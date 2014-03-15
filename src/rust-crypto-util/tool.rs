@@ -7,6 +7,8 @@
 #[license = "MIT/ASL2"];
 #[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"];
 
+#[allow(deprecated_owned_vector)];
+
 extern crate getopts;
 extern crate rust_crypto = "rust-crypto";
 
