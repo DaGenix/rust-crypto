@@ -54,10 +54,10 @@ fn run_scrypt(matches: &Matches) {
         return;
     }
 
-    let salt_len = io::stdin().read_be_u32().unwrap();
-    let salt = io::stdin().read_bytes(salt_len as uint).unwrap();
-    let pass_len = io::stdin().read_be_u32().unwrap();
-    let pass = io::stdin().read_bytes(pass_len as uint).unwrap();
+    let salt_len = io::stdio::stdin_raw().read_be_u32().unwrap();
+    let salt = io::stdio::stdin_raw().read_bytes(salt_len as uint).unwrap();
+    let pass_len = io::stdio::stdin_raw().read_be_u32().unwrap();
+    let pass = io::stdio::stdin_raw().read_bytes(pass_len as uint).unwrap();
 
     let params = scrypt::ScryptParams::new(logn, r, p);
     let mut output = vec::from_elem(dklen, 0u8);
