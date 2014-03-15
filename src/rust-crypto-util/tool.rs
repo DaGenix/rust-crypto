@@ -7,7 +7,6 @@
 #[license = "MIT/ASL2"];
 #[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"];
 
-extern crate extra;
 extern crate getopts;
 extern crate rust_crypto = "rust-crypto";
 
