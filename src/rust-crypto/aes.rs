@@ -68,7 +68,7 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send>(
 }
 
 /// Get the best implementation of an EcbEncryptor
-#[cfg(not(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(not(target_arch = "x86"), not(target_arch = "x86_64"))]
 pub fn ecb_encryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
@@ -139,7 +139,7 @@ pub fn ecb_decryptor<X: PaddingProcessor + Send>(
 }
 
 /// Get the best implementation of an EcbDecryptor
-#[cfg(not(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(not(target_arch = "x86"), not(target_arch = "x86_64"))]
 pub fn ecb_decryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
@@ -211,7 +211,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send>(
 }
 
 /// Get the best implementation of a CbcEncryptor
-#[cfg(not(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(not(target_arch = "x86"), not(target_arch = "x86_64"))]
 pub fn cbc_encryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
@@ -283,7 +283,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send>(
 }
 
 /// Get the best implementation of a CbcDecryptor
-#[cfg(not(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(not(target_arch = "x86"), not(target_arch = "x86_64"))]
 pub fn cbc_decryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
@@ -355,7 +355,7 @@ pub fn ctr(
 }
 
 /// Get the best implementation of a Ctr
-#[cfg(not(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(not(target_arch = "x86"), not(target_arch = "x86_64"))]
 pub fn ctr(
         key_size: KeySize,
         key: &[u8],
