@@ -11,7 +11,7 @@
 use std;
 use std::mem;
 use std::num::{One, Zero, CheckedAdd};
-use std::vec::bytes::{MutableByteVector, copy_memory};
+use std::slice::bytes::{MutableByteVector, copy_memory};
 
 use buffer::{ReadBuffer, WriteBuffer, BufferResult, BufferUnderflow, BufferOverflow};
 use symmetriccipher::{SynchronousStreamCipher, SymmetricCipherError};
@@ -480,7 +480,7 @@ impl <T: FixedBuffer> StandardPadding for T {
 #[cfg(test)]
 pub mod test {
     use std::num::Bounded;
-    use std::vec;
+    use std::slice;
 
     use rand::IsaacRng;
     use rand::distributions::{IndependentSample, Range};
@@ -492,7 +492,7 @@ pub mod test {
     /// correct.
     pub fn test_digest_1million_random<D: Digest>(digest: &mut D, blocksize: uint, expected: &str) {
         let total_size = 1000000;
-        let buffer = vec::from_elem(blocksize * 2, 'a' as u8);
+        let buffer = slice::from_elem(blocksize * 2, 'a' as u8);
         let mut rng = IsaacRng::new_unseeded();
         let range = Range::new(0, 2 * blocksize + 1);
         let mut count = 0;
