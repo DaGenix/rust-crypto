@@ -10,8 +10,8 @@
  */
 
 use std::num::Bounded;
-use std::vec;
-use std::vec::MutableCloneableVector;
+use std::slice;
+use std::slice::MutableCloneableVector;
 
 use rand::{OSRng, Rng};
 
@@ -90,7 +90,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
     // Most users of pbkdf2 should use a value much larger than 1, so, this allocation should almost
     // always be necessary. A big exception is Scrypt. However, this allocation is unlikely to be
     // the bottleneck in Scrypt performance.
-    let mut scratch = vec::from_elem(os, 0u8);
+    let mut scratch = slice::from_elem(os, 0u8);
 
     let mut idx: u32 = 0;
 
@@ -104,7 +104,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         if chunk.len() == os {
             calculate_block(mac, salt, c, idx, scratch, chunk);
         } else {
-            let mut tmp = vec::from_elem(os, 0u8);
+            let mut tmp = slice::from_elem(os, 0u8);
             calculate_block(mac, salt, c, idx, scratch, tmp);
             chunk.copy_from(tmp);
         }
@@ -239,7 +239,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
-    let mut output = vec::from_elem(hash.len(), 0u8);
+    let mut output = slice::from_elem(hash.len(), 0u8);
     pbkdf2(&mut mac, salt, c, output);
 
     // Be careful here - its important that the comparison be done using a fixed time equality
@@ -251,7 +251,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
 #[cfg(test)]
 mod test {
-    use std::vec;
+    use std::slice;
 
     use pbkdf2::{pbkdf2, pbkdf2_simple, pbkdf2_check};
     use hmac::Hmac;
@@ -321,7 +321,7 @@ mod test {
         let tests = tests();
         for t in tests.iter() {
             let mut mac = Hmac::new(Sha1::new(), t.password);
-            let mut result = vec::from_elem(t.expected.len(), 0u8);
+            let mut result = slice::from_elem(t.expected.len(), 0u8);
             pbkdf2(&mut mac, t.salt, t.c, result);
             assert!(result == t.expected);
         }

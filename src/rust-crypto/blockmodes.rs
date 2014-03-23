@@ -9,7 +9,7 @@
 // TODO - I think padding could be done better. Maybe macros for BlockEngine would help this too.
 
 use std::cmp;
-use std::vec;
+use std::slice;
 
 use buffer::{ReadBuffer, WriteBuffer, OwnedReadBuffer, OwnedWriteBuffer, BufferResult,
     BufferUnderflow, BufferOverflow, RefReadBuffer, RefWriteBuffer};
@@ -89,13 +89,13 @@ struct BlockEngine<P, X> {
 fn update_history(in_hist: &mut [u8], out_hist: &mut [u8], last_in: &[u8], last_out: &[u8]) {
     let in_hist_len = in_hist.len();
     if in_hist_len > 0 {
-        vec::bytes::copy_memory(
+        slice::bytes::copy_memory(
             in_hist,
             last_in.slice_from(last_in.len() - in_hist_len));
     }
     let out_hist_len = out_hist.len();
     if out_hist_len > 0 {
-        vec::bytes::copy_memory(
+        slice::bytes::copy_memory(
             out_hist,
             last_out.slice_from(last_out.len() - out_hist_len));
     }
@@ -109,8 +109,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             block_size: block_size,
             in_hist: ~[],
             out_hist: ~[],
-            in_scratch: OwnedWriteBuffer::new(vec::from_elem(block_size, 0u8)),
-            out_write_scratch: Some(OwnedWriteBuffer::new(vec::from_elem(block_size, 0u8))),
+            in_scratch: OwnedWriteBuffer::new(slice::from_elem(block_size, 0u8)),
+            out_write_scratch: Some(OwnedWriteBuffer::new(slice::from_elem(block_size, 0u8))),
             out_read_scratch: None,
             processor: processor,
             padding: padding,
@@ -400,8 +400,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
     }
     fn reset_with_history(&mut self, in_hist: &[u8], out_hist: &[u8]) {
         self.reset();
-        vec::bytes::copy_memory(self.in_hist, in_hist);
-        vec::bytes::copy_memory(self.out_hist, out_hist);
+        slice::bytes::copy_memory(self.in_hist, in_hist);
+        slice::bytes::copy_memory(self.out_hist, out_hist);
     }
 }
 
@@ -576,7 +576,7 @@ impl <T: BlockEncryptor, X: PaddingProcessor> CbcEncryptor<T, X> {
         let block_size = algo.block_size();
         let processor = CbcEncryptorProcessor {
             algo: algo,
-            temp: vec::from_elem(block_size, 0u8)
+            temp: slice::from_elem(block_size, 0u8)
         };
         CbcEncryptor {
             block_engine: BlockEngine::new_with_history(
@@ -624,7 +624,7 @@ impl <T: BlockDecryptor, X: PaddingProcessor> CbcDecryptor<T, X> {
         let block_size = algo.block_size();
         let processor = CbcDecryptorProcessor {
             algo: algo,
-            temp: vec::from_elem(block_size, 0u8)
+            temp: slice::from_elem(block_size, 0u8)
         };
         CbcDecryptor {
             block_engine: BlockEngine::new_with_history(
@@ -672,11 +672,11 @@ impl <A: BlockEncryptor> CtrMode<A> {
         CtrMode {
             algo: algo,
             ctr: ctr,
-            bytes: OwnedReadBuffer::new_with_len(vec::from_elem(block_size, 0u8), 0)
+            bytes: OwnedReadBuffer::new_with_len(slice::from_elem(block_size, 0u8), 0)
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
-        vec::bytes::copy_memory(self.ctr, ctr);
+        slice::bytes::copy_memory(self.ctr, ctr);
         self.bytes.reset();
     }
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
@@ -730,7 +730,7 @@ pub struct CtrModeX8<A> {
 
 fn construct_ctr_x8(in_ctr: &[u8], out_ctr_x8: &mut [u8]) {
     for (i, ctr_i) in out_ctr_x8.mut_chunks(in_ctr.len()).enumerate() {
-        vec::bytes::copy_memory(ctr_i, in_ctr);
+        slice::bytes::copy_memory(ctr_i, in_ctr);
         add_ctr(ctr_i, i as u8);
     }
 }
@@ -739,12 +739,12 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
     /// Create a new CTR object that operates on 8 blocks at a time
     pub fn new(algo: A, ctr: &[u8]) -> CtrModeX8<A> {
         let block_size = algo.block_size();
-        let mut ctr_x8 = vec::from_elem(block_size * 8, 0u8);
+        let mut ctr_x8 = slice::from_elem(block_size * 8, 0u8);
         construct_ctr_x8(ctr, ctr_x8);
         CtrModeX8 {
             algo: algo,
             ctr_x8: ctr_x8,
-            bytes: OwnedReadBuffer::new_with_len(vec::from_elem(block_size * 8, 0u8), 0)
+            bytes: OwnedReadBuffer::new_with_len(slice::from_elem(block_size * 8, 0u8), 0)
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
@@ -806,7 +806,7 @@ mod test {
     use symmetriccipher::{Encryptor, Decryptor, SymmetricCipherError, InvalidLength, InvalidPadding};
 
     use std::cmp;
-    use std::vec;
+    use std::slice;
     use test::BenchHarness;
 
     trait CipherTest {
@@ -967,7 +967,7 @@ mod test {
             test: &T,
             enc: &mut E,
             dec: &mut D) {
-        let mut cipher_out = vec::from_elem(test.get_cipher().len(), 0u8);
+        let mut cipher_out = slice::from_elem(test.get_cipher().len(), 0u8);
         {
             let mut buff_in = RefReadBuffer::new(test.get_plain());
             let mut buff_out = RefWriteBuffer::new(cipher_out);
@@ -979,7 +979,7 @@ mod test {
         }
         assert!(test.get_cipher() == cipher_out);
 
-        let mut plain_out = vec::from_elem(test.get_plain().len(), 0u8);
+        let mut plain_out = slice::from_elem(test.get_plain().len(), 0u8);
         {
             let mut buff_in = RefReadBuffer::new(test.get_cipher());
             let mut buff_out = RefWriteBuffer::new(plain_out);
@@ -1104,7 +1104,7 @@ mod test {
             test: &T,
             enc: &mut E,
             dec: &mut D) {
-        let mut cipher_out = vec::from_elem(test.get_cipher().len(), 0u8);
+        let mut cipher_out = slice::from_elem(test.get_cipher().len(), 0u8);
         run_inc(
             test.get_plain(),
             cipher_out,
@@ -1116,7 +1116,7 @@ mod test {
             false);
         assert!(test.get_cipher() == cipher_out);
 
-        let mut plain_out = vec::from_elem(test.get_plain().len(), 0u8);
+        let mut plain_out = slice::from_elem(test.get_plain().len(), 0u8);
         run_inc(
             test.get_cipher(),
             plain_out,
@@ -1148,7 +1148,7 @@ mod test {
             let mut enc = new_enc();
             let mut dec = new_dec();
 
-            let mut cipher_out = vec::from_elem(test.get_cipher().len(), 0u8);
+            let mut cipher_out = slice::from_elem(test.get_cipher().len(), 0u8);
             run_inc(
                 test.get_plain(),
                 cipher_out,
@@ -1160,7 +1160,7 @@ mod test {
                 rng2.gen());
             assert!(test.get_cipher() == cipher_out);
 
-            let mut plain_out = vec::from_elem(test.get_plain().len(), 0u8);
+            let mut plain_out = slice::from_elem(test.get_plain().len(), 0u8);
             run_inc(
                 test.get_cipher(),
                 plain_out,
