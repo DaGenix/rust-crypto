@@ -55,9 +55,9 @@ fn run_scrypt(matches: &Matches) {
     }
 
     let salt_len = io::stdio::stdin_raw().read_be_u32().unwrap();
-    let salt = io::stdio::stdin_raw().read_bytes(salt_len as uint).unwrap();
+    let salt = io::stdio::stdin_raw().read_exact(salt_len as uint).unwrap();
     let pass_len = io::stdio::stdin_raw().read_be_u32().unwrap();
-    let pass = io::stdio::stdin_raw().read_bytes(pass_len as uint).unwrap();
+    let pass = io::stdio::stdin_raw().read_exact(pass_len as uint).unwrap();
 
     let params = scrypt::ScryptParams::new(logn, r, p);
     let mut output = slice::from_elem(dklen, 0u8);
@@ -100,7 +100,7 @@ fn main() {
         print_usage();
         return;
     }
-    let algorithm_name: &str = matches.free[0];
+    let algorithm_name = matches.free.get(0).as_slice();
 
     match algorithm_name {
         "scrypt" => run_scrypt(&matches),
