@@ -100,7 +100,7 @@ fn main() {
         print_usage();
         return;
     }
-    let algorithm_name: &str = matches.free[0];
+    let algorithm_name = matches.free.get(0).as_slice();
 
     match algorithm_name {
         "scrypt" => run_scrypt(&matches),
