@@ -14,8 +14,8 @@
 
 use std::num::ToPrimitive;
 use std::mem::size_of;
-use std::vec;
-use std::vec::MutableCloneableVector;
+use std::slice;
+use std::slice::MutableCloneableVector;
 
 use rand::{OSRng, Rng};
 
@@ -239,11 +239,11 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
 
     let mut mac = Hmac::new(Sha256::new(), password);
 
-    let mut b = vec::from_elem(p * r * 128, 0u8);
+    let mut b = slice::from_elem(p * r * 128, 0u8);
     pbkdf2(&mut mac, salt, 1, b);
 
-    let mut v = vec::from_elem(n * r * 128, 0u8);
-    let mut t = vec::from_elem(r * 128, 0u8);
+    let mut v = slice::from_elem(n * r * 128, 0u8);
+    let mut t = slice::from_elem(r * 128, 0u8);
 
     for chunk in b.mut_chunks(r * 128) {
         scrypt_ro_mix(chunk, v, t, n);
@@ -401,7 +401,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         None => { }
     }
 
-    let mut output = vec::from_elem(hash.len(), 0u8);
+    let mut output = slice::from_elem(hash.len(), 0u8);
     scrypt(password.as_bytes(), salt, &params, output);
 
     // Be careful here - its important that the comparison be done using a fixed time equality
@@ -413,7 +413,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
 #[cfg(test)]
 mod test {
-    use std::vec;
+    use std::slice;
 
     use scrypt::{scrypt, scrypt_simple, scrypt_check, ScryptParams};
 
@@ -485,7 +485,7 @@ mod test {
     fn test_scrypt() {
         let tests = tests();
         for t in tests.iter() {
-            let mut result = vec::from_elem(t.expected.len(), 0u8);
+            let mut result = slice::from_elem(t.expected.len(), 0u8);
             let params = ScryptParams::new(t.log_n, t.r, t.p);
             scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result);
             assert!(result == t.expected);

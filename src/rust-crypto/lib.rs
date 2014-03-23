@@ -11,7 +11,8 @@
 #[feature(macro_rules)];
 #[feature(simd)];
 
-extern crate extra;
+#[allow(deprecated_owned_vector)];
+
 extern crate rand;
 extern crate serialize;
 

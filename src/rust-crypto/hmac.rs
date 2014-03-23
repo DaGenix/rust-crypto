@@ -8,7 +8,7 @@
  * This module implements the Hmac function - a Message Authentication Code using a Digest.
  */
 
-use std::vec;
+use std::slice;
 
 use digest::Digest;
 use mac::{Mac, MacResult};
@@ -34,9 +34,9 @@ fn derive_key(key: &mut [u8], mask: u8) {
 // pad it with zeros.
 fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> ~[u8] {
     let bs = digest.block_size();
-    let mut expanded_key = vec::from_elem(bs, 0u8);
+    let mut expanded_key = slice::from_elem(bs, 0u8);
     if key.len() <= bs {
-        vec::bytes::copy_memory(expanded_key, key);
+        slice::bytes::copy_memory(expanded_key, key);
         for elem in expanded_key.mut_slice_from(key.len()).mut_iter() {
             *elem = 0;
         }
@@ -97,7 +97,7 @@ impl <D: Digest> Mac for Hmac<D> {
 
     fn result(&mut self) -> MacResult {
         let output_size = self.digest.output_bytes();
-        let mut code = vec::from_elem(output_size, 0u8);
+        let mut code = slice::from_elem(output_size, 0u8);
 
         self.raw_result(code);
 

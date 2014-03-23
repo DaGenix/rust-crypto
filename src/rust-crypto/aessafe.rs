@@ -1022,14 +1022,14 @@ impl <T: AesBitValueOps> AesOps for Bs8State<T> {
     fn mix_columns(&self) -> Bs8State<T> {
         let Bs8State(ref x0, ref x1, ref x2, ref x3, ref x4, ref x5, ref x6, ref x7) = *self;
 
-        let x0out = x7 ^ x7.ror1() ^ x0.ror1() ^ (x0 ^ x0.ror1()).ror2();
-        let x1out = x0 ^ x0.ror1() ^ *x7 ^ x7.ror1() ^ x1.ror1() ^ (x1 ^ x1.ror1()).ror2();
-        let x2out = x1 ^ x1.ror1() ^ x2.ror1() ^ (x2 ^ x2.ror1()).ror2();
-        let x3out = x2 ^ x2.ror1() ^ *x7 ^ x7.ror1() ^ x3.ror1() ^ (x3 ^ x3.ror1()).ror2();
-        let x4out = x3 ^ x3.ror1() ^ *x7 ^ x7.ror1() ^ x4.ror1() ^ (x4 ^ x4.ror1()).ror2();
-        let x5out = x4 ^ x4.ror1() ^ x5.ror1() ^ (x5 ^ x5.ror1()).ror2();
-        let x6out = x5 ^ x5.ror1() ^ x6.ror1() ^ (x6 ^ x6.ror1()).ror2();
-        let x7out = x6 ^ x6.ror1() ^ x7.ror1() ^ (x7 ^ x7.ror1()).ror2();
+        let x0out = *x7 ^ x7.ror1() ^ x0.ror1() ^ (*x0 ^ x0.ror1()).ror2();
+        let x1out = *x0 ^ x0.ror1() ^ *x7 ^ x7.ror1() ^ x1.ror1() ^ (*x1 ^ x1.ror1()).ror2();
+        let x2out = *x1 ^ x1.ror1() ^ x2.ror1() ^ (*x2 ^ x2.ror1()).ror2();
+        let x3out = *x2 ^ x2.ror1() ^ *x7 ^ x7.ror1() ^ x3.ror1() ^ (*x3 ^ x3.ror1()).ror2();
+        let x4out = *x3 ^ x3.ror1() ^ *x7 ^ x7.ror1() ^ x4.ror1() ^ (*x4 ^ x4.ror1()).ror2();
+        let x5out = *x4 ^ x4.ror1() ^ x5.ror1() ^ (*x5 ^ x5.ror1()).ror2();
+        let x6out = *x5 ^ x5.ror1() ^ x6.ror1() ^ (*x6 ^ x6.ror1()).ror2();
+        let x7out = *x6 ^ x6.ror1() ^ x7.ror1() ^ (*x7 ^ x7.ror1()).ror2();
 
         return Bs8State(x0out, x1out, x2out, x3out, x4out, x5out, x6out, x7out);
     }

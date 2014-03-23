@@ -7,13 +7,14 @@
 #[license = "MIT/ASL2"];
 #[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"];
 
-extern crate extra;
+#[allow(deprecated_owned_vector)];
+
 extern crate getopts;
 extern crate rust_crypto = "rust-crypto";
 
 use std::io;
 use std::os;
-use std::vec;
+use std::slice;
 
 use getopts::{optopt, optflag, getopts, Matches};
 
@@ -53,13 +54,13 @@ fn run_scrypt(matches: &Matches) {
         return;
     }
 
-    let salt_len = io::stdin().read_be_u32().unwrap();
-    let salt = io::stdin().read_bytes(salt_len as uint).unwrap();
-    let pass_len = io::stdin().read_be_u32().unwrap();
-    let pass = io::stdin().read_bytes(pass_len as uint).unwrap();
+    let salt_len = io::stdio::stdin_raw().read_be_u32().unwrap();
+    let salt = io::stdio::stdin_raw().read_bytes(salt_len as uint).unwrap();
+    let pass_len = io::stdio::stdin_raw().read_be_u32().unwrap();
+    let pass = io::stdio::stdin_raw().read_bytes(pass_len as uint).unwrap();
 
     let params = scrypt::ScryptParams::new(logn, r, p);
-    let mut output = vec::from_elem(dklen, 0u8);
+    let mut output = slice::from_elem(dklen, 0u8);
     scrypt::scrypt(pass, salt, &params, output);
 
     match io::stdout().write(output) {
