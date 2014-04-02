@@ -148,7 +148,7 @@ macro_rules! define_aes_struct(
         $rounds:expr
     ) => (
         pub struct $name {
-            priv sk: [Bs8State<u32>, ..$rounds + 1]
+            sk: [Bs8State<u32>, ..$rounds + 1]
         }
     )
 )
@@ -235,7 +235,7 @@ macro_rules! define_aes_struct_x8(
         $rounds:expr
     ) => (
         pub struct $name {
-            priv sk: [Bs8State<u32x4>, ..$rounds + 1]
+            sk: [Bs8State<u32x4>, ..$rounds + 1]
         }
     )
 )

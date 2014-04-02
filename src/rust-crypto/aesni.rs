@@ -7,11 +7,11 @@
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
 pub struct AesNi128Encryptor {
-    priv round_keys: [u8, ..16 * (10 + 1)]
+    round_keys: [u8, ..16 * (10 + 1)]
 }
 
 pub struct AesNi128Decryptor {
-    priv round_keys: [u8, ..16 * (10 + 1)]
+    round_keys: [u8, ..16 * (10 + 1)]
 }
 
 impl AesNi128Encryptor {
@@ -49,11 +49,11 @@ impl BlockDecryptor for AesNi128Decryptor {
 }
 
 pub struct AesNi192Encryptor {
-    priv round_keys: [u8, ..16 * (12 + 1)]
+    round_keys: [u8, ..16 * (12 + 1)]
 }
 
 pub struct AesNi192Decryptor {
-    priv round_keys: [u8, ..16 * (12 + 1)]
+    round_keys: [u8, ..16 * (12 + 1)]
 }
 
 impl AesNi192Encryptor {
@@ -91,11 +91,11 @@ impl BlockDecryptor for AesNi192Decryptor {
 }
 
 pub struct AesNi256Encryptor {
-    priv round_keys: [u8, ..16 * (14 + 1)]
+    round_keys: [u8, ..16 * (14 + 1)]
 }
 
 pub struct AesNi256Decryptor {
-    priv round_keys: [u8, ..16 * (14 + 1)]
+    round_keys: [u8, ..16 * (14 + 1)]
 }
 
 impl AesNi256Encryptor {

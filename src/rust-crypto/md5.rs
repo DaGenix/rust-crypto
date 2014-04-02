@@ -157,10 +157,10 @@ static C4: [u32, ..16] = [
 
 /// The MD5 Digest algorithm
 pub struct Md5 {
-    priv length_bytes: u64,
-    priv buffer: FixedBuffer64,
-    priv state: Md5State,
-    priv finished: bool,
+    length_bytes: u64,
+    buffer: FixedBuffer64,
+    state: Md5State,
+    finished: bool,
 }
 
 impl Md5 {

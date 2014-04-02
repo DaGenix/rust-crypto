@@ -17,10 +17,10 @@ use mac::{Mac, MacResult};
  * The Hmac struct represents an Hmac function - a Message Authentication Code using a Digest.
  */
 pub struct Hmac<D> {
-    priv digest: D,
-    priv i_key: ~[u8],
-    priv o_key: ~[u8],
-    priv finished: bool
+    digest: D,
+    i_key: ~[u8],
+    o_key: ~[u8],
+    finished: bool
 }
 
 fn derive_key(key: &mut [u8], mask: u8) {

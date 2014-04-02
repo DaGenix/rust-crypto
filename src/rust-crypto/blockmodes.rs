@@ -449,7 +449,7 @@ impl PaddingProcessor for PkcsPadding {
 
 /// Wraps a PaddingProcessor so that only pad_input() will actually be called.
 pub struct EncPadding<X> {
-    priv padding: X
+    padding: X
 }
 
 impl <X: PaddingProcessor> EncPadding<X> {
@@ -463,7 +463,7 @@ impl <X: PaddingProcessor> PaddingProcessor for EncPadding<X> {
 
 /// Wraps a PaddingProcessor so that only strip_output() will actually be called.
 pub struct DecPadding<X> {
-    priv padding: X
+    padding: X
 }
 
 impl <X: PaddingProcessor> DecPadding<X> {
@@ -487,7 +487,7 @@ impl <T: BlockEncryptor> BlockProcessor for EcbEncryptorProcessor<T> {
 
 /// ECB Encryption mode
 pub struct EcbEncryptor<T, X> {
-    priv block_engine: BlockEngine<EcbEncryptorProcessor<T>, X>
+    block_engine: BlockEngine<EcbEncryptorProcessor<T>, X>
 }
 
 impl <T: BlockEncryptor, X: PaddingProcessor> EcbEncryptor<T, X> {
@@ -525,7 +525,7 @@ impl <T: BlockDecryptor> BlockProcessor for EcbDecryptorProcessor<T> {
 
 /// ECB Decryption mode
 pub struct EcbDecryptor<T, X> {
-    priv block_engine: BlockEngine<EcbDecryptorProcessor<T>, X>
+    block_engine: BlockEngine<EcbDecryptorProcessor<T>, X>
 }
 
 impl <T: BlockDecryptor, X: PaddingProcessor> EcbDecryptor<T, X> {
@@ -567,7 +567,7 @@ impl <T: BlockEncryptor> BlockProcessor for CbcEncryptorProcessor<T> {
 
 /// CBC encryption mode
 pub struct CbcEncryptor<T, X> {
-    priv block_engine: BlockEngine<CbcEncryptorProcessor<T>, X>
+    block_engine: BlockEngine<CbcEncryptorProcessor<T>, X>
 }
 
 impl <T: BlockEncryptor, X: PaddingProcessor> CbcEncryptor<T, X> {
@@ -615,7 +615,7 @@ impl <T: BlockDecryptor> BlockProcessor for CbcDecryptorProcessor<T> {
 
 /// CBC decryption mode
 pub struct CbcDecryptor<T, X> {
-    priv block_engine: BlockEngine<CbcDecryptorProcessor<T>, X>
+    block_engine: BlockEngine<CbcDecryptorProcessor<T>, X>
 }
 
 impl <T: BlockDecryptor, X: PaddingProcessor> CbcDecryptor<T, X> {
@@ -660,9 +660,9 @@ fn add_ctr(ctr: &mut [u8], mut ammount: u8) {
 
 /// CTR Mode
 pub struct CtrMode<A> {
-    priv algo: A,
-    priv ctr: ~[u8],
-    priv bytes: OwnedReadBuffer
+    algo: A,
+    ctr: ~[u8],
+    bytes: OwnedReadBuffer
 }
 
 impl <A: BlockEncryptor> CtrMode<A> {
@@ -723,9 +723,9 @@ impl <A: BlockEncryptor> Decryptor for CtrMode<A> {
 
 /// CTR Mode that operates on 8 blocks at a time
 pub struct CtrModeX8<A> {
-    priv algo: A,
-    priv ctr_x8: ~[u8],
-    priv bytes: OwnedReadBuffer
+    algo: A,
+    ctr_x8: ~[u8],
+    bytes: OwnedReadBuffer
 }
 
 fn construct_ctr_x8(in_ctr: &[u8], out_ctr_x8: &mut [u8]) {

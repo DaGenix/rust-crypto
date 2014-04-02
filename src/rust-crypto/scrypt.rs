@@ -148,9 +148,9 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
  */
 #[deriving(Clone)]
 pub struct ScryptParams {
-    priv log_n: u8,
-    priv r: u32,
-    priv p: u32
+    log_n: u8,
+    r: u32,
+    p: u32
 }
 
 impl ScryptParams {

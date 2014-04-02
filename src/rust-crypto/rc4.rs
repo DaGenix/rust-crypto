@@ -14,9 +14,9 @@ use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCi
 use cryptoutil::symm_enc_or_dec;
 
 pub struct Rc4 {
-    priv i: uint,
-    priv j: uint,
-    priv state: [u8, ..256]
+    i: uint,
+    j: uint,
+    state: [u8, ..256]
 }
 
 impl Rc4 {

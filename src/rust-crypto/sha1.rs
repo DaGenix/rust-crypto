@@ -43,10 +43,10 @@ static K3: u32 = 0xCA62C1D6u32;
 
 /// Structure representing the state of a Sha1 computation
 pub struct Sha1 {
-    priv h: [u32, ..DIGEST_BUF_LEN],
-    priv length_bits: u64,
-    priv buffer: FixedBuffer64,
-    priv computed: bool,
+    h: [u32, ..DIGEST_BUF_LEN],
+    length_bits: u64,
+    buffer: FixedBuffer64,
+    computed: bool,
 }
 
 fn add_input(st: &mut Sha1, msg: &[u8]) {
