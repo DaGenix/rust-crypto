@@ -12,6 +12,7 @@
  *       http://www.tarsnap.com/scrypt/scrypt.pdf
  */
 
+use std::io::IoResult;
 use std::num::ToPrimitive;
 use std::mem::size_of;
 use std::slice;
@@ -147,9 +148,9 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
  */
 #[deriving(Clone)]
 pub struct ScryptParams {
-    priv log_n: u8,
-    priv r: u32,
-    priv p: u32
+    log_n: u8,
+    r: u32,
+    p: u32
 }
 
 impl ScryptParams {
@@ -274,8 +275,8 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
  * * params - The ScryptParams to use
  *
  */
-pub fn scrypt_simple(password: &str, params: &ScryptParams) -> ~str {
-    let mut rng = OSRng::new();
+pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
+    let mut rng = try!(OSRng::new());
 
     // 128-bit salt
     let salt: ~[u8] = rng.gen_vec(16);
@@ -307,7 +308,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> ~str {
     result.push_str(dk.to_base64(base64::STANDARD));
     result.push_char('$');
 
-    return result;
+    return Ok(result);
 }
 
 /**
@@ -496,8 +497,8 @@ mod test {
         let password = "password";
 
         let params = ScryptParams::new(log_n, r, p);
-        let out1 = scrypt_simple(password, &params);
-        let out2 = scrypt_simple(password, &params);
+        let out1 = scrypt_simple(password, &params).unwrap();
+        let out2 = scrypt_simple(password, &params).unwrap();
 
         // This just makes sure that a salt is being applied. It doesn't verify that that salt is
         // cryptographically strong, however.

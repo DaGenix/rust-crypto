@@ -4,11 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[feature(asm)];
-#[feature(macro_rules)];
-#[feature(simd)];
+#![feature(asm)]
+#![feature(macro_rules)]
+#![feature(simd)]
 
-#[allow(deprecated_owned_vector)];
+#![allow(deprecated_owned_vector)]
 
 extern crate rand;
 extern crate serialize;

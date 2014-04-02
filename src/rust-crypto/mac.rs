@@ -50,7 +50,7 @@ pub trait Mac {
  * A MacResult wraps a Mac code and provides a safe Eq implementation that runs in fixed time.
  */
 pub struct MacResult {
-    priv code: ~[u8]
+    code: ~[u8]
 }
 
 impl MacResult {
