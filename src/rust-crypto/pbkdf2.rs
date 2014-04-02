@@ -9,6 +9,7 @@
  * http://tools.ietf.org/html/rfc2898.
  */
 
+use std::io::IoResult;
 use std::num::Bounded;
 use std::slice;
 use std::slice::MutableCloneableVector;
@@ -131,8 +132,8 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
  * * c - The iteration count
  *
  */
-pub fn pbkdf2_simple(password: &str, c: u32) -> ~str {
-    let mut rng = OSRng::new();
+pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<~str> {
+    let mut rng = try!(OSRng::new());
 
     // 128-bit salt
     let salt: ~[u8] = rng.gen_vec(16);
@@ -154,7 +155,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> ~str {
     result.push_str(dk.to_base64(base64::STANDARD));
     result.push_char('$');
 
-    return result;
+    return Ok(result);
 }
 
 /**
@@ -331,8 +332,8 @@ mod test {
     fn test_pbkdf2_simple() {
         let password = "password";
 
-        let out1 = pbkdf2_simple(password, 1024);
-        let out2 = pbkdf2_simple(password, 1024);
+        let out1 = pbkdf2_simple(password, 1024).unwrap();
+        let out2 = pbkdf2_simple(password, 1024).unwrap();
 
         // This just makes sure that a salt is being applied. It doesn't verify that that salt is
         // cryptographically strong, however.
