@@ -4,14 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[license = "MIT/ASL2"];
-#[crate_id = "github.com/DaGenix/rust-crypto#rust-crypto:0.1"];
+#![license = "MIT/ASL2"]
+#![crate_id = "github.com/DaGenix/rust-crypto#rust-crypto:0.1"]
 
-#[feature(asm)];
-#[feature(macro_rules)];
-#[feature(simd)];
+#![feature(asm)]
+#![feature(macro_rules)]
+#![feature(simd)]
 
-#[allow(deprecated_owned_vector)];
+#![allow(deprecated_owned_vector)]
 
 extern crate rand;
 extern crate serialize;
