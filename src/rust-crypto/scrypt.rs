@@ -279,12 +279,12 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt
-    let salt: ~[u8] = rng.gen_vec(16);
+    let salt: Vec<u8> = rng.gen_vec(16);
 
     // 256-bit derived key
     let mut dk = [0u8, ..32];
 
-    scrypt(password.as_bytes(), salt, params, dk);
+    scrypt(password.as_bytes(), salt.as_slice(), params, dk);
 
     let mut result = ~"$rscrypt$";
     if params.r < 256 && params.p < 256 {
@@ -303,7 +303,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
         result.push_str(tmp.to_base64(base64::STANDARD));
     }
     result.push_char('$');
-    result.push_str(salt.to_base64(base64::STANDARD));
+    result.push_str(salt.as_slice().to_base64(base64::STANDARD));
     result.push_char('$');
     result.push_str(dk.to_base64(base64::STANDARD));
     result.push_char('$');
