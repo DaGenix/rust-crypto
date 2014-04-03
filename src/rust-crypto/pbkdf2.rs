@@ -136,21 +136,21 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<~str> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt
-    let salt: ~[u8] = rng.gen_vec(16);
+    let salt: Vec<u8> = rng.gen_vec(16);
 
     // 256-bit derived key
     let mut dk = [0u8, ..32];
 
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
-    pbkdf2(&mut mac, salt, c, dk);
+    pbkdf2(&mut mac, salt.as_slice(), c, dk);
 
     let mut result = ~"$rpbkdf2$0$";
     let mut tmp = [0u8, ..4];
     write_u32_be(tmp, c);
     result.push_str(tmp.to_base64(base64::STANDARD));
     result.push_char('$');
-    result.push_str(salt.to_base64(base64::STANDARD));
+    result.push_str(salt.as_slice().to_base64(base64::STANDARD));
     result.push_char('$');
     result.push_str(dk.to_base64(base64::STANDARD));
     result.push_char('$');
