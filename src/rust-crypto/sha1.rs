@@ -58,7 +58,7 @@ fn add_input(st: &mut Sha1, msg: &[u8]) {
 }
 
 fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
-    let mut t: int; // Loop counter
+    let mut t: uint; // Loop counter
 
     let mut w = [0u32, ..WORK_BUF_LEN];
 
@@ -66,7 +66,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
     read_u32v_be(w.mut_slice(0, 16), data);
 
     // Initialize the rest of vector w
-    t = 16;
+    t = 16u;
     while t < 80 {
         let val = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
         w[t] = circular_shift(1, val);
