@@ -25,6 +25,7 @@ These algorithms are already implemented in the main branch.
 * RC4
 * ECB, CBC, and CTR block cipher modes
 * PKCS padding for CBC block cipher mode
+* Salsa20 and XSalsa20
 
 ## Desired Algorithms
 
@@ -44,7 +45,6 @@ These algorithms are planned.
 The algorithms aren't really planned, but would probably be suitable additions to the library.
 
 * DES / 3DES (But only fixed time implementations!)
-* Salsa20
 * Various Elliptic Curve Algorithms
 * Blowfish
 * Twofish
