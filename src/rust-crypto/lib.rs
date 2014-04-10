@@ -26,6 +26,7 @@ pub mod mac;
 pub mod md5;
 pub mod pbkdf2;
 pub mod rc4;
+pub mod salsa20;
 pub mod scrypt;
 pub mod sha1;
 pub mod sha2;
