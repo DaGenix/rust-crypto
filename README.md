@@ -26,6 +26,8 @@ These algorithms are already implemented in the main branch.
 * ECB, CBC, and CTR block cipher modes
 * PKCS padding for CBC block cipher mode
 * Salsa20 and XSalsa20
+* Blowfish
+* Bcrypt
 
 ## Desired Algorithms
 
@@ -33,7 +35,6 @@ These algorithms are planned.
 
 * RSA
 * DSA
-* Bcrypt
 * AES-GCM
 * Diffie-Hellman
 * CFB and OFB Cipher Block Modes
@@ -46,7 +47,6 @@ The algorithms aren't really planned, but would probably be suitable additions t
 
 * DES / 3DES (But only fixed time implementations!)
 * Various Elliptic Curve Algorithms
-* Blowfish
 * Twofish
 * CTS Padding for CBC Block Cipher Mode
 
