@@ -80,7 +80,7 @@ pub trait Digest {
 }
 
 fn to_hex(rr: &[u8]) -> ~str {
-    let mut s = ~"";
+    let mut s = StrBuf::new();
     for b in rr.iter() {
         let hex = (*b as uint).to_str_radix(16u);
         if hex.len() == 1 {
@@ -88,5 +88,5 @@ fn to_hex(rr: &[u8]) -> ~str {
         }
         s.push_str(hex);
     }
-    return s;
+    return s.into_owned();
 }

@@ -286,7 +286,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
 
     scrypt(password.as_bytes(), salt.as_slice(), params, dk);
 
-    let mut result = ~"$rscrypt$";
+    let mut result = StrBuf::from_owned_str(~"$rscrypt$");
     if params.r < 256 && params.p < 256 {
         result.push_str("0$");
         let mut tmp = [0u8, ..3];
@@ -308,7 +308,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
     result.push_str(dk.to_base64(base64::STANDARD));
     result.push_char('$');
 
-    return Ok(result);
+    return Ok(result.into_owned());
 }
 
 /**
