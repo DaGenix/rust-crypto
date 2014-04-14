@@ -807,7 +807,7 @@ mod test {
 
     use std::cmp;
     use std::slice;
-    use test::BenchHarness;
+    use test::Bencher;
 
     trait CipherTest {
         fn get_plain<'a>(&'a self) -> &'a [u8];
@@ -1286,7 +1286,7 @@ mod test {
     }
 
     #[bench]
-    pub fn aes_ecb_no_padding_bench(bh: &mut BenchHarness) {
+    pub fn aes_ecb_no_padding_bench(bh: &mut Bencher) {
         let key = [1u8, ..16];
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
@@ -1311,7 +1311,7 @@ mod test {
     }
 
     #[bench]
-    pub fn aes_cbc_pkcs_padding_bench(bh: &mut BenchHarness) {
+    pub fn aes_cbc_pkcs_padding_bench(bh: &mut Bencher) {
         let key = [1u8, ..16];
         let iv = [2u8, ..16];
         let plain = [3u8, ..512];
@@ -1337,7 +1337,7 @@ mod test {
     }
 
     #[bench]
-    pub fn aes_ctr_bench(bh: &mut BenchHarness) {
+    pub fn aes_ctr_bench(bh: &mut Bencher) {
         let key = [1u8, ..16];
         let ctr = [2u8, ..16];
         let plain = [3u8, ..512];
@@ -1363,7 +1363,7 @@ mod test {
     }
 
     #[bench]
-    pub fn aes_ctr_x8_bench(bh: &mut BenchHarness) {
+    pub fn aes_ctr_x8_bench(bh: &mut Bencher) {
         let key = [1u8, ..16];
         let ctr = [2u8, ..16];
         let plain = [3u8, ..512];

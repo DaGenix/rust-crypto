@@ -546,10 +546,10 @@ mod test {
 mod bench {
     use blowfish::Blowfish;
     use symmetriccipher::BlockEncryptor;
-    use test::BenchHarness;
+    use test::Bencher;
 
     #[bench]
-    fn blowfish(bh: &mut BenchHarness) {
+    fn blowfish(bh: &mut Bencher) {
         let key = [0u8, ..16];
         let plaintext = [1u8, ..8];
         let state = Blowfish::new(key);
