@@ -61,7 +61,7 @@ fn run_scrypt(matches: &Matches) {
 
     let params = scrypt::ScryptParams::new(logn, r, p);
     let mut output = slice::from_elem(dklen, 0u8);
-    scrypt::scrypt(pass, salt, &params, output);
+    scrypt::scrypt(pass.as_slice(), salt.as_slice(), &params, output);
 
     match io::stdout().write(output) {
         Ok(_) => { },
