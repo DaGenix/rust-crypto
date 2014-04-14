@@ -745,7 +745,7 @@ mod test {
 
 #[cfg(test)]
 mod bench {
-    use test::BenchHarness;
+    use test::Bencher;
 
     #[cfg(target_arch = "x86")]
     #[cfg(target_arch = "x86_64")]
@@ -758,7 +758,7 @@ mod bench {
     #[cfg(target_arch = "x86")]
     #[cfg(target_arch = "x86_64")]
     #[bench]
-    pub fn aesni_bench(bh: &mut BenchHarness) {
+    pub fn aesni_bench(bh: &mut Bencher) {
         if util::supports_aesni() {
             let key: [u8, ..16] = [1u8, ..16];
             let plain: [u8, ..16] = [2u8, ..16];
@@ -776,7 +776,7 @@ mod bench {
     }
 
     #[bench]
-    pub fn aes_safe_bench(bh: &mut BenchHarness) {
+    pub fn aes_safe_bench(bh: &mut Bencher) {
         let key: [u8, ..16] = [1u8, ..16];
         let plain: [u8, ..16] = [2u8, ..16];
 
@@ -792,7 +792,7 @@ mod bench {
     }
 
     #[bench]
-    pub fn aes_safe_x8_bench(bh: &mut BenchHarness) {
+    pub fn aes_safe_x8_bench(bh: &mut Bencher) {
         let key: [u8, ..16] = [1u8, ..16];
         let plain: [u8, ..128] = [2u8, ..128];
 

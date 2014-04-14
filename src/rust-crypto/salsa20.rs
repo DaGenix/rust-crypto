@@ -282,12 +282,12 @@ mod test {
 
 #[cfg(test)]
 mod bench {
-    use test::BenchHarness;
+    use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
     use salsa20::Salsa20;
 
     #[bench]
-    pub fn salsa20_10(bh: & mut BenchHarness) {
+    pub fn salsa20_10(bh: & mut Bencher) {
         let mut salsa20 = Salsa20::new([0, ..32], [0, ..8]);
         let input = [1u8, ..10];
         let mut output = [0u8, ..10];
@@ -298,7 +298,7 @@ mod bench {
     }
     
     #[bench]
-    pub fn salsa20_1k(bh: & mut BenchHarness) {
+    pub fn salsa20_1k(bh: & mut Bencher) {
         let mut salsa20 = Salsa20::new([0, ..32], [0, ..8]);
         let input = [1u8, ..1024];
         let mut output = [0u8, ..1024];
@@ -309,7 +309,7 @@ mod bench {
     }
  
     #[bench]
-    pub fn salsa20_64k(bh: & mut BenchHarness) {
+    pub fn salsa20_64k(bh: & mut Bencher) {
         let mut salsa20 = Salsa20::new([0, ..32], [0, ..8]);
         let input = [1u8, ..65536];
         let mut output = [0u8, ..65536];
