@@ -23,8 +23,8 @@ pub fn write_u64_be(dst: &mut[u8], input: u64) {
     use std::mem::to_be64;
     assert!(dst.len() == 8);
     unsafe {
-        let x: *mut i64 = transmute(dst.unsafe_mut_ref(0));
-        *x = to_be64(input as i64);
+        let x: *mut u64 = transmute(dst.unsafe_mut_ref(0));
+        *x = to_be64(input);
     }
 }
 
@@ -35,8 +35,8 @@ pub fn write_u32_be(dst: &mut[u8], input: u32) {
     use std::mem::to_be32;
     assert!(dst.len() == 4);
     unsafe {
-        let x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
-        *x = to_be32(input as i32);
+        let x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
+        *x = to_be32(input);
     }
 }
 
@@ -47,8 +47,8 @@ pub fn write_u32_le(dst: &mut[u8], input: u32) {
     use std::mem::to_le32;
     assert!(dst.len() == 4);
     unsafe {
-        let x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
-        *x = to_le32(input as i32);
+        let x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
+        *x = to_le32(input);
     }
 }
 
@@ -58,8 +58,8 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     use std::mem::to_be64;
     assert!(dst.len() * 8 == input.len());
     unsafe {
-        let mut x: *mut i64 = transmute(dst.unsafe_mut_ref(0));
-        let mut y: *i64 = transmute(input.unsafe_ref(0));
+        let mut x: *mut u64 = transmute(dst.unsafe_mut_ref(0));
+        let mut y: *u64 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
             *x = to_be64(*y);
             x = x.offset(1);
@@ -74,8 +74,8 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     use std::mem::to_be32;
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
-        let mut y: *i32 = transmute(input.unsafe_ref(0));
+        let mut x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
+        let mut y: *u32 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
             *x = to_be32(*y);
             x = x.offset(1);
@@ -90,8 +90,8 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     use std::mem::to_le32;
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x: *mut i32 = transmute(dst.unsafe_mut_ref(0));
-        let mut y: *i32 = transmute(input.unsafe_ref(0));
+        let mut x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
+        let mut y: *u32 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
             *x = to_le32(*y);
             x = x.offset(1);
@@ -106,8 +106,8 @@ pub fn read_u32_le(input: &[u8]) -> u32 {
     use std::mem::to_le32;
     assert!(input.len() == 4);
     unsafe {
-        let tmp: *i32 = transmute(input.unsafe_ref(0));
-        return to_le32(*tmp) as u32;
+        let tmp: *u32 = transmute(input.unsafe_ref(0));
+        return to_le32(*tmp);
     }
 }
 
@@ -117,8 +117,8 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
     use std::mem::to_be32;
     assert!(input.len() == 4);
     unsafe {
-        let tmp: *i32 = transmute(input.unsafe_ref(0));
-        return to_be32(*tmp) as u32;
+        let tmp: *u32 = transmute(input.unsafe_ref(0));
+        return to_be32(*tmp);
     }
 }
 
