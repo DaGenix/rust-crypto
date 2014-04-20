@@ -97,13 +97,13 @@ impl <'a> ReadBuffer for RefReadBuffer<'a> {
 }
 
 pub struct OwnedReadBuffer {
-    buff: ~[u8],
+    buff: Vec<u8>,
     len: uint,
     pos: uint
 }
 
 impl OwnedReadBuffer {
-    pub fn new(buff: ~[u8]) -> OwnedReadBuffer {
+    pub fn new(buff: Vec<u8>) -> OwnedReadBuffer {
         let len = buff.len();
         OwnedReadBuffer {
             buff: buff,
@@ -111,7 +111,7 @@ impl OwnedReadBuffer {
             pos: 0
         }
     }
-    pub fn new_with_len<'a>(buff: ~[u8], len: uint) -> OwnedReadBuffer {
+    pub fn new_with_len<'a>(buff: Vec<u8>, len: uint) -> OwnedReadBuffer {
         OwnedReadBuffer {
             buff: buff,
             len: len,
@@ -240,13 +240,13 @@ impl <'a> WriteBuffer for BorrowedWriteBuffer<'a> {
 }
 
 pub struct OwnedWriteBuffer {
-    buff: ~[u8],
+    buff: Vec<u8>,
     len: uint,
     pos: uint
 }
 
 impl OwnedWriteBuffer {
-    pub fn new(buff: ~[u8]) -> OwnedWriteBuffer {
+    pub fn new(buff: Vec<u8>) -> OwnedWriteBuffer {
         let len = buff.len();
         OwnedWriteBuffer {
             buff: buff,

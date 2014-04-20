@@ -50,7 +50,7 @@ pub trait Mac {
  * A MacResult wraps a Mac code and provides a safe Eq implementation that runs in fixed time.
  */
 pub struct MacResult {
-    code: ~[u8]
+    code: Vec<u8>
 }
 
 impl MacResult {
@@ -59,14 +59,14 @@ impl MacResult {
      */
     pub fn new(code: &[u8]) -> MacResult {
         return MacResult {
-            code: code.to_owned()
+            code: Vec::from_slice(code)
         };
     }
 
     /**
      * Create a new MacResult taking ownership of the specified code value.
      */
-    pub fn new_from_owned(code: ~[u8]) -> MacResult {
+    pub fn new_from_owned(code: Vec<u8>) -> MacResult {
         return MacResult {
             code: code
         };

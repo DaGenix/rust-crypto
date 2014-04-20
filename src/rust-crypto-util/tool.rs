@@ -14,7 +14,6 @@ extern crate rust_crypto = "rust-crypto";
 
 use std::io;
 use std::os;
-use std::slice;
 
 use getopts::{optopt, optflag, getopts, Matches};
 
@@ -60,10 +59,10 @@ fn run_scrypt(matches: &Matches) {
     let pass = io::stdio::stdin_raw().read_exact(pass_len as uint).unwrap();
 
     let params = scrypt::ScryptParams::new(logn, r, p);
-    let mut output = slice::from_elem(dklen, 0u8);
-    scrypt::scrypt(pass.as_slice(), salt.as_slice(), &params, output);
+    let mut output = Vec::from_elem(dklen, 0u8);
+    scrypt::scrypt(pass.as_slice(), salt.as_slice(), &params, output.as_mut_slice());
 
-    match io::stdout().write(output) {
+    match io::stdout().write(output.as_slice()) {
         Ok(_) => { },
         Err(_) => fail!("Error writing result")
     }

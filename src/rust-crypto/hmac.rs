@@ -18,8 +18,8 @@ use mac::{Mac, MacResult};
  */
 pub struct Hmac<D> {
     digest: D,
-    i_key: ~[u8],
-    o_key: ~[u8],
+    i_key: Vec<u8>,
+    o_key: Vec<u8>,
     finished: bool
 }
 
@@ -32,11 +32,11 @@ fn derive_key(key: &mut [u8], mask: u8) {
 // The key that Hmac processes must be the same as the block size of the underlying Digest. If the
 // provided key is smaller than that, we just pad it with zeros. If its larger, we hash it and then
 // pad it with zeros.
-fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> ~[u8] {
+fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let bs = digest.block_size();
-    let mut expanded_key = slice::from_elem(bs, 0u8);
+    let mut expanded_key = Vec::from_elem(bs, 0u8);
     if key.len() <= bs {
-        slice::bytes::copy_memory(expanded_key, key);
+        slice::bytes::copy_memory(expanded_key.as_mut_slice(), key);
         for elem in expanded_key.mut_slice_from(key.len()).mut_iter() {
             *elem = 0;
         }
@@ -54,11 +54,11 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> ~[u8] {
 
 // Hmac uses two keys derived from the provided key - one by xoring every byte with 0x36 and another
 // with 0x5c.
-fn create_keys<D: Digest>(digest: &mut D, key: &[u8]) -> (~[u8], ~[u8]) {
+fn create_keys<D: Digest>(digest: &mut D, key: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let mut i_key = expand_key(digest, key);
     let mut o_key = i_key.clone();
-    derive_key(i_key, 0x36);
-    derive_key(o_key, 0x5c);
+    derive_key(i_key.as_mut_slice(), 0x36);
+    derive_key(o_key.as_mut_slice(), 0x5c);
     return (i_key, o_key);
 }
 
@@ -73,7 +73,7 @@ impl <D: Digest> Hmac<D> {
      */
     pub fn new(mut digest: D, key: &[u8]) -> Hmac<D> {
         let (i_key, o_key) = create_keys(&mut digest, key);
-        digest.input(i_key);
+        digest.input(i_key.as_slice());
         return Hmac {
             digest: digest,
             i_key: i_key,
@@ -91,15 +91,15 @@ impl <D: Digest> Mac for Hmac<D> {
 
     fn reset(&mut self) {
         self.digest.reset();
-        self.digest.input(self.i_key);
+        self.digest.input(self.i_key.as_slice());
         self.finished = false;
     }
 
     fn result(&mut self) -> MacResult {
         let output_size = self.digest.output_bytes();
-        let mut code = slice::from_elem(output_size, 0u8);
+        let mut code = Vec::from_elem(output_size, 0u8);
 
-        self.raw_result(code);
+        self.raw_result(code.as_mut_slice());
 
         return MacResult::new_from_owned(code);
     }
@@ -109,7 +109,7 @@ impl <D: Digest> Mac for Hmac<D> {
             self.digest.result(output);
 
             self.digest.reset();
-            self.digest.input(self.o_key);
+            self.digest.input(self.o_key.as_slice());
             self.digest.input(output);
 
             self.finished = true;

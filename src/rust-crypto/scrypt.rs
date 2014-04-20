@@ -15,7 +15,6 @@
 use std::io::IoResult;
 use std::num::ToPrimitive;
 use std::mem::size_of;
-use std::slice;
 use std::slice::MutableCloneableVector;
 
 use rand::{OSRng, Rng};
@@ -240,17 +239,17 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
 
     let mut mac = Hmac::new(Sha256::new(), password);
 
-    let mut b = slice::from_elem(p * r * 128, 0u8);
-    pbkdf2(&mut mac, salt, 1, b);
+    let mut b = Vec::from_elem(p * r * 128, 0u8);
+    pbkdf2(&mut mac, salt, 1, b.as_mut_slice());
 
-    let mut v = slice::from_elem(n * r * 128, 0u8);
-    let mut t = slice::from_elem(r * 128, 0u8);
+    let mut v = Vec::from_elem(n * r * 128, 0u8);
+    let mut t = Vec::from_elem(r * 128, 0u8);
 
-    for chunk in b.mut_chunks(r * 128) {
-        scrypt_ro_mix(chunk, v, t, n);
+    for chunk in b.as_mut_slice().mut_chunks(r * 128) {
+        scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
     }
 
-    pbkdf2(&mut mac, b, 1, output);
+    pbkdf2(&mut mac, b.as_slice(), 1, output.as_mut_slice());
 }
 
 /**
@@ -402,20 +401,18 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         None => { }
     }
 
-    let mut output = slice::from_elem(hash.len(), 0u8);
-    scrypt(password.as_bytes(), salt, &params, output);
+    let mut output = Vec::from_elem(hash.len(), 0u8);
+    scrypt(password.as_bytes(), salt, &params, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output, hash));
+    return Ok(fixed_time_eq(output.as_slice(), hash));
 }
 
 #[cfg(test)]
 mod test {
-    use std::slice;
-
     use scrypt::{scrypt, scrypt_simple, scrypt_check, ScryptParams};
 
     struct Test {
@@ -486,10 +483,10 @@ mod test {
     fn test_scrypt() {
         let tests = tests();
         for t in tests.iter() {
-            let mut result = slice::from_elem(t.expected.len(), 0u8);
+            let mut result = Vec::from_elem(t.expected.len(), 0u8);
             let params = ScryptParams::new(t.log_n, t.r, t.p);
-            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result);
-            assert!(result == t.expected);
+            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result.as_mut_slice());
+            assert!(result.as_slice() == t.expected);
         }
     }
 

@@ -9,7 +9,6 @@
 // except according to those terms.
 
 use std::num::ToStrRadix;
-use std::slice;
 
 /**
  * The Digest trait specifies an interface common to digest functions, such as SHA-1 and the SHA-2
@@ -73,9 +72,9 @@ pub trait Digest {
      * ~str in hexadecimal format.
      */
     fn result_str(&mut self) -> ~str {
-        let mut buf = slice::from_elem((self.output_bits()+7)/8, 0u8);
-        self.result(buf);
-        return to_hex(buf);
+        let mut buf = Vec::from_elem((self.output_bits()+7)/8, 0u8);
+        self.result(buf.as_mut_slice());
+        return to_hex(buf.as_slice());
     }
 }
 
