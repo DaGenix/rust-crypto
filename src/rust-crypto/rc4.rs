@@ -67,7 +67,6 @@ impl Decryptor for Rc4 {
 
 #[cfg(test)]
 mod test {
-    use std::slice;
     use symmetriccipher::SynchronousStreamCipher;
     use rc4::Rc4;
 
@@ -103,9 +102,9 @@ mod test {
         let tests = tests();
         for t in tests.iter() {
             let mut rc4 = Rc4::new(t.key.as_bytes());
-            let mut result = slice::from_elem(t.output.len(), 0u8);
-            rc4.process(t.input.as_bytes(), result);
-            assert!(result == t.output);
+            let mut result = Vec::from_elem(t.output.len(), 0u8);
+            rc4.process(t.input.as_bytes(), result.as_mut_slice());
+            assert!(result.as_slice() == t.output);
         }
     }
 }
