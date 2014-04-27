@@ -1145,10 +1145,14 @@ mod test {
 
         let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
         let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
+        let mut rng3: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
         let max_size = cmp::max(test.get_plain().len(), test.get_cipher().len());
 
-        let r = || {
+        let r1 = || {
             rng1.gen_range(0, max_size)
+        };
+        let r2 = || {
+            rng2.gen_range(0, max_size)
         };
 
         for _ in range(0, 1000) {
@@ -1162,9 +1166,9 @@ mod test {
                 |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     enc.encrypt(in_buff, out_buff, eof)
                 },
-                || { r() },
-                || { r() },
-                rng2.gen());
+                || { r1() },
+                || { r2() },
+                rng3.gen());
             assert!(test.get_cipher() == cipher_out.as_slice());
 
             let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
@@ -1174,9 +1178,9 @@ mod test {
                 |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     dec.decrypt(in_buff, out_buff, eof)
                 },
-                || { r() },
-                || { r() },
-                rng2.gen());
+                || { r1() },
+                || { r2() },
+                rng3.gen());
             assert!(test.get_plain() == plain_out.as_slice());
         }
     }
