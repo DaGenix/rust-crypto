@@ -54,7 +54,7 @@ fn add_input(st: &mut Sha1, msg: &[u8]) {
     // Assumes that msg.len() can be converted to u64 without overflow
     st.length_bits = add_bytes_to_bits(st.length_bits, msg.len() as u64);
     let st_h = &mut st.h;
-    st.buffer.input(msg, |d: &[u8]| { process_msg_block(d, st_h); });
+    st.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
 }
 
 fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
@@ -131,7 +131,7 @@ fn circular_shift(bits: u32, word: u32) -> u32 {
 fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
     if !st.computed {
         let st_h = &mut st.h;
-        st.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, st_h) });
+        st.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
         write_u32_be(st.buffer.next(4), (st.length_bits >> 32) as u32 );
         write_u32_be(st.buffer.next(4), st.length_bits as u32);
         process_msg_block(st.buffer.full_buffer(), st_h);
