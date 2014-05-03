@@ -71,26 +71,26 @@ mod test {
     use rc4::Rc4;
 
     struct Test {
-        key: ~str,
-        input: ~str,
+        key: &'static str,
+        input: &'static str,
         output: ~[u8]
     }
 
     fn tests() -> ~[Test] {
         ~[
             Test {
-                key: ~"Key",
-                input: ~"Plaintext",
+                key: "Key",
+                input: "Plaintext",
                 output: ~[0xBB, 0xF3, 0x16, 0xE8, 0xD9, 0x40, 0xAF, 0x0A, 0xD3]
             },
             Test {
-                key: ~"Wiki",
-                input: ~"pedia",
+                key: "Wiki",
+                input: "pedia",
                 output: ~[0x10, 0x21, 0xBF, 0x04, 0x20]
             },
             Test {
-                key: ~"Secret",
-                input: ~"Attack at dawn",
+                key: "Secret",
+                input: "Attack at dawn",
                 output: ~[0x45, 0xA0, 0x1F, 0x64, 0x5F, 0xC3, 0x5B,
                           0x38, 0x35, 0x52, 0x54, 0x4B, 0x9B, 0xF5]
             }

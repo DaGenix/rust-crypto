@@ -416,8 +416,8 @@ mod test {
     use scrypt::{scrypt, scrypt_simple, scrypt_check, ScryptParams};
 
     struct Test {
-        password: ~str,
-        salt: ~str,
+        password: &'static str,
+        salt: &'static str,
         log_n: u8,
         r: u32,
         p: u32,
@@ -429,8 +429,8 @@ mod test {
     fn tests() -> ~[Test] {
         return ~[
             Test {
-                password: ~"",
-                salt: ~"",
+                password: "",
+                salt: "",
                 log_n: 4,
                 r: 1,
                 p: 1,
@@ -445,8 +445,8 @@ mod test {
                     0xcf, 0x35, 0xe2, 0x0c, 0x38, 0xd1, 0x89, 0x06 ]
             },
             Test {
-                password: ~"password",
-                salt: ~"NaCl",
+                password: "password",
+                salt: "NaCl",
                 log_n: 10,
                 r: 8,
                 p: 16,
@@ -461,8 +461,8 @@ mod test {
                     0x83, 0x60, 0xcb, 0xdf, 0xa2, 0xcc, 0x06, 0x40 ]
             },
             Test {
-                password: ~"pleaseletmein",
-                salt: ~"SodiumChloride",
+                password: "pleaseletmein",
+                salt: "SodiumChloride",
                 log_n: 14,
                 r: 8,
                 p: 1,
