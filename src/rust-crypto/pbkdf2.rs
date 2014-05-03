@@ -144,7 +144,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<~str> {
 
     pbkdf2(&mut mac, salt.as_slice(), c, dk);
 
-    let mut result = StrBuf::from_owned_str(~"$rpbkdf2$0$");
+    let mut result = "$rpbkdf2$0$".into_strbuf();
     let mut tmp = [0u8, ..4];
     write_u32_be(tmp, c);
     result.push_str(tmp.to_base64(base64::STANDARD));
