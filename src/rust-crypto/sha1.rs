@@ -185,9 +185,9 @@ mod tests {
 
     #[deriving(Clone)]
     struct Test {
-        input: ~str,
+        input: &'static str,
         output: ~[u8],
-        output_str: ~str,
+        output_str: &'static str,
     }
 
     #[test]
@@ -196,7 +196,7 @@ mod tests {
 
         let fips_180_1_tests = ~[
             Test {
-                input: ~"abc",
+                input: "abc",
                 output: ~[
                     0xA9u8, 0x99u8, 0x3Eu8, 0x36u8,
                     0x47u8, 0x06u8, 0x81u8, 0x6Au8,
@@ -204,12 +204,11 @@ mod tests {
                     0x78u8, 0x50u8, 0xC2u8, 0x6Cu8,
                     0x9Cu8, 0xD0u8, 0xD8u8, 0x9Du8,
                 ],
-                output_str: ~"a9993e364706816aba3e25717850c26c9cd0d89d"
+                output_str: "a9993e364706816aba3e25717850c26c9cd0d89d"
             },
             Test {
                 input:
-                     ~"abcdbcdecdefdefgefghfghighij" +
-                     "hijkijkljklmklmnlmnomnopnopq",
+                     "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
                 output: ~[
                     0x84u8, 0x98u8, 0x3Eu8, 0x44u8,
                     0x1Cu8, 0x3Bu8, 0xD2u8, 0x6Eu8,
@@ -217,14 +216,14 @@ mod tests {
                     0xF9u8, 0x51u8, 0x29u8, 0xE5u8,
                     0xE5u8, 0x46u8, 0x70u8, 0xF1u8,
                 ],
-                output_str: ~"84983e441c3bd26ebaae4aa1f95129e5e54670f1"
+                output_str: "84983e441c3bd26ebaae4aa1f95129e5e54670f1"
             },
         ];
         // Examples from wikipedia
 
         let wikipedia_tests = ~[
             Test {
-                input: ~"The quick brown fox jumps over the lazy dog",
+                input: "The quick brown fox jumps over the lazy dog",
                 output: ~[
                     0x2fu8, 0xd4u8, 0xe1u8, 0xc6u8,
                     0x7au8, 0x2du8, 0x28u8, 0xfcu8,
@@ -232,10 +231,10 @@ mod tests {
                     0xbbu8, 0x76u8, 0xe7u8, 0x39u8,
                     0x1bu8, 0x93u8, 0xebu8, 0x12u8,
                 ],
-                output_str: ~"2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
+                output_str: "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
             },
             Test {
-                input: ~"The quick brown fox jumps over the lazy cog",
+                input: "The quick brown fox jumps over the lazy cog",
                 output: ~[
                     0xdeu8, 0x9fu8, 0x2cu8, 0x7fu8,
                     0xd2u8, 0x5eu8, 0x1bu8, 0x3au8,
@@ -243,7 +242,7 @@ mod tests {
                     0x0bu8, 0xd1u8, 0x7du8, 0x9bu8,
                     0x10u8, 0x0du8, 0xb4u8, 0xb3u8,
                 ],
-                output_str: ~"de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
+                output_str: "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
             },
         ];
         let tests = fips_180_1_tests + wikipedia_tests;
@@ -260,7 +259,7 @@ mod tests {
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(out_str == t.output_str);
+            assert!(out_str.as_slice() == t.output_str);
 
             sh.reset();
         }
@@ -280,7 +279,7 @@ mod tests {
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(out_str == t.output_str);
+            assert!(out_str.as_slice() == t.output_str);
 
             sh.reset();
         }

@@ -222,8 +222,8 @@ mod tests {
 
 
     struct Test {
-        input: ~str,
-        output_str: ~str,
+        input: &'static str,
+        output_str: &'static str,
     }
 
     fn test_hash<D: Digest>(sh: &mut D, tests: &[Test]) {
@@ -232,7 +232,7 @@ mod tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(out_str == t.output_str);
+            assert!(out_str.as_slice() == t.output_str);
 
             sh.reset();
         }
@@ -248,7 +248,7 @@ mod tests {
             }
 
             let out_str = sh.result_str();
-            assert!(out_str == t.output_str);
+            assert!(out_str.as_slice() == t.output_str);
 
             sh.reset();
         }
@@ -259,16 +259,16 @@ mod tests {
         // Examples from wikipedia
         let wikipedia_tests = ~[
             Test {
-                input: ~"",
-                output_str: ~"d41d8cd98f00b204e9800998ecf8427e"
+                input: "",
+                output_str: "d41d8cd98f00b204e9800998ecf8427e"
             },
             Test {
-                input: ~"The quick brown fox jumps over the lazy dog",
-                output_str: ~"9e107d9d372bb6826bd81d3542a419d6"
+                input: "The quick brown fox jumps over the lazy dog",
+                output_str: "9e107d9d372bb6826bd81d3542a419d6"
             },
             Test {
-                input: ~"The quick brown fox jumps over the lazy dog.",
-                output_str: ~"e4d909c290d0fb1ca068ffaddf22cbd0"
+                input: "The quick brown fox jumps over the lazy dog.",
+                output_str: "e4d909c290d0fb1ca068ffaddf22cbd0"
             },
         ];
 
