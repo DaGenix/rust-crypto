@@ -251,7 +251,7 @@ mod tests {
 
         let mut out = [0u8, ..20];
 
-        let mut sh = ~Sha1::new();
+        let mut sh = box Sha1::new();
         for t in tests.iter() {
             (*sh).input_str(t.input);
             sh.result(out);
