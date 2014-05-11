@@ -200,7 +200,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         Some(pstr) => match pstr.from_base64() {
             Ok(pvec) => {
                 if pvec.len() != 4 { return Err(ERR_STR); }
-                read_u32_be(pvec)
+                read_u32_be(pvec.as_slice())
             }
             Err(_) => return Err(ERR_STR)
         },
@@ -240,13 +240,13 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
     let mut output = Vec::from_elem(hash.len(), 0u8);
-    pbkdf2(&mut mac, salt, c, output.as_mut_slice());
+    pbkdf2(&mut mac, salt.as_slice(), c, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output.as_slice(), hash));
+    return Ok(fixed_time_eq(output.as_slice(), hash.as_slice()));
 }
 
 #[cfg(test)]

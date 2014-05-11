@@ -350,6 +350,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
                 },
                 None => return Err(ERR_STR)
             };
+            let pvec = pvec.as_slice();
             match fstr {
                 "0" => {
                     if pvec.len() != 3 { return Err(ERR_STR); }
@@ -402,13 +403,13 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     }
 
     let mut output = Vec::from_elem(hash.len(), 0u8);
-    scrypt(password.as_bytes(), salt, &params, output.as_mut_slice());
+    scrypt(password.as_bytes(), salt.as_slice(), &params, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output.as_slice(), hash));
+    return Ok(fixed_time_eq(output.as_slice(), hash.as_slice()));
 }
 
 #[cfg(test)]

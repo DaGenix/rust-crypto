@@ -192,9 +192,8 @@ mod tests {
 
     #[test]
     fn test() {
-        // Test messages from FIPS 180-1
-
-        let fips_180_1_tests = ~[
+        let tests = ~[
+            // Test messages from FIPS 180-1
             Test {
                 input: "abc",
                 output: ~[
@@ -218,10 +217,7 @@ mod tests {
                 ],
                 output_str: "84983e441c3bd26ebaae4aa1f95129e5e54670f1"
             },
-        ];
-        // Examples from wikipedia
-
-        let wikipedia_tests = ~[
+            // Examples from wikipedia
             Test {
                 input: "The quick brown fox jumps over the lazy dog",
                 output: ~[
@@ -245,7 +241,6 @@ mod tests {
                 output_str: "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
             },
         ];
-        let tests = fips_180_1_tests + wikipedia_tests;
 
         // Test that it works when accepting the message all at once
 
