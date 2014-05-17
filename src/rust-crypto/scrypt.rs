@@ -292,19 +292,19 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
         tmp[0] = params.log_n;
         tmp[1] = params.r as u8;
         tmp[2] = params.p as u8;
-        result.push_str(tmp.to_base64(base64::STANDARD));
+        result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
     } else {
         result.push_str("1$");
         let mut tmp = [0u8, ..9];
         tmp[0] = params.log_n;
         write_u32_le(tmp.mut_slice(1, 5), params.r);
         write_u32_le(tmp.mut_slice(5, 9), params.p);
-        result.push_str(tmp.to_base64(base64::STANDARD));
+        result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
     }
     result.push_char('$');
-    result.push_str(salt.as_slice().to_base64(base64::STANDARD));
+    result.push_str(salt.as_slice().to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
-    result.push_str(dk.to_base64(base64::STANDARD));
+    result.push_str(dk.to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
 
     return Ok(result.into_owned());

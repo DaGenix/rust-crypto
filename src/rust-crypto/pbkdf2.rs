@@ -147,11 +147,11 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<~str> {
     let mut result = "$rpbkdf2$0$".into_strbuf();
     let mut tmp = [0u8, ..4];
     write_u32_be(tmp, c);
-    result.push_str(tmp.to_base64(base64::STANDARD));
+    result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
-    result.push_str(salt.as_slice().to_base64(base64::STANDARD));
+    result.push_str(salt.as_slice().to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
-    result.push_str(dk.to_base64(base64::STANDARD));
+    result.push_str(dk.to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
 
     return Ok(result.into_owned());
