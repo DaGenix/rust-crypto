@@ -42,10 +42,10 @@ fn run_scrypt(matches: &Matches) {
         print_usage();
         return;
     }
-    let logn = from_str::<u8>(matches.opt_str("logn").unwrap()).unwrap();
-    let r = from_str::<u32>(matches.opt_str("r").unwrap()).unwrap();
-    let p = from_str::<u32>(matches.opt_str("p").unwrap()).unwrap();
-    let dklen = from_str::<uint>(matches.opt_str("dklen").unwrap()).unwrap();
+    let logn = from_str::<u8>(matches.opt_str("logn").unwrap().as_slice()).unwrap();
+    let r = from_str::<u32>(matches.opt_str("r").unwrap().as_slice()).unwrap();
+    let p = from_str::<u32>(matches.opt_str("p").unwrap().as_slice()).unwrap();
+    let dklen = from_str::<uint>(matches.opt_str("dklen").unwrap().as_slice()).unwrap();
 
     if !matches.opt_present("rawsalt") || !matches.opt_present("rawpassword") ||
        !matches.opt_present("rawoutput") {
@@ -69,7 +69,7 @@ fn run_scrypt(matches: &Matches) {
 }
 
 fn main() {
-    let args = os::args();
+    let args: Vec<StrBuf> = os::args().iter().map(|x| x.to_strbuf()).collect();
 
     let opts = ~[
         // General parameters:
