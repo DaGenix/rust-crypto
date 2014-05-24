@@ -254,7 +254,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
 
 /**
  * scrypt_simple is a helper function that should be sufficient for the majority of cases where
- * an application needs to use Scrypt to hash a password for storage. The result is a ~str that
+ * an application needs to use Scrypt to hash a password for storage. The result is a StrBuf that
  * contains the parameters used as part of its encoding. The scrypt_check function may be used on
  * a password to check if it is equal to a hashed value.
  *
@@ -274,7 +274,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
  * * params - The ScryptParams to use
  *
  */
-pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
+pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<StrBuf> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt
@@ -307,7 +307,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<~str> {
     result.push_str(dk.to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
 
-    return Ok(result.into_owned());
+    return Ok(result);
 }
 
 /**
@@ -502,20 +502,20 @@ mod test {
         // cryptographically strong, however.
         assert!(out1 != out2);
 
-        match scrypt_check(password, out1) {
+        match scrypt_check(password, out1.as_slice()) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
-        match scrypt_check(password, out2) {
+        match scrypt_check(password, out2.as_slice()) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
 
-        match scrypt_check("wrong", out1) {
+        match scrypt_check("wrong", out1.as_slice()) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }
-        match scrypt_check("wrong", out2) {
+        match scrypt_check("wrong", out2.as_slice()) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }

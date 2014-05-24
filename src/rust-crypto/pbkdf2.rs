@@ -113,7 +113,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
 
 /**
  * pbkdf2_simple is a helper function that should be sufficient for the majority of cases where
- * an application needs to use PBKDF2 to hash a password for storage. The result is a ~str that
+ * an application needs to use PBKDF2 to hash a password for storage. The result is a StrBuf that
  * contains the parameters used as part of its encoding. The pbkdf2_check function may be used on
  * a password to check if it is equal to a hashed value.
  *
@@ -131,7 +131,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
  * * c - The iteration count
  *
  */
-pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<~str> {
+pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<StrBuf> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt
@@ -154,7 +154,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<~str> {
     result.push_str(dk.to_base64(base64::STANDARD).as_slice());
     result.push_char('$');
 
-    return Ok(result.into_owned());
+    return Ok(result);
 }
 
 /**
@@ -336,20 +336,20 @@ mod test {
         // cryptographically strong, however.
         assert!(out1 != out2);
 
-        match pbkdf2_check(password, out1) {
+        match pbkdf2_check(password, out1.as_slice()) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
-        match pbkdf2_check(password, out2) {
+        match pbkdf2_check(password, out2.as_slice()) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
 
-        match pbkdf2_check("wrong", out1) {
+        match pbkdf2_check("wrong", out1.as_slice()) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }
-        match pbkdf2_check("wrong", out2) {
+        match pbkdf2_check("wrong", out2.as_slice()) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }
