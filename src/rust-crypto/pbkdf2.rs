@@ -131,7 +131,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
  * * c - The iteration count
  *
  */
-pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<StrBuf> {
+pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt
