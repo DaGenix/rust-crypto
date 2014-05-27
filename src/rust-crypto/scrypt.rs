@@ -254,7 +254,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
 
 /**
  * scrypt_simple is a helper function that should be sufficient for the majority of cases where
- * an application needs to use Scrypt to hash a password for storage. The result is a StrBuf that
+ * an application needs to use Scrypt to hash a password for storage. The result is a String that
  * contains the parameters used as part of its encoding. The scrypt_check function may be used on
  * a password to check if it is equal to a hashed value.
  *
@@ -274,7 +274,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
  * * params - The ScryptParams to use
  *
  */
-pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<StrBuf> {
+pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt
