@@ -113,7 +113,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
 
 /**
  * pbkdf2_simple is a helper function that should be sufficient for the majority of cases where
- * an application needs to use PBKDF2 to hash a password for storage. The result is a StrBuf that
+ * an application needs to use PBKDF2 to hash a password for storage. The result is a String that
  * contains the parameters used as part of its encoding. The pbkdf2_check function may be used on
  * a password to check if it is equal to a hashed value.
  *
@@ -131,7 +131,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
  * * c - The iteration count
  *
  */
-pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<StrBuf> {
+pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
     let mut rng = try!(OSRng::new());
 
     // 128-bit salt

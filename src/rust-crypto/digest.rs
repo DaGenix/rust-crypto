@@ -69,17 +69,17 @@ pub trait Digest {
 
     /**
      * Convenience function that retrieves the result of a digest as a
-     * StrBuf in hexadecimal format.
+     * String in hexadecimal format.
      */
-    fn result_str(&mut self) -> StrBuf {
+    fn result_str(&mut self) -> String {
         let mut buf = Vec::from_elem((self.output_bits()+7)/8, 0u8);
         self.result(buf.as_mut_slice());
         return to_hex(buf.as_slice());
     }
 }
 
-fn to_hex(rr: &[u8]) -> StrBuf {
-    let mut s = StrBuf::new();
+fn to_hex(rr: &[u8]) -> String {
+    let mut s = String::new();
     for b in rr.iter() {
         let hex = (*b as uint).to_str_radix(16u);
         if hex.len() == 1 {
