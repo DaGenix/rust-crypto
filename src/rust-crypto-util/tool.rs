@@ -69,7 +69,7 @@ fn run_scrypt(matches: &Matches) {
 }
 
 fn main() {
-    let args: Vec<String> = os::args().iter().map(|x| x.to_strbuf()).collect();
+    let args: Vec<String> = os::args().iter().map(|x| x.to_string()).collect();
 
     let opts = ~[
         // General parameters:

@@ -285,7 +285,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
 
     scrypt(password.as_bytes(), salt.as_slice(), params, dk);
 
-    let mut result = "$rscrypt$".into_strbuf();
+    let mut result = "$rscrypt$".into_string();
     if params.r < 256 && params.p < 256 {
         result.push_str("0$");
         let mut tmp = [0u8, ..3];
