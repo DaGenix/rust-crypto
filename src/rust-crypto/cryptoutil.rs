@@ -130,7 +130,7 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
 #[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
-    let mut tmp: u8 = mem::uninit();
+    let mut tmp: u8 = mem::uninitialized();
 
     asm!(
         "
@@ -160,8 +160,8 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bo
 #[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
-    let mut tmp1: u8 = mem::uninit();
-    let mut tmp2: u8 = mem::uninit();
+    let mut tmp1: u8 = mem::uninitialized();
+    let mut tmp2: u8 = mem::uninitialized();
 
     asm!(
         "
