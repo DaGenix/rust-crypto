@@ -11,7 +11,6 @@
 #![feature(macro_rules)]
 #![feature(simd)]
 
-extern crate rand;
 extern crate serialize;
 
 pub mod aes;

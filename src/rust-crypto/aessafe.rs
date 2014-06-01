@@ -133,7 +133,7 @@ use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDec
 // Defining the type here avoids that problem. Additionally, we need to implement various trait from
 // libstd which wouldn't be possible if we used that type directly.
 #[simd]
-#[deriving(Clone, Eq)]
+#[deriving(Clone, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub struct u32x4(u32, u32, u32, u32);
 

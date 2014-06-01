@@ -11,9 +11,8 @@
 
 use std::io::IoResult;
 use std::num::Bounded;
+use std::rand::{OsRng, Rng};
 use std::slice::MutableCloneableVector;
-
-use rand::{OSRng, Rng};
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
@@ -132,10 +131,10 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
  *
  */
 pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
-    let mut rng = try!(OSRng::new());
+    let mut rng = try!(OsRng::new());
 
     // 128-bit salt
-    let salt: Vec<u8> = rng.gen_vec(16);
+    let salt: Vec<u8> = rng.gen_iter::<u8>().take(16).collect();
 
     // 256-bit derived key
     let mut dk = [0u8, ..32];

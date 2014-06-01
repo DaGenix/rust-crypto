@@ -15,9 +15,8 @@
 use std::io::IoResult;
 use std::num::ToPrimitive;
 use std::mem::size_of;
+use std::rand::{OsRng, Rng};
 use std::slice::MutableCloneableVector;
-
-use rand::{OSRng, Rng};
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
@@ -275,10 +274,10 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
  *
  */
 pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> {
-    let mut rng = try!(OSRng::new());
+    let mut rng = try!(OsRng::new());
 
     // 128-bit salt
-    let salt: Vec<u8> = rng.gen_vec(16);
+    let salt: Vec<u8> = rng.gen_iter::<u8>().take(16).collect();
 
     // 256-bit derived key
     let mut dk = [0u8, ..32];
