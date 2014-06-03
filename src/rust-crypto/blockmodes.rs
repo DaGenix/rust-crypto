@@ -1140,8 +1140,8 @@ mod test {
             test: &T,
             new_enc: || -> E,
             new_dec: || -> D) {
-        use rand;
-        use rand::Rng;
+        use std::rand;
+        use std::rand::Rng;
 
         let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
         let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
