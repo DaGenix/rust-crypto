@@ -81,10 +81,12 @@ impl MacResult {
     }
 }
 
-impl Eq for MacResult {
+impl PartialEq for MacResult {
     fn eq(&self, x: &MacResult) -> bool {
         let lhs = self.code();
         let rhs = x.code();
         return fixed_time_eq(lhs, rhs);
     }
 }
+
+impl Eq for MacResult { }
