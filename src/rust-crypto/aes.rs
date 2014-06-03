@@ -522,7 +522,7 @@ mod test {
     #[cfg(target_arch = "x86")]
     #[cfg(target_arch = "x86_64")]
     #[test]
-    fn testAesNi128() {
+    fn test_aesni_128() {
         if util::supports_aesni() {
             let tests = tests128();
             for t in tests.iter() {
@@ -536,7 +536,7 @@ mod test {
     #[cfg(target_arch = "x86")]
     #[cfg(target_arch = "x86_64")]
     #[test]
-    fn testAesNi192() {
+    fn test_aesni_192() {
         if util::supports_aesni() {
             let tests = tests192();
             for t in tests.iter() {
@@ -550,7 +550,7 @@ mod test {
     #[cfg(target_arch = "x86")]
     #[cfg(target_arch = "x86_64")]
     #[test]
-    fn testAesNi256() {
+    fn test_aesni_256() {
         if util::supports_aesni() {
             let tests = tests256();
             for t in tests.iter() {
@@ -562,7 +562,7 @@ mod test {
     }
 
     #[test]
-    fn testAesSafe128() {
+    fn test_aessafe_128() {
         let tests = tests128();
         for t in tests.iter() {
             let mut enc = aessafe::AesSafe128Encryptor::new(t.key);
@@ -572,7 +572,7 @@ mod test {
     }
 
     #[test]
-    fn testAesSafe192() {
+    fn test_aessafe_192() {
         let tests = tests192();
         for t in tests.iter() {
             let mut enc = aessafe::AesSafe192Encryptor::new(t.key);
@@ -582,7 +582,7 @@ mod test {
     }
 
     #[test]
-    fn testAesSafe256() {
+    fn test_aessafe_256() {
         let tests = tests256();
         for t in tests.iter() {
             let mut enc = aessafe::AesSafe256Encryptor::new(t.key);
@@ -594,7 +594,7 @@ mod test {
     // The following test vectors are all from NIST SP 800-38A
 
     #[test]
-    fn testAesSafe128_x8() {
+    fn test_aessafe_128_x8() {
         let key: [u8, ..16] = [
             0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
             0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c ];
@@ -643,7 +643,7 @@ mod test {
     }
 
     #[test]
-    fn testAesSafe192_x8() {
+    fn test_aessafe_192_x8() {
         let key: [u8, ..24] = [
             0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 0xc8, 0x10, 0xf3, 0x2b,
             0x80, 0x90, 0x79, 0xe5, 0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b ];
@@ -692,7 +692,7 @@ mod test {
     }
 
     #[test]
-    fn testAesSafe256_x8() {
+    fn test_aessafe_256_x8() {
         let key: [u8, ..32] = [
             0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe,
             0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
