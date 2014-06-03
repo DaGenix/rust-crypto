@@ -481,8 +481,8 @@ impl <T: FixedBuffer> StandardPadding for T {
 pub mod test {
     use std::num::Bounded;
 
-    use rand::IsaacRng;
-    use rand::distributions::{IndependentSample, Range};
+    use std::rand::IsaacRng;
+    use std::rand::distributions::{IndependentSample, Range};
 
     use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple, fixed_time_eq};
     use digest::Digest;
