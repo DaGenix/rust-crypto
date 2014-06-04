@@ -20,6 +20,7 @@ pub mod bcrypt;
 pub mod blockmodes;
 pub mod blowfish;
 pub mod buffer;
+pub mod chacha20;
 mod cryptoutil;
 pub mod digest;
 pub mod hmac;
