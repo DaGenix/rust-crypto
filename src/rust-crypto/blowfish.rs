@@ -13,6 +13,18 @@ pub struct Blowfish {
     p: [u32, ..18]
 }
 
+fn next_u32_wrap(buf: &[u8], offset: &mut uint) -> u32 {
+    let mut v = 0;
+    for _ in range(0u, 4) {
+        if *offset >= buf.len() {
+            *offset = 0;
+        }
+        v = (v << 8) | buf[*offset] as u32;
+        *offset += 1;
+    }
+    v
+}
+
 impl Blowfish {
     pub fn new(key: &[u8]) -> Blowfish {
         assert!(4 <= key.len() && key.len() <= 56);
@@ -204,14 +216,9 @@ impl Blowfish {
 
     // For bcrypt. Use Blowfish::new instead.
     pub fn expand_key(&mut self, key: &[u8]) {
-        let mut last_key_byte = 0u;
+        let mut key_pos = 0u;
         for i in range(0u, 18u) {
-            let mut key_slice = 0u32;
-            for _ in range(0u, 4u) {
-                key_slice = (key_slice << 8u) | (key[last_key_byte] as u32);
-                last_key_byte = (last_key_byte+1) % key.len();
-            }
-            self.p[i] ^= key_slice;
+            self.p[i] ^= next_u32_wrap(key, &mut key_pos);
         }
         let mut l = 0u32;
         let mut r = 0u32;
@@ -234,20 +241,16 @@ impl Blowfish {
     }
     
     // Bcrypt key schedule.
-    pub fn salted_expand_key(&mut self, salt: [u32, ..4], key: &[u8]) {
-        let mut last_key_byte = 0u;
+    pub fn salted_expand_key(&mut self, salt: &[u8], key: &[u8]) {
+        let mut key_pos = 0u;
         for i in range(0u, 18u) {
-            let mut key_slice = 0u32;
-            for _ in range(0u, 4u) {
-                key_slice = (key_slice << 8u) | (key[last_key_byte] as u32);
-                last_key_byte = (last_key_byte+1) % key.len();
-            }
-            self.p[i] ^= key_slice;
+            self.p[i] ^= next_u32_wrap(key, &mut key_pos);
         }
         let mut l = 0u32;
         let mut r = 0u32;
+        let mut salt_pos = 0u;
         for i in range_step(0u, 18u, 2) {
-            let (new_l, new_r) = self.encrypt(l ^ salt[i & 2], r ^ salt[(i&2)+1]);
+            let (new_l, new_r) = self.encrypt(l ^ next_u32_wrap(salt, &mut salt_pos), r ^ next_u32_wrap(salt, &mut salt_pos));
             l = new_l;
             r = new_r;
             self.p[i] = l;
@@ -255,13 +258,13 @@ impl Blowfish {
         }
         for i in range(0u, 4u) {
             for j in range_step(0u, 256u, 4) {
-                let (new_l, new_r) = self.encrypt(l ^ salt[2], r ^ salt[3]);
+                let (new_l, new_r) = self.encrypt(l ^ next_u32_wrap(salt, &mut salt_pos), r ^ next_u32_wrap(salt, &mut salt_pos));
                 l = new_l;
                 r = new_r;
                 self.s[i][j] = l;
                 self.s[i][j+1] = r;
                 
-                let (new_l, new_r) = self.encrypt(l ^ salt[0], r ^ salt[1]);
+                let (new_l, new_r) = self.encrypt(l ^ next_u32_wrap(salt, &mut salt_pos), r ^ next_u32_wrap(salt, &mut salt_pos));
                 l = new_l;
                 r = new_r;
                 self.s[i][j+2] = l;
