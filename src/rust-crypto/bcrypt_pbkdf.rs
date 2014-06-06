@@ -262,3 +262,20 @@ mod test {
         }
     }
 }
+
+#[cfg(test)]
+mod bench {
+    use test::Bencher;
+    use bcrypt_pbkdf::bcrypt_pbkdf;
+
+    #[bench]
+    fn bench_bcrypt_pbkdf_5_32(b: &mut Bencher) {
+        let pass = [0u8, ..16];
+        let salt = [0u8, ..16];
+        let mut out  = [0u8, ..32];
+
+        b.iter(|| {
+            bcrypt_pbkdf(pass, salt, 5, out.as_mut_slice());
+        });
+    }
+}
