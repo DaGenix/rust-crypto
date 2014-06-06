@@ -17,6 +17,7 @@ pub mod aes;
 pub mod aesni;
 pub mod aessafe;
 pub mod bcrypt;
+pub mod bcrypt_pbkdf;
 pub mod blockmodes;
 pub mod blowfish;
 pub mod buffer;
