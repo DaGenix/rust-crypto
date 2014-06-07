@@ -354,3 +354,49 @@ mod test {
         assert_eq!(mac.as_slice(), expected.as_slice());
     }
 }
+
+#[cfg(test)]
+mod bench {
+    use test::Bencher;
+    use mac::Mac;
+    use poly1305::Poly1305;
+
+    #[bench]
+    pub fn poly1305_10(bh: & mut Bencher) {
+        let mut mac = [0u8, ..16];
+        let key     = [0u8, ..32];
+        let bytes   = [1u8, ..10];
+        bh.iter( || {
+            let mut poly = Poly1305::new(key);
+            poly.input(bytes);
+            poly.raw_result(mac.as_mut_slice());
+        });
+        bh.bytes = bytes.len() as u64;
+    }
+
+    #[bench]
+    pub fn poly1305_1k(bh: & mut Bencher) {
+        let mut mac = [0u8, ..16];
+        let key     = [0u8, ..32];
+        let bytes   = [1u8, ..1024];
+        bh.iter( || {
+            let mut poly = Poly1305::new(key);
+            poly.input(bytes);
+            poly.raw_result(mac.as_mut_slice());
+        });
+        bh.bytes = bytes.len() as u64;
+    }
+
+    #[bench]
+    pub fn poly1305_64k(bh: & mut Bencher) {
+        let mut mac = [0u8, ..16];
+        let key     = [0u8, ..32];
+        let bytes   = [1u8, ..65536];
+        bh.iter( || {
+            let mut poly = Poly1305::new(key);
+            poly.input(bytes);
+            poly.raw_result(mac.as_mut_slice());
+        });
+        bh.bytes = bytes.len() as u64;
+    }
+}
