@@ -27,6 +27,7 @@ pub mod hmac;
 pub mod mac;
 pub mod md5;
 pub mod pbkdf2;
+pub mod poly1305;
 pub mod rc4;
 pub mod salsa20;
 pub mod scrypt;
