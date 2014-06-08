@@ -448,33 +448,33 @@ fn encrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
 
         asm!(
         "
-            /* Copy the data to encrypt to xmm15 */
-            movdqu ($2), %xmm15
+            /* Copy the data to encrypt to xmm1 */
+            movdqu ($2), %xmm1
 
             /* Perform round 0 - the whitening step */
             movdqu ($1), %xmm0
             add $$0x10, $1
-            pxor %xmm0, %xmm15
+            pxor %xmm0, %xmm1
 
             /* Perform all remaining rounds (except the final one) */
             enc_round:
             movdqu ($1), %xmm0
             add $$0x10, $1
-            aesenc %xmm0, %xmm15
+            aesenc %xmm0, %xmm1
             sub $$0x01, $0
             cmp $$0x01, $0
             jne enc_round
 
             /* Perform the last round */
             movdqu ($1), %xmm0
-            aesenclast %xmm0, %xmm15
+            aesenclast %xmm0, %xmm1
 
-            /* Finally, move the result from xmm15 to outp */
-            movdqu %xmm15, ($3)
+            /* Finally, move the result from xmm1 to outp */
+            movdqu %xmm1, ($3)
         "
         : "=r" (rounds), "=r" (round_keysp) // outputs
         : "r" (inp), "r" (outp), "0" (rounds), "1" (round_keysp) // inputs
-        : "xmm0", "xmm15", "memory", "cc" // clobbers
+        : "xmm0", "xmm1", "memory", "cc" // clobbers
         : "volatile" // options
         );
     }
@@ -491,33 +491,33 @@ fn decrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
 
         asm!(
         "
-            /* Copy the data to decrypt to xmm15 */
-            movdqu ($2), %xmm15
+            /* Copy the data to decrypt to xmm1 */
+            movdqu ($2), %xmm1
 
             /* Perform round 0 - the whitening step */
             movdqu ($1), %xmm0
             sub $$0x10, $1
-            pxor %xmm0, %xmm15
+            pxor %xmm0, %xmm1
 
             /* Perform all remaining rounds (except the final one) */
             dec_round:
             movdqu ($1), %xmm0
             sub $$0x10, $1
-            aesdec %xmm0, %xmm15
+            aesdec %xmm0, %xmm1
             sub $$0x01, $0
             cmp $$0x01, $0
             jne dec_round
 
             /* Perform the last round */
             movdqu ($1), %xmm0
-            aesdeclast %xmm0, %xmm15
+            aesdeclast %xmm0, %xmm1
 
-            /* Finally, move the result from xmm15 to outp */
-            movdqu %xmm15, ($3)
+            /* Finally, move the result from xmm1 to outp */
+            movdqu %xmm1, ($3)
         "
         : "=r" (rounds), "=r" (round_keysp) // outputs
         : "r" (inp), "r" (outp), "0" (rounds), "1" (round_keysp) // inputs
-        : "xmm0", "xmm15", "memory", "cc" // clobbers
+        : "xmm0", "xmm1", "memory", "cc" // clobbers
         : "volatile" // options
         );
     }

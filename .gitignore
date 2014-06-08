@@ -19,7 +19,9 @@ bin
 
 # Output files
 rust-crypto-test
+rust-crypto-test.exe
 rust-crypto-util
+rust-crypto-util.exe
 
 # mvn build files
 tools/rust-crypto-tester/target/
