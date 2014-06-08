@@ -56,6 +56,7 @@ clean-$$($(1)_rust_crate_name):
 	@rm -f $$($(1)_rust_crate_out)
 	@rm -f $$($(1)_rust_crate_main).d
 	@rm -f $$($(1)_rust_crate_name)-test
+	@rm -f $$($(1)_rust_crate_name)-test.exe
 	@rm -f $$($(1)_rust_crate_test).d
 	@rm -f $$($(1)_rust_crate_dir)/*.o
 endif
