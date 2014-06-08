@@ -6,15 +6,12 @@
 
 use blowfish::Blowfish;
 use std::iter::{range, range_step};
-use cryptoutil::{read_u32v_be, write_u32_be};
+use cryptoutil::{write_u32_be};
 
 fn setup(cost: uint, salt: &[u8], key: &[u8]) -> Blowfish {
     let mut state = Blowfish::init_state();
     
-    let mut salt_ = [0u32, ..4];
-    read_u32v_be(salt_.as_mut_slice(), salt.as_slice());
-
-    state.salted_expand_key(salt_, key);
+    state.salted_expand_key(salt, key);
     for _ in range(0u, 1u << cost) {
         state.expand_key(key);
         state.expand_key(salt);
@@ -146,5 +143,21 @@ mod test {
             bcrypt(test.cost, test.salt, test.input, output.as_mut_slice());
             assert_eq!(output.slice(0, 23), test.output.as_slice());
         }
+    }
+}
+
+#[cfg(test)]
+mod bench {
+    use test::Bencher;
+    use bcrypt::bcrypt;
+
+    #[bench]
+    pub fn bcrypt_16_5(bh: & mut Bencher) {
+        let pass = [0u8, ..16];
+        let salt = [0u8, ..16];
+        let mut out  = [0u8, ..24];
+        bh.iter( || {
+            bcrypt(5, salt, pass, out);
+        });
     }
 }
