@@ -25,3 +25,8 @@ rust-crypto-util.exe
 
 # mvn build files
 tools/rust-crypto-tester/target/
+
+# vim
+*~
+.*.swp
+.*.swo
