@@ -10,7 +10,6 @@
  */
 
 use std::io::IoResult;
-use std::num::Bounded;
 use std::rand::{OsRng, Rng};
 use std::slice::MutableCloneableVector;
 
@@ -94,12 +93,9 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
     let mut idx: u32 = 0;
 
     for chunk in output.mut_chunks(os) {
-        if idx == Bounded::max_value() {
-            fail!("PBKDF2 size limit exceeded.");
-        } else {
-            // The block index starts at 1. So, this is supposed to run on the first execution.
-            idx += 1;
-        }
+        // The block index starts at 1. So, this is supposed to run on the first execution.
+        idx = idx.checked_add(&1).expect("PBKDF2 size limit exceeded.");
+
         if chunk.len() == os {
             calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), chunk);
         } else {

@@ -9,7 +9,6 @@
 // except according to those terms.
 
 use std;
-use std::mem;
 use std::num::{One, Zero, CheckedAdd};
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
@@ -126,29 +125,27 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
 #[cfg(target_arch = "x86")]
 #[cfg(target_arch = "x86_64")]
 #[inline(never)]
-#[allow(unused_variable)]
 #[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
-    let mut tmp: u8 = mem::uninitialized();
 
     asm!(
         "
             fixed_time_eq_loop:
 
-            mov ($1), $4
-            xor ($2), $4
-            or $4, $0
+            mov ($1), %cl
+            xor ($2), %cl
+            or %cl, $0
 
             inc $1
             inc $2
             dec $3
             jnz fixed_time_eq_loop
         "
-        : "=&r" (result), "=&r" (lhsp), "=&r" (rhsp), "=&r" (count), "=&r" (tmp) // output
-        : "0" (result), "1" (lhsp), "2" (rhsp), "3" (count) // input
-        : "cc" // clobbers
-        : // flags
+        : "+r" (result), "+r" (lhsp), "+r" (rhsp), "+r" (count) // all input and output
+        : // input
+        : "cl", "cc" // clobbers
+        : "volatile" // flags
     );
 
     return result == 0;
@@ -156,32 +153,28 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bo
 
 #[cfg(target_arch = "arm")]
 #[inline(never)]
-#[allow(unused_variable)]
 #[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
-    let mut tmp1: u8 = mem::uninitialized();
-    let mut tmp2: u8 = mem::uninitialized();
 
     asm!(
         "
             fixed_time_eq_loop:
 
-            ldrb $4, [$1]
-            ldrb $5, [$2]
-            eor $4, $4, $5
-            orr $0, $0, $4
+            ldrb r4, [$1]
+            ldrb r5, [$2]
+            eor r4, r4, r5
+            orr $0, $0, r4
 
             add $1, $1, #1
             add $2, $2, #1
             subs $3, $3, #1
             bne fixed_time_eq_loop
         "
-        // output
-        : "=&r" (result), "=&r" (lhsp), "=&r" (rhsp), "=&r" (count), "=&r" (tmp1), "=&r" (tmp2)
-        : "0" (result), "1" (lhsp), "2" (rhsp), "3" (count) // input
-        : "cc" // clobbers
-        : // flags
+        : "+r" (result), "+r" (lhsp), "+r" (rhsp), "+r" (count) // all input and output
+        : // input
+        : "r4", "r5", "cc" // clobbers
+        : "volatile" // flags
     );
 
     return result == 0;

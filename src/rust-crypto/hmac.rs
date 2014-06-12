@@ -37,17 +37,11 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let mut expanded_key = Vec::from_elem(bs, 0u8);
     if key.len() <= bs {
         slice::bytes::copy_memory(expanded_key.as_mut_slice(), key);
-        for elem in expanded_key.mut_slice_from(key.len()).mut_iter() {
-            *elem = 0;
-        }
     } else {
         let output_size = digest.output_bytes();
         digest.input(key);
         digest.result(expanded_key.mut_slice_to(output_size));
         digest.reset();
-        for elem in expanded_key.mut_slice_from(output_size).mut_iter() {
-            *elem = 0;
-        }
     }
     return expanded_key;
 }
