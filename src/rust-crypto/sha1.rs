@@ -186,17 +186,17 @@ mod tests {
     #[deriving(Clone)]
     struct Test {
         input: &'static str,
-        output: ~[u8],
+        output: Vec<u8>,
         output_str: &'static str,
     }
 
     #[test]
     fn test() {
-        let tests = ~[
+        let tests = vec![
             // Test messages from FIPS 180-1
             Test {
                 input: "abc",
-                output: ~[
+                output: vec![
                     0xA9u8, 0x99u8, 0x3Eu8, 0x36u8,
                     0x47u8, 0x06u8, 0x81u8, 0x6Au8,
                     0xBAu8, 0x3Eu8, 0x25u8, 0x71u8,
@@ -208,7 +208,7 @@ mod tests {
             Test {
                 input:
                      "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-                output: ~[
+                output: vec![
                     0x84u8, 0x98u8, 0x3Eu8, 0x44u8,
                     0x1Cu8, 0x3Bu8, 0xD2u8, 0x6Eu8,
                     0xBAu8, 0xAEu8, 0x4Au8, 0xA1u8,
@@ -220,7 +220,7 @@ mod tests {
             // Examples from wikipedia
             Test {
                 input: "The quick brown fox jumps over the lazy dog",
-                output: ~[
+                output: vec![
                     0x2fu8, 0xd4u8, 0xe1u8, 0xc6u8,
                     0x7au8, 0x2du8, 0x28u8, 0xfcu8,
                     0xedu8, 0x84u8, 0x9eu8, 0xe1u8,
@@ -231,7 +231,7 @@ mod tests {
             },
             Test {
                 input: "The quick brown fox jumps over the lazy cog",
-                output: ~[
+                output: vec![
                     0xdeu8, 0x9fu8, 0x2cu8, 0x7fu8,
                     0xd2u8, 0x5eu8, 0x1bu8, 0x3au8,
                     0xfau8, 0xd3u8, 0xe8u8, 0x5au8,

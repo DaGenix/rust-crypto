@@ -421,20 +421,20 @@ mod test {
         log_n: u8,
         r: u32,
         p: u32,
-        expected: ~[u8]
+        expected: Vec<u8>
     }
 
     // Test vectors from [1]. The last test vector is omitted because it takes too long to run.
 
-    fn tests() -> ~[Test] {
-        return ~[
+    fn tests() -> Vec<Test> {
+        return vec![
             Test {
                 password: "",
                 salt: "",
                 log_n: 4,
                 r: 1,
                 p: 1,
-                expected: ~[
+                expected: vec![
                     0x77, 0xd6, 0x57, 0x62, 0x38, 0x65, 0x7b, 0x20,
                     0x3b, 0x19, 0xca, 0x42, 0xc1, 0x8a, 0x04, 0x97,
                     0xf1, 0x6b, 0x48, 0x44, 0xe3, 0x07, 0x4a, 0xe8,
@@ -450,7 +450,7 @@ mod test {
                 log_n: 10,
                 r: 8,
                 p: 16,
-                expected: ~[
+                expected: vec![
                     0xfd, 0xba, 0xbe, 0x1c, 0x9d, 0x34, 0x72, 0x00,
                     0x78, 0x56, 0xe7, 0x19, 0x0d, 0x01, 0xe9, 0xfe,
                     0x7c, 0x6a, 0xd7, 0xcb, 0xc8, 0x23, 0x78, 0x30,
@@ -466,7 +466,7 @@ mod test {
                 log_n: 14,
                 r: 8,
                 p: 1,
-                expected: ~[
+                expected: vec![
                     0x70, 0x23, 0xbd, 0xcb, 0x3a, 0xfd, 0x73, 0x48,
                     0x46, 0x1c, 0x06, 0xcd, 0x81, 0xfd, 0x38, 0xeb,
                     0xfd, 0xa8, 0xfb, 0xba, 0x90, 0x4f, 0x8e, 0x3e,
@@ -486,7 +486,7 @@ mod test {
             let mut result = Vec::from_elem(t.expected.len(), 0u8);
             let params = ScryptParams::new(t.log_n, t.r, t.p);
             scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result.as_mut_slice());
-            assert!(result.as_slice() == t.expected);
+            assert!(result == t.expected);
         }
     }
 
