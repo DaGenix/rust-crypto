@@ -7,8 +7,6 @@
 #![license = "MIT/ASL2"]
 #![crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"]
 
-#![allow(deprecated_owned_vector)]
-
 extern crate getopts;
 extern crate rust_crypto = "rust-crypto";
 
@@ -71,7 +69,7 @@ fn run_scrypt(matches: &Matches) {
 fn main() {
     let args: Vec<String> = os::args().iter().map(|x| x.to_string()).collect();
 
-    let opts = ~[
+    let opts = vec![
         // General parameters:
         optflag("h", "help", "Print help"),
 
@@ -85,7 +83,7 @@ fn main() {
         optflag("", "rawoutput", "Use raw output mode"),
     ];
 
-    let matches = match getopts(args.tail(), opts) {
+    let matches = match getopts(args.tail(), opts.as_slice()) {
         Ok(m) => { m }
         Err(f) => { fail!(f.to_err_msg()) }
     };

@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn test_md5() {
         // Examples from wikipedia
-        let wikipedia_tests = ~[
+        let wikipedia_tests = vec![
             Test {
                 input: "",
                 output_str: "d41d8cd98f00b204e9800998ecf8427e"
@@ -276,7 +276,7 @@ mod tests {
 
         let mut sh = Md5::new();
 
-        test_hash(&mut sh, tests);
+        test_hash(&mut sh, tests.as_slice());
     }
 
     #[test]

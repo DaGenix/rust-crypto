@@ -822,9 +822,9 @@ mod test {
     }
 
     struct EcbTest {
-        key: ~[u8],
-        plain: ~[u8],
-        cipher: ~[u8]
+        key: Vec<u8>,
+        plain: Vec<u8>,
+        cipher: Vec<u8>
     }
 
     impl CipherTest for EcbTest {
@@ -837,10 +837,10 @@ mod test {
     }
 
     struct CbcTest {
-        key: ~[u8],
-        iv: ~[u8],
-        plain: ~[u8],
-        cipher: ~[u8]
+        key: Vec<u8>,
+        iv: Vec<u8>,
+        plain: Vec<u8>,
+        cipher: Vec<u8>
     }
 
     impl CipherTest for CbcTest {
@@ -853,10 +853,10 @@ mod test {
     }
 
     struct CtrTest {
-        key: ~[u8],
-        ctr: ~[u8],
-        plain: ~[u8],
-        cipher: ~[u8]
+        key: Vec<u8>,
+        ctr: Vec<u8>,
+        plain: Vec<u8>,
+        cipher: Vec<u8>
     }
 
     impl CipherTest for CtrTest {
@@ -868,12 +868,12 @@ mod test {
         }
     }
 
-    fn aes_ecb_no_padding_tests() -> ~[EcbTest] {
-        ~[
+    fn aes_ecb_no_padding_tests() -> Vec<EcbTest> {
+        vec![
             EcbTest {
-                key: ~[0, ..16],
-                plain: ~[0, ..32],
-                cipher: ~[
+                key: Vec::from_elem(16, 0u8),
+                plain: Vec::from_elem(32, 0u8),
+                cipher: vec![
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
                     0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e,
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
@@ -882,12 +882,12 @@ mod test {
         ]
     }
 
-    fn aes_ecb_pkcs_padding_tests() -> ~[EcbTest] {
-        ~[
+    fn aes_ecb_pkcs_padding_tests() -> Vec<EcbTest> {
+        vec![
             EcbTest {
-                key: ~[0, ..16],
-                plain: ~[0, ..32],
-                cipher: ~[
+                key: Vec::from_elem(16, 0u8),
+                plain: Vec::from_elem(32, 0u8),
+                cipher: vec![
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
                     0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e,
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
@@ -896,9 +896,9 @@ mod test {
                     0xff, 0x9f, 0x69, 0x91, 0x76, 0x80, 0x15, 0x1e ]
             },
             EcbTest {
-                key: ~[0, ..16],
-                plain: ~[0, ..33],
-                cipher: ~[
+                key: Vec::from_elem(16, 0u8),
+                plain: Vec::from_elem(33, 0u8),
+                cipher: vec![
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
                     0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e,
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
@@ -909,13 +909,13 @@ mod test {
         ]
     }
 
-    fn aes_cbc_no_padding_tests() -> ~[CbcTest] {
-        ~[
+    fn aes_cbc_no_padding_tests() -> Vec<CbcTest> {
+        vec![
             CbcTest {
-                key: ~[1, ..16],
-                iv: ~[3, ..16],
-                plain: ~[2, ..32],
-                cipher: ~[
+                key: Vec::from_elem(16, 1u8),
+                iv: Vec::from_elem(16, 3u8),
+                plain: Vec::from_elem(32, 2u8),
+                cipher: vec![
                     0x5e, 0x77, 0xe5, 0x9f, 0x8f, 0x85, 0x94, 0x34,
                     0x89, 0xa2, 0x41, 0x49, 0xc7, 0x5f, 0x4e, 0xc9,
                     0xe0, 0x9a, 0x77, 0x36, 0xfb, 0xc8, 0xb2, 0xdc,
@@ -924,13 +924,13 @@ mod test {
         ]
     }
 
-    fn aes_cbc_pkcs_padding_tests() -> ~[CbcTest] {
-        ~[
+    fn aes_cbc_pkcs_padding_tests() -> Vec<CbcTest> {
+        vec![
             CbcTest {
-                key: ~[1, ..16],
-                iv: ~[3, ..16],
-                plain: ~[2, ..32],
-                cipher: ~[
+                key: Vec::from_elem(16, 1u8),
+                iv: Vec::from_elem(16, 3u8),
+                plain: Vec::from_elem(32, 2u8),
+                cipher: vec![
                     0x5e, 0x77, 0xe5, 0x9f, 0x8f, 0x85, 0x94, 0x34,
                     0x89, 0xa2, 0x41, 0x49, 0xc7, 0x5f, 0x4e, 0xc9,
                     0xe0, 0x9a, 0x77, 0x36, 0xfb, 0xc8, 0xb2, 0xdc,
@@ -939,10 +939,10 @@ mod test {
                     0xef, 0x88, 0xf3, 0x27, 0xbd, 0x9c, 0xc8, 0x4d ]
             },
             CbcTest {
-                key: ~[1, ..16],
-                iv: ~[3, ..16],
-                plain: ~[2, ..33],
-                cipher: ~[
+                key: Vec::from_elem(16, 1u8),
+                iv: Vec::from_elem(16, 3u8),
+                plain: Vec::from_elem(33, 2u8),
+                cipher: vec![
                     0x5e, 0x77, 0xe5, 0x9f, 0x8f, 0x85, 0x94, 0x34,
                     0x89, 0xa2, 0x41, 0x49, 0xc7, 0x5f, 0x4e, 0xc9,
                     0xe0, 0x9a, 0x77, 0x36, 0xfb, 0xc8, 0xb2, 0xdc,
@@ -953,13 +953,13 @@ mod test {
         ]
     }
 
-    fn aes_ctr_tests() -> ~[CtrTest] {
-        ~[
+    fn aes_ctr_tests() -> Vec<CtrTest> {
+        vec![
             CtrTest {
-                key: ~[1, ..16],
-                ctr: ~[3, ..16],
-                plain: ~[2, ..33],
-                cipher: ~[
+                key: Vec::from_elem(16, 1u8),
+                ctr: Vec::from_elem(16, 3u8),
+                plain: Vec::from_elem(33, 2u8),
+                cipher: vec![
                     0x64, 0x3e, 0x05, 0x19, 0x79, 0x78, 0xd7, 0x45,
                     0xa9, 0x10, 0x5f, 0xd8, 0x4c, 0xd7, 0xe6, 0xb1,
                     0x5f, 0x66, 0xc6, 0x17, 0x4b, 0x25, 0xea, 0x24,
@@ -1201,11 +1201,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key.as_slice());
                     EcbEncryptor::new(aes_enc, NoPadding)
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key);
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key.as_slice());
                     EcbDecryptor::new(aes_dec, NoPadding)
                 });
         }
@@ -1218,11 +1218,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key.as_slice());
                     EcbEncryptor::new(aes_enc, PkcsPadding)
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key);
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key.as_slice());
                     EcbDecryptor::new(aes_dec, PkcsPadding)
                 });
         }
@@ -1235,12 +1235,12 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key);
-                    CbcEncryptor::new(aes_enc, NoPadding, Vec::from_slice(test.iv))
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key.as_slice());
+                    CbcEncryptor::new(aes_enc, NoPadding, test.iv.clone())
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key);
-                    CbcDecryptor::new(aes_dec, NoPadding, Vec::from_slice(test.iv))
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key.as_slice());
+                    CbcDecryptor::new(aes_dec, NoPadding, test.iv.clone())
                 });
         }
     }
@@ -1252,12 +1252,12 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key);
-                    CbcEncryptor::new(aes_enc, PkcsPadding, Vec::from_slice(test.iv))
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key.as_slice());
+                    CbcEncryptor::new(aes_enc, PkcsPadding, test.iv.clone())
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key);
-                    CbcDecryptor::new(aes_dec, PkcsPadding, Vec::from_slice(test.iv))
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key.as_slice());
+                    CbcDecryptor::new(aes_dec, PkcsPadding, test.iv.clone())
                 });
         }
     }
@@ -1269,12 +1269,12 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key);
-                    CtrMode::new(aes_enc, Vec::from_slice(test.ctr))
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key.as_slice());
+                    CtrMode::new(aes_enc, test.ctr.clone())
                 },
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key);
-                    CtrMode::new(aes_enc, Vec::from_slice(test.ctr))
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key.as_slice());
+                    CtrMode::new(aes_enc, test.ctr.clone())
                 });
         }
     }
@@ -1286,12 +1286,12 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key);
-                    CtrModeX8::new(aes_enc, test.ctr.clone())
+                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key.as_slice());
+                    CtrModeX8::new(aes_enc, test.ctr.as_slice())
                 },
                 || {
-                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key);
-                    CtrModeX8::new(aes_enc, test.ctr.clone())
+                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key.as_slice());
+                    CtrModeX8::new(aes_enc, test.ctr.as_slice())
                 });
         }
     }
@@ -1381,7 +1381,7 @@ mod test {
         let mut cipher = [3u8, ..528];
 
         let aes_enc = aessafe::AesSafe128EncryptorX8::new(key);
-        let mut enc = CtrModeX8::new(aes_enc, ctr.to_owned());
+        let mut enc = CtrModeX8::new(aes_enc, ctr);
 
         bh.iter( || {
             enc.reset(ctr);

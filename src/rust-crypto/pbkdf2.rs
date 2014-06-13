@@ -251,22 +251,22 @@ mod test {
     use sha1::Sha1;
 
     struct Test {
-        password: ~[u8],
-        salt: ~[u8],
+        password: Vec<u8>,
+        salt: Vec<u8>,
         c: u32,
-        expected: ~[u8]
+        expected: Vec<u8>
     }
 
     // Test vectors from http://tools.ietf.org/html/rfc6070. The 4th test vector is omitted because
     // it takes too long to run.
 
-    fn tests() -> ~[Test] {
-        return ~[
+    fn tests() -> Vec<Test> {
+        return vec![
             Test {
                 password: "password".as_bytes().to_owned(),
                 salt: "salt".as_bytes().to_owned(),
                 c: 1,
-                expected: ~[
+                expected: vec![
                     0x0c, 0x60, 0xc8, 0x0f, 0x96, 0x1f, 0x0e, 0x71,
                     0xf3, 0xa9, 0xb5, 0x24, 0xaf, 0x60, 0x12, 0x06,
                     0x2f, 0xe0, 0x37, 0xa6 ]
@@ -275,7 +275,7 @@ mod test {
                 password: "password".as_bytes().to_owned(),
                 salt: "salt".as_bytes().to_owned(),
                 c: 2,
-                expected: ~[
+                expected: vec![
                     0xea, 0x6c, 0x01, 0x4d, 0xc7, 0x2d, 0x6f, 0x8c,
                     0xcd, 0x1e, 0xd9, 0x2a, 0xce, 0x1d, 0x41, 0xf0,
                     0xd8, 0xde, 0x89, 0x57 ]
@@ -284,7 +284,7 @@ mod test {
                 password: "password".as_bytes().to_owned(),
                 salt: "salt".as_bytes().to_owned(),
                 c: 4096,
-                expected: ~[
+                expected: vec![
                     0x4b, 0x00, 0x79, 0x01, 0xb7, 0x65, 0x48, 0x9a,
                     0xbe, 0xad, 0x49, 0xd9, 0x26, 0xf7, 0x21, 0xd0,
                     0x65, 0xa4, 0x29, 0xc1 ]
@@ -293,16 +293,16 @@ mod test {
                 password: "passwordPASSWORDpassword".as_bytes().to_owned(),
                 salt: "saltSALTsaltSALTsaltSALTsaltSALTsalt".as_bytes().to_owned(),
                 c: 4096,
-                expected: ~[
+                expected: vec![
                     0x3d, 0x2e, 0xec, 0x4f, 0xe4, 0x1c, 0x84, 0x9b,
                     0x80, 0xc8, 0xd8, 0x36, 0x62, 0xc0, 0xe4, 0x4a,
                     0x8b, 0x29, 0x1a, 0x96, 0x4c, 0xf2, 0xf0, 0x70, 0x38 ]
             },
             Test {
-                password: ~[112, 97, 115, 115, 0, 119, 111, 114, 100],
-                salt: ~[115, 97, 0, 108, 116],
+                password: vec![112, 97, 115, 115, 0, 119, 111, 114, 100],
+                salt: vec![115, 97, 0, 108, 116],
                 c: 4096,
-                expected: ~[
+                expected: vec![
                     0x56, 0xfa, 0x6a, 0xa7, 0x55, 0x48, 0x09, 0x9d,
                     0xcc, 0x37, 0xd7, 0xf0, 0x34, 0x25, 0xe0, 0xc3 ]
             }
@@ -313,10 +313,10 @@ mod test {
     fn test_pbkdf2() {
         let tests = tests();
         for t in tests.iter() {
-            let mut mac = Hmac::new(Sha1::new(), t.password);
+            let mut mac = Hmac::new(Sha1::new(), t.password.as_slice());
             let mut result = Vec::from_elem(t.expected.len(), 0u8);
-            pbkdf2(&mut mac, t.salt, t.c, result.as_mut_slice());
-            assert!(result.as_slice() == t.expected);
+            pbkdf2(&mut mac, t.salt.as_slice(), t.c, result.as_mut_slice());
+            assert!(result == t.expected);
         }
     }
 
