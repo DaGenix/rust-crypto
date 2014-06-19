@@ -36,8 +36,8 @@ impl ChaCha20 {
     fn expand(key: &[u8], nonce: &[u8]) -> [u32, ..16] {
         let mut state = [0u32, ..16];
         let constant = match key.len() {
-            16 => bytes!("expand 16-byte k"),
-            32 => bytes!("expand 32-byte k"),
+            16 => b"expand 16-byte k",
+            32 => b"expand 32-byte k",
             _  => unreachable!(),
         };
 
