@@ -335,7 +335,7 @@ mod test {
     #[test]
     fn test_tls_vectors() {
         // from http://tools.ietf.org/html/draft-agl-tls-chacha20poly1305-04
-        let key = bytes!("this is 32-byte key for Poly1305");
+        let key = b"this is 32-byte key for Poly1305";
         let msg = [0u8, ..32];
         let expected = [
             0x49, 0xec, 0x78, 0x09, 0x0e, 0x48, 0x1e, 0xc6,
@@ -345,7 +345,7 @@ mod test {
         poly1305(key, msg, mac.as_mut_slice());
         assert_eq!(mac.as_slice(), expected.as_slice());
 
-        let msg = bytes!("Hello world!");
+        let msg = b"Hello world!";
         let expected= [
             0xa6, 0xf7, 0x45, 0x00, 0x8f, 0x81, 0xc9, 0x16,
             0xa2, 0x0d, 0xcc, 0x74, 0xee, 0xf2, 0xb2, 0xf0,

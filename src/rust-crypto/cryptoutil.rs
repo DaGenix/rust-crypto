@@ -9,7 +9,7 @@
 // except according to those terms.
 
 use std;
-use std::num::{One, Zero, CheckedAdd};
+use std::num::{One, Zero, Int, CheckedAdd};
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
 use buffer::{ReadBuffer, WriteBuffer, BufferResult, BufferUnderflow, BufferOverflow};
@@ -19,11 +19,10 @@ use symmetriccipher::{SynchronousStreamCipher, SymmetricCipherError};
 /// format.
 pub fn write_u64_be(dst: &mut[u8], input: u64) {
     use std::mem::transmute;
-    use std::mem::to_be64;
     assert!(dst.len() == 8);
     unsafe {
         let x: *mut u64 = transmute(dst.unsafe_mut_ref(0));
-        *x = to_be64(input);
+        *x = input.to_be();
     }
 }
 
@@ -31,11 +30,10 @@ pub fn write_u64_be(dst: &mut[u8], input: u64) {
 /// format.
 pub fn write_u32_be(dst: &mut[u8], input: u32) {
     use std::mem::transmute;
-    use std::mem::to_be32;
     assert!(dst.len() == 4);
     unsafe {
         let x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
-        *x = to_be32(input);
+        *x = input.to_be();
     }
 }
 
@@ -43,24 +41,22 @@ pub fn write_u32_be(dst: &mut[u8], input: u32) {
 /// format.
 pub fn write_u32_le(dst: &mut[u8], input: u32) {
     use std::mem::transmute;
-    use std::mem::to_le32;
     assert!(dst.len() == 4);
     unsafe {
         let x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
-        *x = to_le32(input);
+        *x = input.to_le();
     }
 }
 
 /// Read a vector of bytes into a vector of u64s. The values are read in big-endian format.
 pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     use std::mem::transmute;
-    use std::mem::to_be64;
     assert!(dst.len() * 8 == input.len());
     unsafe {
         let mut x: *mut u64 = transmute(dst.unsafe_mut_ref(0));
         let mut y: *u64 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
-            *x = to_be64(*y);
+            *x = (*y).to_be();
             x = x.offset(1);
             y = y.offset(1);
         }
@@ -70,13 +66,12 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
 /// Read a vector of bytes into a vector of u32s. The values are read in big-endian format.
 pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     use std::mem::transmute;
-    use std::mem::to_be32;
     assert!(dst.len() * 4 == input.len());
     unsafe {
         let mut x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
         let mut y: *u32 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
-            *x = to_be32(*y);
+            *x = (*y).to_be();
             x = x.offset(1);
             y = y.offset(1);
         }
@@ -86,13 +81,12 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
 /// Read a vector of bytes into a vector of u32s. The values are read in little-endian format.
 pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     use std::mem::transmute;
-    use std::mem::to_le32;
     assert!(dst.len() * 4 == input.len());
     unsafe {
         let mut x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
         let mut y: *u32 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
-            *x = to_le32(*y);
+            *x = (*y).to_le();
             x = x.offset(1);
             y = y.offset(1);
         }
@@ -102,22 +96,20 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
 /// Read the value of a vector of bytes as a u32 value in little-endian format.
 pub fn read_u32_le(input: &[u8]) -> u32 {
     use std::mem::transmute;
-    use std::mem::to_le32;
     assert!(input.len() == 4);
     unsafe {
         let tmp: *u32 = transmute(input.unsafe_ref(0));
-        return to_le32(*tmp);
+        return (*tmp).to_le();
     }
 }
 
 /// Read the value of a vector of bytes as a u32 value in big-endian format.
 pub fn read_u32_be(input: &[u8]) -> u32 {
     use std::mem::transmute;
-    use std::mem::to_be32;
     assert!(input.len() == 4);
     unsafe {
         let tmp: *u32 = transmute(input.unsafe_ref(0));
-        return to_be32(*tmp);
+        return (*tmp).to_be();
     }
 }
 
