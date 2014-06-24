@@ -1,0 +1,8 @@
+[package]
+name = "rust-crypto"
+version = "0.1.0"
+authors = []
+
+[[lib]]
+name = "rust-crypto"
+path = "src/rust-crypto/lib.rs"

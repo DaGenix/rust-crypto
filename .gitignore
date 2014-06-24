@@ -30,3 +30,6 @@ tools/rust-crypto-tester/target/
 *~
 .*.swp
 .*.swo
+
+# cargo build
+target/
