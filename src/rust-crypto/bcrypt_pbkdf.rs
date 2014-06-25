@@ -14,7 +14,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
     let mut bf = Blowfish::init_state();
     bf.salted_expand_key(hsalt, hpass);
 
-    for _ in range(0, 64) {
+    for _ in range(0u, 64) {
         bf.expand_key(hsalt);
         bf.expand_key(hpass);
     }
@@ -23,7 +23,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
     read_u32v_be(buf, b"OxychromaticBlowfishSwatDynamite");
 
     for i in range_step(0u, 8, 2) {
-        for _ in range(0, 64) {
+        for _ in range(0u, 64) {
             let (l, r) = bf.encrypt(buf[i], buf[i+1]);
             buf[i] = l;
             buf[i+1] = r;

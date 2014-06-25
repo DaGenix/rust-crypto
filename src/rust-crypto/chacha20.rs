@@ -72,7 +72,7 @@ impl ChaCha20 {
     fn update(&mut self) {
         let mut x = self.state;
 
-        for _ in range(0, 10) {
+        for _ in range(0u, 10) {
             quater_round!(x[0], x[4], x[ 8], x[12]);
             quater_round!(x[1], x[5], x[ 9], x[13]);
             quater_round!(x[2], x[6], x[10], x[14]);

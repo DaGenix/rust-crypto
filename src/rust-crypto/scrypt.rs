@@ -43,7 +43,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         } }
     )
 
-    for _ in range(0, rounds / 2) {
+    for _ in range(0u, rounds / 2) {
         run_round!(
             0x4, 0x0, 0xc, 7;
             0x8, 0x4, 0x0, 9;

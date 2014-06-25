@@ -1155,7 +1155,7 @@ mod test {
             rng2.gen_range(0, max_size)
         };
 
-        for _ in range(0, 1000) {
+        for _ in range(0u, 1000) {
             let mut enc = new_enc();
             let mut dec = new_dec();
 
