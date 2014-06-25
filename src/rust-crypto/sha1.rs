@@ -125,7 +125,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
 }
 
 fn circular_shift(bits: u32, word: u32) -> u32 {
-    return word << bits | word >> 32u32 - bits;
+    return word << bits as uint | word >> (32u32 - bits) as uint;
 }
 
 fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
