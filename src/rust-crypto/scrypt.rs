@@ -28,9 +28,6 @@ use sha2::Sha256;
 
 // The salsa20/8 core function.
 fn salsa20_8(input: &[u8], output: &mut [u8]) {
-    fn rot(a: u32, b: uint) -> u32 {
-        return (a << b) | (a >> (32 - b));
-    }
 
     let mut x = [0u32, ..16];
     read_u32v_le(x, input);
@@ -39,7 +36,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
     macro_rules! run_round (
         ($($set_idx:expr, $idx_a:expr, $idx_b:expr, $rot:expr);*) => { {
-            $( x[$set_idx] ^= rot(x[$idx_a] + x[$idx_b], $rot); )*
+            $( x[$set_idx] ^= (x[$idx_a] + x[$idx_b]).rotate_left($rot); )*
         } }
     )
 

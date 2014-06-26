@@ -17,50 +17,46 @@ pub struct Salsa20 {
     offset: uint,
 }
 
-fn rotate_left(a: u32, b: uint) -> u32 {
-    return (a << b) | (a >> (32 - b));
-}
-
 fn doubleround(y: &mut [u32, ..16]) {
-    y[ 4] = y[ 4] ^ rotate_left(y[ 0]+y[12], 7);
-    y[ 8] = y[ 8] ^ rotate_left(y[ 4]+y[ 0], 9);
-    y[12] = y[12] ^ rotate_left(y[ 8]+y[ 4], 13);
-    y[ 0] = y[ 0] ^ rotate_left(y[12]+y[ 8], 18);
+    y[ 4] = y[ 4] ^ (y[ 0]+y[12]).rotate_left( 7);
+    y[ 8] = y[ 8] ^ (y[ 4]+y[ 0]).rotate_left( 9);
+    y[12] = y[12] ^ (y[ 8]+y[ 4]).rotate_left(13);
+    y[ 0] = y[ 0] ^ (y[12]+y[ 8]).rotate_left(18);
     
-    y[ 9] = y[ 9] ^ rotate_left(y[ 5]+y[ 1], 7);
-    y[13] = y[13] ^ rotate_left(y[ 9]+y[ 5], 9);
-    y[ 1] = y[ 1] ^ rotate_left(y[13]+y[ 9], 13);
-    y[ 5] = y[ 5] ^ rotate_left(y[ 1]+y[13], 18);
-    
-    y[14] = y[14] ^ rotate_left(y[10]+y[ 6], 7);
-    y[ 2] = y[ 2] ^ rotate_left(y[14]+y[10], 9);
-    y[ 6] = y[ 6] ^ rotate_left(y[ 2]+y[14], 13);
-    y[10] = y[10] ^ rotate_left(y[ 6]+y[ 2], 18);
+    y[ 9] = y[ 9] ^ (y[ 5]+y[ 1]).rotate_left( 7);
+    y[13] = y[13] ^ (y[ 9]+y[ 5]).rotate_left( 9);
+    y[ 1] = y[ 1] ^ (y[13]+y[ 9]).rotate_left(13);
+    y[ 5] = y[ 5] ^ (y[ 1]+y[13]).rotate_left(18);
 
-    y[ 3] = y[ 3] ^ rotate_left(y[15]+y[11], 7);
-    y[ 7] = y[ 7] ^ rotate_left(y[ 3]+y[15], 9);
-    y[11] = y[11] ^ rotate_left(y[ 7]+y[ 3], 13);
-    y[15] = y[15] ^ rotate_left(y[11]+y[ 7], 18);
-    
-    y[1] = y[1] ^ rotate_left(y[0]+y[3], 7);
-    y[2] = y[2] ^ rotate_left(y[1]+y[0], 9);
-    y[3] = y[3] ^ rotate_left(y[2]+y[1], 13);
-    y[0] = y[0] ^ rotate_left(y[3]+y[2], 18);
-    
-    y[6] = y[6] ^ rotate_left(y[5]+y[4], 7);
-    y[7] = y[7] ^ rotate_left(y[6]+y[5], 9);
-    y[4] = y[4] ^ rotate_left(y[7]+y[6], 13);
-    y[5] = y[5] ^ rotate_left(y[4]+y[7], 18);
-    
-    y[11] = y[11] ^ rotate_left(y[10]+y[ 9], 7);
-    y[ 8] = y[ 8] ^ rotate_left(y[11]+y[10], 9);
-    y[ 9] = y[ 9] ^ rotate_left(y[ 8]+y[11], 13);
-    y[10] = y[10] ^ rotate_left(y[ 9]+y[ 8], 18);
-    
-    y[12] = y[12] ^ rotate_left(y[15]+y[14], 7);
-    y[13] = y[13] ^ rotate_left(y[12]+y[15], 9);
-    y[14] = y[14] ^ rotate_left(y[13]+y[12], 13);
-    y[15] = y[15] ^ rotate_left(y[14]+y[13], 18);
+    y[14] = y[14] ^ (y[10]+y[ 6]).rotate_left( 7);
+    y[ 2] = y[ 2] ^ (y[14]+y[10]).rotate_left( 9);
+    y[ 6] = y[ 6] ^ (y[ 2]+y[14]).rotate_left(13);
+    y[10] = y[10] ^ (y[ 6]+y[ 2]).rotate_left(18);
+
+    y[ 3] = y[ 3] ^ (y[15]+y[11]).rotate_left( 7);
+    y[ 7] = y[ 7] ^ (y[ 3]+y[15]).rotate_left( 9);
+    y[11] = y[11] ^ (y[ 7]+y[ 3]).rotate_left(13);
+    y[15] = y[15] ^ (y[11]+y[ 7]).rotate_left(18);
+
+    y[1] = y[1] ^ (y[0]+y[3]).rotate_left( 7);
+    y[2] = y[2] ^ (y[1]+y[0]).rotate_left( 9);
+    y[3] = y[3] ^ (y[2]+y[1]).rotate_left(13);
+    y[0] = y[0] ^ (y[3]+y[2]).rotate_left(18);
+
+    y[6] = y[6] ^ (y[5]+y[4]).rotate_left( 7);
+    y[7] = y[7] ^ (y[6]+y[5]).rotate_left( 9);
+    y[4] = y[4] ^ (y[7]+y[6]).rotate_left(13);
+    y[5] = y[5] ^ (y[4]+y[7]).rotate_left(18);
+
+    y[11] = y[11] ^ (y[10]+y[ 9]).rotate_left( 7);
+    y[ 8] = y[ 8] ^ (y[11]+y[10]).rotate_left( 9);
+    y[ 9] = y[ 9] ^ (y[ 8]+y[11]).rotate_left(13);
+    y[10] = y[10] ^ (y[ 9]+y[ 8]).rotate_left(18);
+
+    y[12] = y[12] ^ (y[15]+y[14]).rotate_left( 7);
+    y[13] = y[13] ^ (y[12]+y[15]).rotate_left( 9);
+    y[14] = y[14] ^ (y[13]+y[12]).rotate_left(13);
+    y[15] = y[15] ^ (y[14]+y[13]).rotate_left(18);
 }
 
 impl Salsa20 {
