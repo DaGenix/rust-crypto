@@ -8,8 +8,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::num::ToStrRadix;
-
 /**
  * The Digest trait specifies an interface common to digest functions, such as SHA-1 and the SHA-2
  * family of digest functions.
@@ -81,10 +79,7 @@ pub trait Digest {
 fn to_hex(rr: &[u8]) -> String {
     let mut s = String::new();
     for b in rr.iter() {
-        let hex = (*b as uint).to_str_radix(16u);
-        if hex.len() == 1 {
-            s.push_char('0');
-        }
+        let hex = format!("{:02x}", *b);
         s.push_str(hex.as_slice());
     }
     return s;

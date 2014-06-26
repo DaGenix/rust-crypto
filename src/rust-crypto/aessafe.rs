@@ -321,7 +321,7 @@ define_aes_enc_x8!(AesSafe256EncryptorX8, 14)
 define_aes_dec_x8!(AesSafe256DecryptorX8, 14)
 
 fn rotate(r: u32, rotate: u32) -> u32 {
-    return (r >> rotate) | (r << (32 - rotate));
+    return (r >> rotate as uint) | (r << (32 - rotate) as uint);
 }
 
 fn ffmulx(x: u32) -> u32 {

@@ -137,7 +137,7 @@ impl Salsa20 {
         let mut z = [0u32, ..16];
         read_u32v_le(x.as_mut_slice(), self.state);
         read_u32v_le(z.as_mut_slice(), self.state);
-        for _ in range(0, 10) {
+        for _ in range(0u, 10) {
             doubleround(&mut z);
         }
         for i in range(0u, 16) {
@@ -151,7 +151,7 @@ impl Salsa20 {
     fn hsalsa20_hash(&mut self) {
         let mut x = [0u32, ..16];
         read_u32v_le(x.as_mut_slice(), self.state);
-        for _ in range(0, 10) {
+        for _ in range(0u, 10) {
             doubleround(&mut x);
         }
         for i in range(0u, 16) {

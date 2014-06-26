@@ -43,7 +43,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         } }
     )
 
-    for _ in range(0, rounds / 2) {
+    for _ in range(0u, rounds / 2) {
         run_round!(
             0x4, 0x0, 0xc, 7;
             0x8, 0x4, 0x0, 9;
@@ -168,7 +168,7 @@ impl ScryptParams {
         assert!(log_n > 0);
         assert!((log_n as uint) < size_of::<uint>() * 8);
 
-        let n = 1u32 << log_n;
+        let n = 1u32 << log_n as uint;
 
         let rp = match r.checked_mul(&p) {
             Some(x) => x,
@@ -232,7 +232,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     assert!(output.len() / 32 <= 0xffffffff);
 
     // The checks in the ScryptParams constructor guarantee that the following is safe:
-    let n = 1u << params.log_n;
+    let n = 1u << params.log_n as uint;
     let r = params.r as uint;
     let p = params.p as uint;
 

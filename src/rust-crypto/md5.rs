@@ -57,7 +57,7 @@ impl Md5State {
         }
 
         fn rotate_left(x: u32, n: u32) -> u32 {
-            return (x << n) | (x >> (32 - n));
+            return (x << n as uint) | (x >> (32 - n as uint));
         }
 
         fn op_f(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
