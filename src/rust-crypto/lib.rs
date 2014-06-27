@@ -12,6 +12,7 @@
 #![feature(simd)]
 
 extern crate serialize;
+#[cfg(test)] extern crate test;
 
 pub mod aes;
 pub mod aesni;
