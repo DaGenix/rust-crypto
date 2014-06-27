@@ -820,7 +820,7 @@ mod tests {
 
         let mut sh = box Sha512::new();
 
-        test_hash(sh, tests.as_slice());
+        test_hash(&mut *sh, tests.as_slice());
     }
 
     #[test]
@@ -845,7 +845,7 @@ mod tests {
 
         let mut sh = box Sha384::new();
 
-        test_hash(sh, tests.as_slice());
+        test_hash(&mut *sh, tests.as_slice());
     }
 
     #[test]
@@ -870,7 +870,7 @@ mod tests {
 
         let mut sh = box Sha512Trunc256::new();
 
-        test_hash(sh, tests.as_slice());
+        test_hash(&mut *sh, tests.as_slice());
     }
 
     #[test]
@@ -895,7 +895,7 @@ mod tests {
 
         let mut sh = box Sha512Trunc224::new();
 
-        test_hash(sh, tests.as_slice());
+        test_hash(&mut *sh, tests.as_slice());
     }
 
     #[test]
@@ -920,7 +920,7 @@ mod tests {
 
         let mut sh = box Sha256::new();
 
-        test_hash(sh, tests.as_slice());
+        test_hash(&mut *sh, tests.as_slice());
     }
 
     #[test]
@@ -945,7 +945,7 @@ mod tests {
 
         let mut sh = box Sha224::new();
 
-        test_hash(sh, tests.as_slice());
+        test_hash(&mut *sh, tests.as_slice());
     }
 
     #[test]
