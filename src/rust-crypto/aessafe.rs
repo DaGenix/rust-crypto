@@ -320,10 +320,6 @@ define_aes_impl_x8!(AesSafe256DecryptorX8, Decryption, 14, 32)
 define_aes_enc_x8!(AesSafe256EncryptorX8, 14)
 define_aes_dec_x8!(AesSafe256DecryptorX8, 14)
 
-fn rotate(r: u32, rotate: u32) -> u32 {
-    return (r >> rotate as uint) | (r << (32 - rotate) as uint);
-}
-
 fn ffmulx(x: u32) -> u32 {
     let m1: u32 = 0x80808080;
     let m2: u32 = 0x7f7f7f7f;
@@ -337,7 +333,7 @@ fn inv_mcol(x: u32) -> u32 {
     let f8 = ffmulx(f4);
     let f9 = x ^ f8;
 
-    return f2 ^ f4 ^ f8 ^ rotate(f2 ^ f9, 8) ^ rotate(f4 ^ f9, 16) ^ rotate(f9, 24);
+    return f2 ^ f4 ^ f8 ^ (f2 ^ f9).rotate_right(8) ^ (f4 ^ f9).rotate_right(16) ^ f9.rotate_right(24);
 }
 
 fn sub_word(x: u32) -> u32 {
@@ -380,7 +376,7 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32, ..4]
     for i in range(key_words, (rounds + 1) * 4) {
         let mut tmp = round_keys[(i - 1) / 4][(i - 1) % 4];
         if (i % key_words) == 0 {
-            tmp = sub_word(rotate(tmp, 8)) ^ RCON[(i / key_words) - 1];
+            tmp = sub_word(tmp.rotate_right(8)) ^ RCON[(i / key_words) - 1];
         } else if (key_words == 8) && ((i % key_words) == 4) {
             // This is only necessary for AES-256 keys
             tmp = sub_word(tmp);

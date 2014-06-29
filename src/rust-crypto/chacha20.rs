@@ -14,14 +14,12 @@ pub struct ChaCha20 {
     offset : uint,
 }
 
-fn rotl32(v: u32, n: uint) -> u32 { (v << n) | (v >> (32 - n)) }
-
 macro_rules! quater_round(
     ($a:expr, $b:expr, $c:expr, $d:expr) => ({
-        $a += $b; $d ^= $a; $d = rotl32($d, 16);
-        $c += $d; $b ^= $c; $b = rotl32($b, 12);
-        $a += $b; $d ^= $a; $d = rotl32($d, 8);
-        $c += $d; $b ^= $c; $b = rotl32($b, 7);
+        $a += $b; $d ^= $a; $d = $d.rotate_left(16);
+        $c += $d; $b ^= $c; $b = $b.rotate_left(12);
+        $a += $b; $d ^= $a; $d = $d.rotate_left( 8);
+        $c += $d; $b ^= $c; $b = $b.rotate_left( 7);
     });
 )
 
