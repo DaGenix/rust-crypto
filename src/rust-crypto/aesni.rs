@@ -138,7 +138,7 @@ enum KeyType {
 }
 
 #[inline(always)]
-unsafe fn aesimc(round_keys: *u8) {
+unsafe fn aesimc(round_keys: *mut u8) {
     asm!(
     "
         movdqu ($0), %xmm1
@@ -156,8 +156,8 @@ unsafe fn aesimc(round_keys: *u8) {
 #[allow(dead_assignment)]
 fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
-        let mut round_keysp: *u8 = round_key.unsafe_ref(0);
-        let keyp: *u8 = key.unsafe_ref(0);
+        let mut round_keysp: *mut u8 = round_key.unsafe_mut_ref(0);
+        let keyp: *const u8 = key.unsafe_ref(0);
 
         asm!(
         "
@@ -213,7 +213,7 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
             Decryption => {
                 // range of rounds keys from #1 to #9; skip the first and last key
                 for i in range(1u, 10) {
-                    aesimc(round_key.unsafe_ref(16 * i));
+                    aesimc(round_key.unsafe_mut_ref(16 * i));
                 }
             }
             Encryption => { /* nothing more to do */ }
@@ -225,8 +225,8 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
 #[allow(dead_assignment)]
 fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
-        let mut round_keysp: *u8 = round_key.unsafe_ref(0);
-        let keyp: *u8 = key.unsafe_ref(0);
+        let mut round_keysp: *mut u8 = round_key.unsafe_mut_ref(0);
+        let keyp: *const u8 = key.unsafe_ref(0);
 
         asm!(
         "
@@ -317,7 +317,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             Decryption => {
                 // range of rounds keys from #1 to #11; skip the first and last key
                 for i in range(1u, 12) {
-                    aesimc(round_key.unsafe_ref(16 * i));
+                    aesimc(round_key.unsafe_mut_ref(16 * i));
                 }
             }
             Encryption => { /* nothing more to do */ }
@@ -329,8 +329,8 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
 #[allow(dead_assignment)]
 fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
-        let mut round_keysp: *u8 = round_key.unsafe_ref(0);
-        let keyp: *u8 = key.unsafe_ref(0);
+        let mut round_keysp: *mut u8 = round_key.unsafe_mut_ref(0);
+        let keyp: *const u8 = key.unsafe_ref(0);
 
         asm!(
         "
@@ -429,7 +429,7 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
             Decryption => {
                 // range of rounds keys from #1 to #13; skip the first and last key
                 for i in range(1u, 14) {
-                    aesimc(round_key.unsafe_ref(16 * i));
+                    aesimc(round_key.unsafe_mut_ref(16 * i));
                 }
             }
             Encryption => { /* nothing more to do */ }
@@ -442,9 +442,9 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
 fn encrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &mut [u8]) {
     unsafe {
         let mut rounds = rounds;
-        let mut round_keysp: *u8 = round_keys.unsafe_ref(0);
-        let outp: *u8 = output.unsafe_ref(0);
-        let inp: *u8 = input.unsafe_ref(0);
+        let mut round_keysp: *const u8 = round_keys.unsafe_ref(0);
+        let outp: *mut u8 = output.unsafe_mut_ref(0);
+        let inp: *const u8 = input.unsafe_ref(0);
 
         asm!(
         "
@@ -485,9 +485,9 @@ fn encrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
 fn decrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &mut [u8]) {
     unsafe {
         let mut rounds = rounds;
-        let mut round_keysp: *u8 = round_keys.unsafe_ref(round_keys.len() - 16);
-        let outp: *u8 = output.unsafe_ref(0);
-        let inp: *u8 = input.unsafe_ref(0);
+        let mut round_keysp: *const u8 = round_keys.unsafe_ref(round_keys.len() - 16);
+        let outp: *mut u8 = output.unsafe_mut_ref(0);
+        let inp: *const u8 = input.unsafe_ref(0);
 
         asm!(
         "
