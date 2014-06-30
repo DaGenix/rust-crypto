@@ -54,7 +54,7 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     assert!(dst.len() * 8 == input.len());
     unsafe {
         let mut x: *mut u64 = transmute(dst.unsafe_mut_ref(0));
-        let mut y: *u64 = transmute(input.unsafe_ref(0));
+        let mut y: *const u64 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
             *x = (*y).to_be();
             x = x.offset(1);
@@ -69,7 +69,7 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
         let mut x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
-        let mut y: *u32 = transmute(input.unsafe_ref(0));
+        let mut y: *const u32 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
             *x = (*y).to_be();
             x = x.offset(1);
@@ -84,7 +84,7 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
         let mut x: *mut u32 = transmute(dst.unsafe_mut_ref(0));
-        let mut y: *u32 = transmute(input.unsafe_ref(0));
+        let mut y: *const u32 = transmute(input.unsafe_ref(0));
         for _ in range(0, dst.len()) {
             *x = (*y).to_le();
             x = x.offset(1);
@@ -98,7 +98,7 @@ pub fn read_u32_le(input: &[u8]) -> u32 {
     use std::mem::transmute;
     assert!(input.len() == 4);
     unsafe {
-        let tmp: *u32 = transmute(input.unsafe_ref(0));
+        let tmp: *const u32 = transmute(input.unsafe_ref(0));
         return (*tmp).to_le();
     }
 }
@@ -108,7 +108,7 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
     use std::mem::transmute;
     assert!(input.len() == 4);
     unsafe {
-        let tmp: *u32 = transmute(input.unsafe_ref(0));
+        let tmp: *const u32 = transmute(input.unsafe_ref(0));
         return (*tmp).to_be();
     }
 }
@@ -118,7 +118,7 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
 #[cfg(target_arch = "x86_64")]
 #[inline(never)]
 #[allow(dead_assignment)]
-unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
+unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
 
     asm!(
@@ -146,7 +146,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bo
 #[cfg(target_arch = "arm")]
 #[inline(never)]
 #[allow(dead_assignment)]
-unsafe fn fixed_time_eq_asm(mut lhsp: *u8, mut rhsp: *u8, mut count: uint) -> bool {
+unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
 
     asm!(
