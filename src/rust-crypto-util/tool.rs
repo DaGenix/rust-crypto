@@ -5,7 +5,7 @@
 // except according to those terms.
 
 #![license = "MIT/ASL2"]
-#![crate_id = "github.com/DaGenix/rust-crypto#rust-crypto-util:0.1"]
+#![crate_name = "rust-crypto-util"]
 
 extern crate getopts;
 extern crate rust_crypto = "rust-crypto";
