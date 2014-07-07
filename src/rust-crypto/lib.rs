@@ -5,7 +5,7 @@
 // except according to those terms.
 
 #![license = "MIT/ASL2"]
-#![crate_id = "github.com/DaGenix/rust-crypto#rust-crypto:0.1"]
+#![crate_name = "rust-crypto"]
 
 #![feature(asm)]
 #![feature(macro_rules)]

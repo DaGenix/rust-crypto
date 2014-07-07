@@ -25,8 +25,8 @@ $(1)_rust_crate_dir = $(dir $(2))
 $(1)_rust_crate_main = $(2)
 $(1)_rust_crate_test = $$($(1)_rust_crate_dir)test.rs
 
-$(1)_rust_crate_name = $$(shell $$(RUSTC) --crate-name $$($(1)_rust_crate_main))
-$(1)_rust_crate_out = $$(shell $$(RUSTC) --crate-file-name --crate-type=$(3) $$($(1)_rust_crate_main))
+$(1)_rust_crate_name = $$(shell $$(RUSTC) --print-file-name $$($(1)_rust_crate_main))
+$(1)_rust_crate_out = $$(shell $$(RUSTC) --print-file-name --crate-type=$(3) $$($(1)_rust_crate_main))
 
 # If compiling a binary, these two variables will be equal, so it doesn't make
 # any sense to create a rule that lists itself as its dependancy.
