@@ -28,6 +28,21 @@ pub fn write_u64_be(dst: &mut[u8], mut input: u64) {
     }
 }
 
+/// Write a vector of u64s into a vector of bytes. The values are written in little-endian format.
+pub fn write_u64v_le(dst: &mut[u8], input: &[u64]) {
+    assert!(dst.len() == 8 * input.len());
+    unsafe {
+        let mut x: *mut u8 = dst.unsafe_mut(0);
+        let mut y: *const u64 = input.unsafe_get(0);
+        for _ in range(0, input.len()) {
+            let tmp = (*y).to_le();
+            ptr::copy_nonoverlapping_memory(x, &tmp as *const _ as *const u8, 8);
+            x = x.offset(8);
+            y = y.offset(1);
+        }
+    }
+}
+
 /// Write a u32 into a vector, which must be 4 bytes long. The value is written in big-endian
 /// format.
 pub fn write_u32_be(dst: &mut [u8], mut input: u32) {
@@ -60,6 +75,22 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
             let mut tmp: u64 = mem::uninitialized();
             ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, y, 8);
             *x = Int::from_be(tmp);
+            x = x.offset(1);
+            y = y.offset(8);
+        }
+    }
+}
+
+/// Read a vector of bytes into a vector of u64s. The values are read in little-endian format.
+pub fn read_u64v_le(dst: &mut[u64], input: &[u8]) {
+    assert!(dst.len() * 8 == input.len());
+    unsafe {
+        let mut x = dst.unsafe_mut(0) as *mut u64;
+        let mut y = input.unsafe_get(0) as *const u8;
+        for _ in range(0, dst.len()) {
+            let mut tmp: u64 = mem::uninitialized();
+            ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, y, 8);
+            *x = Int::from_le(tmp);
             x = x.offset(1);
             y = y.offset(8);
         }
