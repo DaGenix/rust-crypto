@@ -363,18 +363,18 @@ pub fn ctr(
         iv: &[u8]) -> Box<SynchronousStreamCipher> {
     match key_size {
         KeySize128 => {
-            let aes_dec = aessafe::AesSafe128Encryptor::new(key);
-            let dec = box CtrModeX8::new(aes_dec, Vec::from_slice(iv));
+            let aes_dec = aessafe::AesSafe128EncryptorX8::new(key);
+            let dec = box CtrModeX8::new(aes_dec, iv);
             dec as Box<SynchronousStreamCipher>
         }
         KeySize192 => {
-            let aes_dec = aessafe::AesSafe192Encryptor::new(key);
-            let dec = box CtrModeX8::new(aes_dec, Vec::from_slice(iv));
+            let aes_dec = aessafe::AesSafe192EncryptorX8::new(key);
+            let dec = box CtrModeX8::new(aes_dec, iv);
             dec as Box<SynchronousStreamCipher>
         }
         KeySize256 => {
-            let aes_dec = aessafe::AesSafe256Encryptor::new(key);
-            let dec = box CtrModeX8::new(aes_dec, Vec::from_slice(iv));
+            let aes_dec = aessafe::AesSafe256EncryptorX8::new(key);
+            let dec = box CtrModeX8::new(aes_dec, iv);
             dec as Box<SynchronousStreamCipher>
         }
     }
