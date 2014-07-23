@@ -15,7 +15,6 @@ extern crate serialize;
 #[cfg(test)] extern crate test;
 
 pub mod aes;
-pub mod aesni;
 pub mod aessafe;
 pub mod bcrypt;
 pub mod bcrypt_pbkdf;
@@ -37,3 +36,7 @@ pub mod sha1;
 pub mod sha2;
 pub mod symmetriccipher;
 pub mod util;
+
+#[cfg(target_arch = "x86")]
+#[cfg(target_arch = "x86_64")]
+pub mod aesni;
