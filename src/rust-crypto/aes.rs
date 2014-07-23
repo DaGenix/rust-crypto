@@ -215,6 +215,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send>(
 pub fn cbc_encryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
+        iv: &[u8],
         padding: X) -> Box<Encryptor> {
     match key_size {
         KeySize128 => {
