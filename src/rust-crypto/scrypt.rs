@@ -21,10 +21,11 @@ use std::slice::MutableCloneableVector;
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
 
-use cryptoutil::{fixed_time_eq, read_u32_le, read_u32v_le, write_u32_le};
+use cryptoutil::{read_u32_le, read_u32v_le, write_u32_le};
 use hmac::Hmac;
 use pbkdf2::pbkdf2;
 use sha2::Sha256;
+use util::fixed_time_eq;
 
 // The salsa20/8 core function.
 fn salsa20_8(input: &[u8], output: &mut [u8]) {
