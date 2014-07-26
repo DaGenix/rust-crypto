@@ -183,6 +183,32 @@ pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
 }
 
 
+/// zero_memory() sets all bytes in the given slice to 0 in a way that will not be optimized out
+/// by the compiler. This should be called to remove sensitive data such as private keys from
+/// memory.
+#[inline(never)]
+#[allow(dead_assignment)]
+pub fn zero_memory(xs: &mut [u8]) {
+    if xs.len() == 0 {
+        return;
+    }
+    for x in xs.mut_iter() {
+        *x = 0;
+    }
+    
+    unsafe {
+        let mut xsp = xs.unsafe_ref(0);
+        asm!(
+            ""
+            : "+r" (xsp) // all inputs and outputs
+            : // inputs
+            : "memory" // clobbers
+            : "volatile" // flags
+        );
+    }
+}
+
+
 /// symm_enc_or_dec() implements the necessary functionality to turn a SynchronousStreamCipher into
 /// an Encryptor or Decryptor
 pub fn symm_enc_or_dec<S: SynchronousStreamCipher, R: ReadBuffer, W: WriteBuffer>(
@@ -460,7 +486,7 @@ pub mod test {
     use std::rand::IsaacRng;
     use std::rand::distributions::{IndependentSample, Range};
 
-    use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple, fixed_time_eq};
+    use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple, fixed_time_eq, zero_memory};
     use digest::Digest;
 
     /// Feed 1,000,000 'a's into the digest with varying input sizes and check that the result is
@@ -552,5 +578,16 @@ pub mod test {
         assert!(!fixed_time_eq(a, e));
         assert!(!fixed_time_eq(a, f));
         assert!(!fixed_time_eq(a, g));
+    }
+
+    #[test]
+    pub fn test_zero_memory() {
+        //           0  1  2  3  4  5  6  7  8  9 10 11
+        let mut a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 9];
+        let     b = [3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 9];
+        zero_memory(a.mut_slice(1,9));
+        zero_memory(a.mut_slice(10,10)); // empty case
+
+        assert_eq!(Vec::from_slice(a), Vec::from_slice(b));
     }
 }
