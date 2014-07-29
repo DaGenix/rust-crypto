@@ -85,7 +85,7 @@ fn main() {
 
     let matches = match getopts(args.tail(), opts.as_slice()) {
         Ok(m) => { m }
-        Err(f) => { fail!(f.to_str()) }
+        Err(f) => { fail!(f.to_string()) }
     };
 
     if matches.opt_present("h") || matches.opt_present("help") {
@@ -97,7 +97,7 @@ fn main() {
         print_usage();
         return;
     }
-    let algorithm_name = matches.free.get(0).as_slice();
+    let algorithm_name = matches.free[0].as_slice();
 
     match algorithm_name {
         "scrypt" => run_scrypt(&matches),
