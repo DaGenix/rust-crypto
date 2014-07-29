@@ -27,3 +27,105 @@ pub fn supports_aesni() -> bool {
 
     return (flags & 0x02000000) != 0;
 }
+
+#[cfg(target_arch = "x86")]
+#[cfg(target_arch = "x86_64")]
+#[inline(never)]
+#[allow(dead_assignment)]
+unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
+    let mut result: u8 = 0;
+
+    asm!(
+        "
+            fixed_time_eq_loop:
+
+            mov ($1), %cl
+            xor ($2), %cl
+            or %cl, $0
+
+            inc $1
+            inc $2
+            dec $3
+            jnz fixed_time_eq_loop
+        "
+        : "+r" (result), "+r" (lhsp), "+r" (rhsp), "+r" (count) // all input and output
+        : // input
+        : "cl", "cc" // clobbers
+        : "volatile" // flags
+    );
+
+    return result == 0;
+}
+
+#[cfg(target_arch = "arm")]
+#[inline(never)]
+#[allow(dead_assignment)]
+unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
+    let mut result: u8 = 0;
+
+    asm!(
+        "
+            fixed_time_eq_loop:
+
+            ldrb r4, [$1]
+            ldrb r5, [$2]
+            eor r4, r4, r5
+            orr $0, $0, r4
+
+            add $1, $1, #1
+            add $2, $2, #1
+            subs $3, $3, #1
+            bne fixed_time_eq_loop
+        "
+        : "+r" (result), "+r" (lhsp), "+r" (rhsp), "+r" (count) // all input and output
+        : // input
+        : "r4", "r5", "cc" // clobbers
+        : "volatile" // flags
+    );
+
+    return result == 0;
+}
+
+/// Compare two vectors using a fixed number of operations. If the two vectors are not of equal
+/// length, the function returns false immediately.
+pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
+    if lhs.len() != rhs.len() {
+        return false;
+    }
+    if lhs.len() == 0 {
+        return true;
+    }
+
+    let count = lhs.len();
+
+    unsafe {
+        let lhsp = lhs.unsafe_ref(0);
+        let rhsp = rhs.unsafe_ref(0);
+        return fixed_time_eq_asm(lhsp, rhsp, count);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use util::fixed_time_eq;
+
+    #[test]
+    pub fn test_fixed_time_eq() {
+        let a = [0, 1, 2];
+        let b = [0, 1, 2];
+        let c = [0, 1, 9];
+        let d = [9, 1, 2];
+        let e = [2, 1, 0];
+        let f = [2, 2, 2];
+        let g = [0, 0, 0];
+
+        assert!(fixed_time_eq(a, a));
+        assert!(fixed_time_eq(a, b));
+
+        assert!(!fixed_time_eq(a, c));
+        assert!(!fixed_time_eq(a, d));
+        assert!(!fixed_time_eq(a, e));
+        assert!(!fixed_time_eq(a, f));
+        assert!(!fixed_time_eq(a, g));
+    }
+}
