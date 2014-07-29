@@ -85,7 +85,7 @@ fn main() {
 
     let matches = match getopts(args.tail(), opts.as_slice()) {
         Ok(m) => { m }
-        Err(f) => { fail!(f.to_str()) }
+        Err(f) => { fail!(f.to_string()) }
     };
 
     if matches.opt_present("h") || matches.opt_present("help") {
