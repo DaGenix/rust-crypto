@@ -6,3 +6,7 @@ authors = []
 [[lib]]
 name = "rust-crypto"
 path = "src/rust-crypto/lib.rs"
+
+[[bin]]
+name = "rust-crypto-util"
+path = "src/rust-crypto-util/tool.rs"
