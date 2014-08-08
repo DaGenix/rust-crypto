@@ -237,7 +237,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
         round5: h_ordering 2, 3, 4, 0, 1 data_index 15 roll_shift  5
         round5: h_ordering 1, 2, 3, 4, 0 data_index 13 roll_shift  6
 
-        // Porallel Round 1
+        // Parallel Round 1
         par_round1: h_ordering 0, 1, 2, 3, 4 data_index  5 roll_shift  8
         par_round1: h_ordering 4, 0, 1, 2, 3 data_index 14 roll_shift  9
         par_round1: h_ordering 3, 4, 0, 1, 2 data_index  7 roll_shift  9
