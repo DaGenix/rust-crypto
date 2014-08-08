@@ -27,12 +27,6 @@ use cryptoutil::{write_u32_le, read_u32v_le, add_bytes_to_bits, FixedBuffer,
     FixedBuffer64, StandardPadding};
 use digest::Digest;
 
-/*
- * A SHA-1 implementation derived from Paul E. Jones's reference
- * implementation, which is written for clarity, not speed. At some
- * point this will want to be rewritten.
- */
-
 // Some unexported constants
 static DIGEST_BUF_LEN: uint = 5u;
 static WORK_BUF_LEN: uint = 16u;
@@ -335,35 +329,8 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
     );
 }
 
-fn mk_result(st: &mut Ripemd160, rs: &mut [u8]) {
-    if !st.computed {
-        let st_h = &mut st.h;
-        st.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
-
-        write_u32_le(st.buffer.next(4), st.length_bits as u32);
-        write_u32_le(st.buffer.next(4), (st.length_bits >> 32) as u32 );
-        process_msg_block(st.buffer.full_buffer(), st_h);
-
-        st.computed = true;
-    }
-    
-    write_u32_le(rs.mut_slice(0, 4), st.h[0]);
-    write_u32_le(rs.mut_slice(4, 8), st.h[1]);
-    write_u32_le(rs.mut_slice(8, 12), st.h[2]);
-    write_u32_le(rs.mut_slice(12, 16), st.h[3]);
-    write_u32_le(rs.mut_slice(16, 20), st.h[4]);
-}
-
-fn add_input(st: &mut Ripemd160, msg: &[u8]) {
-    assert!((!st.computed));
-    // Assumes that msg.len() can be converted to u64 without overflow
-    st.length_bits = add_bytes_to_bits(st.length_bits, msg.len() as u64);
-    let st_h = &mut st.h;
-    st.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
-}
-
 impl Ripemd160 {
-    /// Construct a `sha` object
+    // Construct a `Ripemd` object
     pub fn new() -> Ripemd160 {
         let mut st = Ripemd160 {
             h: [0u32, ..DIGEST_BUF_LEN],
@@ -387,8 +354,35 @@ impl Digest for Ripemd160 {
         self.buffer.reset();
         self.computed = false;
     }
-    fn input(&mut self, msg: &[u8]) { add_input(self, msg); }
-    fn result(&mut self, out: &mut [u8]) { return mk_result(self, out); }
+
+    fn input(&mut self, msg: &[u8]) { 
+        assert!(!self.computed);
+        // Assumes that msg.len() can be converted to u64 without overflow
+        self.length_bits = add_bytes_to_bits(self.length_bits, msg.len() as u64);
+        let st_h = &mut self.h;
+        self.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
+    }
+    
+    fn result(&mut self, out: &mut [u8]) { 
+        
+        if !self.computed {
+            let st_h = &mut self.h;
+            self.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
+
+            write_u32_le(self.buffer.next(4), self.length_bits as u32);
+            write_u32_le(self.buffer.next(4), (self.length_bits >> 32) as u32 );
+            process_msg_block(self.buffer.full_buffer(), st_h);
+
+            self.computed = true;
+        }
+        
+        write_u32_le(out.mut_slice(0, 4), self.h[0]);
+        write_u32_le(out.mut_slice(4, 8), self.h[1]);
+        write_u32_le(out.mut_slice(8, 12), self.h[2]);
+        write_u32_le(out.mut_slice(12, 16), self.h[3]);
+        write_u32_le(out.mut_slice(16, 20), self.h[4]);
+    }
+
     fn output_bits(&self) -> uint { 160 }
     fn block_size(&self) -> uint { 64 }
 }

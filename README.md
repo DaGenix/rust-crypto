@@ -16,6 +16,7 @@ this time.
 These algorithms are already implemented in the main branch.
 
 * MD5
+* RIPEMD-160
 * Sha1
 * Sha2 (All fixed output size variants)
 * HMAC
