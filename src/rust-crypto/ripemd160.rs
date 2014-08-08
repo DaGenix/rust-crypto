@@ -113,7 +113,7 @@ macro_rules! process_block(
                   $data[$pdata_index1], $pbits1, 0x50a28be6,
                   bbb[$pj1] ^ (bbb[$pj2] | !bbb[$pj3])) )*
 
-        // Porallel Round 2
+        // Parallel Round 2
         $( round!(bbb[$pi0], bbb[$pi1], bbb[$pi2], bbb[$pi3], bbb[$pi4],
                   $data[$pdata_index2], $pbits2, 0x5c4dd124,
                   (bbb[$pi1] & bbb[$pi3]) | (bbb[$pi2] & !bbb[$pi3])) )*
@@ -255,7 +255,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
         par_round1: h_ordering 1, 2, 3, 4, 0 data_index  3 roll_shift 12
         par_round1: h_ordering 0, 1, 2, 3, 4 data_index 12 roll_shift  6
 
-        // Porallel Round 2
+        // Parallel Round 2
         par_round2: h_ordering 4, 0, 1, 2, 3 data_index  6 roll_shift  9
         par_round2: h_ordering 3, 4, 0, 1, 2 data_index 11 roll_shift 13
         par_round2: h_ordering 2, 3, 4, 0, 1 data_index  3 roll_shift 15
