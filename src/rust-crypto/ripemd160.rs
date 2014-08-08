@@ -27,12 +27,6 @@ use cryptoutil::{write_u32_le, read_u32v_le, add_bytes_to_bits, FixedBuffer,
     FixedBuffer64, StandardPadding};
 use digest::Digest;
 
-/*
- * A SHA-1 implementation derived from Paul E. Jones's reference
- * implementation, which is written for clarity, not speed. At some
- * point this will want to be rewritten.
- */
-
 // Some unexported constants
 static DIGEST_BUF_LEN: uint = 5u;
 static WORK_BUF_LEN: uint = 16u;
@@ -119,7 +113,7 @@ macro_rules! process_block(
                   $data[$pdata_index1], $pbits1, 0x50a28be6,
                   bbb[$pj1] ^ (bbb[$pj2] | !bbb[$pj3])) )*
 
-        // Porallel Round 2
+        // Parallel Round 2
         $( round!(bbb[$pi0], bbb[$pi1], bbb[$pi2], bbb[$pi3], bbb[$pi4],
                   $data[$pdata_index2], $pbits2, 0x5c4dd124,
                   (bbb[$pi1] & bbb[$pi3]) | (bbb[$pi2] & !bbb[$pi3])) )*
@@ -243,7 +237,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
         round5: h_ordering 2, 3, 4, 0, 1 data_index 15 roll_shift  5
         round5: h_ordering 1, 2, 3, 4, 0 data_index 13 roll_shift  6
 
-        // Porallel Round 1
+        // Parallel Round 1
         par_round1: h_ordering 0, 1, 2, 3, 4 data_index  5 roll_shift  8
         par_round1: h_ordering 4, 0, 1, 2, 3 data_index 14 roll_shift  9
         par_round1: h_ordering 3, 4, 0, 1, 2 data_index  7 roll_shift  9
@@ -261,7 +255,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
         par_round1: h_ordering 1, 2, 3, 4, 0 data_index  3 roll_shift 12
         par_round1: h_ordering 0, 1, 2, 3, 4 data_index 12 roll_shift  6
 
-        // Porallel Round 2
+        // Parallel Round 2
         par_round2: h_ordering 4, 0, 1, 2, 3 data_index  6 roll_shift  9
         par_round2: h_ordering 3, 4, 0, 1, 2 data_index 11 roll_shift 13
         par_round2: h_ordering 2, 3, 4, 0, 1 data_index  3 roll_shift 15
@@ -335,35 +329,8 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
     );
 }
 
-fn mk_result(st: &mut Ripemd160, rs: &mut [u8]) {
-    if !st.computed {
-        let st_h = &mut st.h;
-        st.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
-
-        write_u32_le(st.buffer.next(4), st.length_bits as u32);
-        write_u32_le(st.buffer.next(4), (st.length_bits >> 32) as u32 );
-        process_msg_block(st.buffer.full_buffer(), st_h);
-
-        st.computed = true;
-    }
-    
-    write_u32_le(rs.mut_slice(0, 4), st.h[0]);
-    write_u32_le(rs.mut_slice(4, 8), st.h[1]);
-    write_u32_le(rs.mut_slice(8, 12), st.h[2]);
-    write_u32_le(rs.mut_slice(12, 16), st.h[3]);
-    write_u32_le(rs.mut_slice(16, 20), st.h[4]);
-}
-
-fn add_input(st: &mut Ripemd160, msg: &[u8]) {
-    assert!((!st.computed));
-    // Assumes that msg.len() can be converted to u64 without overflow
-    st.length_bits = add_bytes_to_bits(st.length_bits, msg.len() as u64);
-    let st_h = &mut st.h;
-    st.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
-}
-
 impl Ripemd160 {
-    /// Construct a `sha` object
+    // Construct a `Ripemd` object
     pub fn new() -> Ripemd160 {
         let mut st = Ripemd160 {
             h: [0u32, ..DIGEST_BUF_LEN],
@@ -377,6 +344,12 @@ impl Ripemd160 {
 }
 
 impl Digest for Ripemd160 {
+
+    /*!
+     * Resets the hash to its original state also clearing the buffer.
+     * To be used in between hashing separate messages to avoid having
+     * to recreate and allocate the whole structure.
+     */
     fn reset(&mut self) {
         self.length_bits = 0;
         self.h[0] = 0x67452301u32;
@@ -387,9 +360,51 @@ impl Digest for Ripemd160 {
         self.buffer.reset();
         self.computed = false;
     }
-    fn input(&mut self, msg: &[u8]) { add_input(self, msg); }
-    fn result(&mut self, out: &mut [u8]) { return mk_result(self, out); }
+
+    /*!
+     * Adds the input `msg` to the hash. This method can be called repeatedly
+     * for use with streaming messages.
+     */
+    fn input(&mut self, msg: &[u8]) { 
+        assert!(!self.computed);
+        // Assumes that msg.len() can be converted to u64 without overflow
+        self.length_bits = add_bytes_to_bits(self.length_bits, msg.len() as u64);
+        let st_h = &mut self.h;
+        self.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
+    }
+    
+    /*!
+     * Returns the resulting digest of the entire message.
+     * Note: `out` must be at least 20 bytes (160 bits)
+     */
+    fn result(&mut self, out: &mut [u8]) { 
+        
+        if !self.computed {
+            let st_h = &mut self.h;
+            self.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
+
+            write_u32_le(self.buffer.next(4), self.length_bits as u32);
+            write_u32_le(self.buffer.next(4), (self.length_bits >> 32) as u32 );
+            process_msg_block(self.buffer.full_buffer(), st_h);
+
+            self.computed = true;
+        }
+        
+        write_u32_le(out.mut_slice(0, 4), self.h[0]);
+        write_u32_le(out.mut_slice(4, 8), self.h[1]);
+        write_u32_le(out.mut_slice(8, 12), self.h[2]);
+        write_u32_le(out.mut_slice(12, 16), self.h[3]);
+        write_u32_le(out.mut_slice(16, 20), self.h[4]);
+    }
+
+    /*!
+     * Returns the size of the digest in bits
+     */
     fn output_bits(&self) -> uint { 160 }
+
+    /*!
+     * Returns the block size the hash operates on in bytes
+     */
     fn block_size(&self) -> uint { 64 }
 }
 
