@@ -152,7 +152,6 @@ unsafe fn aesimc(round_keys: *mut u8) {
     )
 }
 
-#[inline(never)]
 #[allow(dead_assignment)]
 fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
@@ -166,29 +165,29 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
             add $$0x10, $0
 
             aeskeygenassist $$0x01, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x02, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x04, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x08, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x10, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x20, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x40, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x80, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x1b, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
             aeskeygenassist $$0x36, %xmm1, %xmm2
-            call key_expansion_128
+            call 1f
 
-            jmp end_key_128
+            jmp 2f
 
-            key_expansion_128:
+            1:
             pshufd $$0xff, %xmm2, %xmm2
             vpslldq $$0x04, %xmm1, %xmm3
             pxor %xmm3, %xmm1
@@ -201,7 +200,7 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
             add $$0x10, $0
             ret
 
-            end_key_128:
+            2:
         "
         : "=r" (round_keysp)
         : "r" (keyp), "0" (round_keysp)
@@ -221,7 +220,6 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
     }
 }
 
-#[inline(never)]
 #[allow(dead_assignment)]
 fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
@@ -236,7 +234,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             movdqa %xmm3, %xmm5
 
             aeskeygenassist $$0x1, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             shufpd $$0, %xmm1, %xmm5
             movdqu %xmm5, 16($0)
             movdqa %xmm1, %xmm6
@@ -244,12 +242,12 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             movdqu %xmm6, 32($0)
 
             aeskeygenassist $$0x2, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             movdqu %xmm1, 48($0)
             movdqa %xmm3, %xmm5
 
             aeskeygenassist $$0x4, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             shufpd $$0, %xmm1, %xmm5
             movdqu %xmm5, 64($0)
             movdqa %xmm1, %xmm6
@@ -257,12 +255,12 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             movdqu %xmm6, 80($0)
 
             aeskeygenassist $$0x8, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             movdqu %xmm1, 96($0)
             movdqa %xmm3, %xmm5
 
             aeskeygenassist $$0x10, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             shufpd $$0, %xmm1, %xmm5
             movdqu %xmm5, 112($0)
             movdqa %xmm1, %xmm6
@@ -270,12 +268,12 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             movdqu %xmm6, 128($0)
 
             aeskeygenassist $$0x20, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             movdqu %xmm1, 144($0)
             movdqa %xmm3, %xmm5
 
             aeskeygenassist $$0x40, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             shufpd $$0, %xmm1, %xmm5
             movdqu %xmm5, 160($0)
             movdqa %xmm1, %xmm6
@@ -283,12 +281,12 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             movdqu %xmm6, 176($0)
 
             aeskeygenassist $$0x80, %xmm3, %xmm2
-            call process_key_192
+            call 1f
             movdqu %xmm1, 192($0)
 
-            jmp end_key_192
+            jmp 2f
 
-            process_key_192:
+            1:
             pshufd $$0x55, %xmm2, %xmm2
             movdqu %xmm1, %xmm4
             pslldq $$4, %xmm4
@@ -305,7 +303,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             pxor %xmm2, %xmm3
             ret
 
-            end_key_192:
+            2:
         "
         : "=r" (round_keysp)
         : "r" (keyp), "0" (round_keysp)
@@ -325,7 +323,6 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
     }
 }
 
-#[inline(never)]
 #[allow(dead_assignment)]
 fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
@@ -340,60 +337,60 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
             movdqu %xmm3, 16($0)
 
             aeskeygenassist $$0x1, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 32($0)
 
             aeskeygenassist $$0x0, %xmm1, %xmm2
-            call make_rk256_b
+            call 2f
             movdqu %xmm3, 48($0)
 
             aeskeygenassist $$0x2, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 64($0)
 
             aeskeygenassist $$0x0, %xmm1, %xmm2
-            call make_rk256_b
+            call 2f
             movdqu %xmm3, 80($0)
 
             aeskeygenassist $$0x4, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 96($0)
 
             aeskeygenassist $$0x0, %xmm1, %xmm2
-            call make_rk256_b
+            call 2f
             movdqu %xmm3, 112($0)
 
             aeskeygenassist $$0x8, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 128($0)
 
             aeskeygenassist $$0x0, %xmm1, %xmm2
-            call make_rk256_b
+            call 2f
             movdqu %xmm3, 144($0)
 
             aeskeygenassist $$0x10, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 160($0)
 
             aeskeygenassist $$0x0, %xmm1, %xmm2
-            call make_rk256_b
+            call 2f
             movdqu %xmm3, 176($0)
 
             aeskeygenassist $$0x20, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 192($0)
 
             aeskeygenassist $$0x0, %xmm1, %xmm2
-            call make_rk256_b
+            call 2f
             movdqu %xmm3, 208($0)
 
             aeskeygenassist $$0x40, %xmm3, %xmm2
-            call make_rk256_a
+            call 1f
             movdqu %xmm1, 224($0)
 
-            jmp end_key_256
+            jmp 3f
 
-            make_rk256_a:
+            1:
             pshufd $$0xff, %xmm2, %xmm2
             movdqa %xmm1, %xmm4
             pslldq $$4, %xmm4
@@ -405,7 +402,7 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
             pxor %xmm2, %xmm1
             ret
 
-            make_rk256_b:
+            2:
             pshufd $$0xaa, %xmm2, %xmm2
             movdqa %xmm3, %xmm4
             pslldq $$4, %xmm4
@@ -417,7 +414,7 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
             pxor %xmm2, %xmm3
             ret
 
-            end_key_256:
+            3:
         "
         : "=r" (round_keysp)
         : "r" (keyp), "0" (round_keysp)
@@ -437,7 +434,6 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
     }
 }
 
-#[inline(never)]
 #[allow(dead_assignment)]
 fn encrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &mut [u8]) {
     unsafe {
@@ -457,13 +453,13 @@ fn encrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
             pxor %xmm0, %xmm1
 
             /* Perform all remaining rounds (except the final one) */
-            enc_round:
+            1:
             movdqu ($1), %xmm0
             add $$0x10, $1
             aesenc %xmm0, %xmm1
             sub $$0x01, $0
             cmp $$0x01, $0
-            jne enc_round
+            jne 1b
 
             /* Perform the last round */
             movdqu ($1), %xmm0
@@ -480,7 +476,6 @@ fn encrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
     }
 }
 
-#[inline(never)]
 #[allow(dead_assignment)]
 fn decrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &mut [u8]) {
     unsafe {
@@ -500,13 +495,13 @@ fn decrypt_block_aseni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
             pxor %xmm0, %xmm1
 
             /* Perform all remaining rounds (except the final one) */
-            dec_round:
+            1:
             movdqu ($1), %xmm0
             sub $$0x10, $1
             aesdec %xmm0, %xmm1
             sub $$0x01, $0
             cmp $$0x01, $0
-            jne dec_round
+            jne 1b
 
             /* Perform the last round */
             movdqu ($1), %xmm0

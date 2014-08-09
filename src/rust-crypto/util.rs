@@ -30,14 +30,13 @@ pub fn supports_aesni() -> bool {
 
 #[cfg(target_arch = "x86")]
 #[cfg(target_arch = "x86_64")]
-#[inline(never)]
 #[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
 
     asm!(
         "
-            fixed_time_eq_loop:
+            1:
 
             mov ($1), %cl
             xor ($2), %cl
@@ -46,7 +45,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count:
             inc $1
             inc $2
             dec $3
-            jnz fixed_time_eq_loop
+            jnz 1b
         "
         : "+r" (result), "+r" (lhsp), "+r" (rhsp), "+r" (count) // all input and output
         : // input
@@ -58,14 +57,13 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count:
 }
 
 #[cfg(target_arch = "arm")]
-#[inline(never)]
 #[allow(dead_assignment)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
 
     asm!(
         "
-            fixed_time_eq_loop:
+            1:
 
             ldrb r4, [$1]
             ldrb r5, [$2]
@@ -75,7 +73,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count:
             add $1, $1, #1
             add $2, $2, #1
             subs $3, $3, #1
-            bne fixed_time_eq_loop
+            bne 1b
         "
         : "+r" (result), "+r" (lhsp), "+r" (rhsp), "+r" (count) // all input and output
         : // input
