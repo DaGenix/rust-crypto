@@ -345,7 +345,7 @@ impl Ripemd160 {
 
 impl Digest for Ripemd160 {
 
-    /*!
+    /**
      * Resets the hash to its original state also clearing the buffer.
      * To be used in between hashing separate messages to avoid having
      * to recreate and allocate the whole structure.
@@ -361,7 +361,7 @@ impl Digest for Ripemd160 {
         self.computed = false;
     }
 
-    /*!
+    /**
      * Adds the input `msg` to the hash. This method can be called repeatedly
      * for use with streaming messages.
      */
@@ -373,7 +373,7 @@ impl Digest for Ripemd160 {
         self.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
     }
     
-    /*!
+    /**
      * Returns the resulting digest of the entire message.
      * Note: `out` must be at least 20 bytes (160 bits)
      */
@@ -397,12 +397,12 @@ impl Digest for Ripemd160 {
         write_u32_le(out.mut_slice(16, 20), self.h[4]);
     }
 
-    /*!
+    /**
      * Returns the size of the digest in bits
      */
     fn output_bits(&self) -> uint { 160 }
 
-    /*!
+    /**
      * Returns the block size the hash operates on in bytes
      */
     fn block_size(&self) -> uint { 64 }
