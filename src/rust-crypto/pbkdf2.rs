@@ -11,7 +11,6 @@
 
 use std::io::IoResult;
 use std::rand::{OsRng, Rng};
-use std::slice::MutableCloneableSlice;
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
