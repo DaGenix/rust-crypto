@@ -11,7 +11,7 @@
 
 use std::io::IoResult;
 use std::rand::{OsRng, Rng};
-use std::slice::MutableCloneableVector;
+use std::slice::MutableCloneableSlice;
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
@@ -102,7 +102,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         } else {
             let mut tmp = Vec::from_elem(os, 0u8);
             calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), tmp.as_mut_slice());
-            chunk.copy_from(tmp.as_slice());
+            chunk.clone_from_slice(tmp.as_slice());
         }
     }
 }
