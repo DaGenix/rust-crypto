@@ -1143,9 +1143,10 @@ mod test {
         use std::rand;
         use std::rand::Rng;
 
-        let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
-        let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
-        let mut rng3: rand::StdRng = rand::SeedableRng::from_seed(&[1, 2, 3, 4]);
+        let tmp : &[_] = &[1, 2, 3, 4];
+        let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(tmp);
+        let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(tmp);
+        let mut rng3: rand::StdRng = rand::SeedableRng::from_seed(tmp);
         let max_size = cmp::max(test.get_plain().len(), test.get_cipher().len());
 
         let r1 = || {

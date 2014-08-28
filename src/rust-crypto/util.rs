@@ -31,6 +31,7 @@ pub fn supports_aesni() -> bool {
 #[cfg(target_arch = "x86")]
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_assignment)]
+#[allow(unused_variable)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
     let mut result: u8 = 0;
 
