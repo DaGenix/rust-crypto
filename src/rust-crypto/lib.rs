@@ -12,6 +12,7 @@
 #![feature(simd)]
 
 extern crate serialize;
+extern crate time;
 #[cfg(test)] extern crate test;
 
 pub mod aes;
@@ -24,6 +25,7 @@ pub mod buffer;
 pub mod chacha20;
 mod cryptoutil;
 pub mod digest;
+pub mod fortuna;
 pub mod hmac;
 pub mod mac;
 pub mod md5;
