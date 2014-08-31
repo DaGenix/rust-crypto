@@ -170,7 +170,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
-        padding: X) -> Box<Encryptor> {
+        padding: X) -> Box<Encryptor + 'static> {
     if util::supports_aesni() {
         match key_size {
             KeySize128 => {
@@ -243,7 +243,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
-        padding: X) -> Box<Decryptor> {
+        padding: X) -> Box<Decryptor + 'static> {
     if util::supports_aesni() {
         match key_size {
             KeySize128 => {
@@ -315,7 +315,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send>(
 pub fn ctr(
         key_size: KeySize,
         key: &[u8],
-        iv: &[u8]) -> Box<SynchronousStreamCipher> {
+        iv: &[u8]) -> Box<SynchronousStreamCipher + 'static> {
     if util::supports_aesni() {
         match key_size {
             KeySize128 => {
