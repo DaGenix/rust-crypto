@@ -47,20 +47,20 @@ pub trait SynchronousStreamCipher {
 }
 
 // TODO - Its a bit unclear to me why this is necessary
-impl SynchronousStreamCipher for Box<SynchronousStreamCipher> {
+impl SynchronousStreamCipher for Box<SynchronousStreamCipher + 'static> {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         self.process(input, output);
     }
 }
 
-impl Encryptor for Box<SynchronousStreamCipher> {
+impl Encryptor for Box<SynchronousStreamCipher + 'static> {
     fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
 }
 
-impl Decryptor for Box<SynchronousStreamCipher> {
+impl Decryptor for Box<SynchronousStreamCipher + 'static> {
     fn decrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)

@@ -971,7 +971,7 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Clone + Default> Gf8Ops<T> for Bs8State<T
     }
 }
 
-impl <T: AesBitValueOps> AesOps for Bs8State<T> {
+impl <T: AesBitValueOps + 'static> AesOps for Bs8State<T> {
     fn sub_bytes(&self) -> Bs8State<T> {
         let nb: Bs8State<T> = self.change_basis(AesBitValueOps::a2x());
         let inv = nb.inv();
