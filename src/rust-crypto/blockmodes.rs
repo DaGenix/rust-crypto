@@ -218,7 +218,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
         // Finally, convert out_write_scratch into out_read_scratch.
         fn process_scratch<P: BlockProcessor, X: PaddingProcessor>(me: &mut BlockEngine<P, X>) {
             let mut rin = me.in_scratch.take_read_buffer();
-            let mut wout = me.out_write_scratch.take_unwrap();
+            let mut wout = me.out_write_scratch.take().unwrap();
 
             {
                 let next_in = rin.take_remaining();
@@ -280,7 +280,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 // The NeedOutput state just writes buffered processed data to the output stream
                 // until all of it has been written.
                 NeedOutput => {
-                    let mut rout = self.out_read_scratch.take_unwrap();
+                    let mut rout = self.out_read_scratch.take().unwrap();
                     rout.push_to(output);
                     if rout.is_empty() {
                         self.out_write_scratch = Some(rout.into_write_buffer());
@@ -325,7 +325,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                         self.padding.pad_input(&mut self.in_scratch);
                         if self.in_scratch.is_full() {
                             process_scratch(self);
-                            if self.padding.strip_output(self.out_read_scratch.get_mut_ref()) {
+                            if self.padding.strip_output(self.out_read_scratch.as_mut().unwrap()) {
                                 self.state = Finished;
                             } else {
                                 self.state = Error(InvalidPadding);
@@ -341,7 +341,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                         if self.in_scratch.is_full() {
                             self.state = LastInput2;
                         } else if self.in_scratch.is_empty() {
-                            if self.padding.strip_output(self.out_read_scratch.get_mut_ref()) {
+                            if self.padding.strip_output(self.out_read_scratch.as_mut().unwrap()) {
                                 self.state = Finished;
                             } else {
                                 self.state = Error(InvalidPadding);
@@ -356,12 +356,12 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 // of data in the case that the input was a multiple of the block size and the mode
                 // decided to add a full extra block of padding.
                 LastInput2 => {
-                    let mut rout = self.out_read_scratch.take_unwrap();
+                    let mut rout = self.out_read_scratch.take().unwrap();
                     rout.push_to(output);
                     if rout.is_empty() {
                         self.out_write_scratch = Some(rout.into_write_buffer());
                         process_scratch(self);
-                        if self.padding.strip_output(self.out_read_scratch.get_mut_ref()) {
+                        if self.padding.strip_output(self.out_read_scratch.as_mut().unwrap()) {
                             self.state = Finished;
                         } else {
                             self.state = Error(InvalidPadding);
@@ -399,11 +399,11 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
         self.state = FastMode;
         self.in_scratch.reset();
         if self.out_read_scratch.is_some() {
-            let ors = self.out_read_scratch.take_unwrap();
+            let ors = self.out_read_scratch.take().unwrap();
             let ows = ors.into_write_buffer();
             self.out_write_scratch = Some(ows);
         } else {
-            self.out_write_scratch.get_mut_ref().reset();
+            self.out_write_scratch.as_mut().unwrap().reset();
         }
     }
     fn reset_with_history(&mut self, in_hist: &[u8], out_hist: &[u8]) {
