@@ -25,7 +25,7 @@ pub fn supports_aesni() -> bool {
         asm!("")
     }
 
-    return (flags & 0x02000000) != 0;
+    (flags & 0x02000000) != 0
 }
 
 #[cfg(target_arch = "x86")]
@@ -54,7 +54,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count:
         : "volatile" // flags
     );
 
-    return result == 0;
+    result == 0
 }
 
 #[cfg(target_arch = "arm")]
@@ -82,25 +82,24 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count:
         : "volatile" // flags
     );
 
-    return result == 0;
+    result == 0
 }
 
 /// Compare two vectors using a fixed number of operations. If the two vectors are not of equal
 /// length, the function returns false immediately.
 pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
     if lhs.len() != rhs.len() {
-        return false;
-    }
-    if lhs.len() == 0 {
-        return true;
-    }
+        false
+    } else if lhs.len() == 0 {
+        true
+    } else {
+        let count = lhs.len();
 
-    let count = lhs.len();
-
-    unsafe {
-        let lhsp = lhs.unsafe_get(0);
-        let rhsp = rhs.unsafe_get(0);
-        return fixed_time_eq_asm(lhsp, rhsp, count);
+        unsafe {
+            let lhsp = lhs.unsafe_get(0);
+            let rhsp = rhs.unsafe_get(0);
+            fixed_time_eq_asm(lhsp, rhsp, count)
+        }
     }
 }
 
