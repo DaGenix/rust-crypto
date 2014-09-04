@@ -3,7 +3,7 @@ name = "rust-crypto"
 version = "0.1.0"
 authors = []
 
-[[lib]]
+[lib]
 name = "rust-crypto"
 path = "src/rust-crypto/lib.rs"
 
