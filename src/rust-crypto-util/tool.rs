@@ -8,7 +8,7 @@
 #![crate_name = "rust-crypto-util"]
 
 extern crate getopts;
-extern crate rust_crypto = "rust-crypto";
+extern crate "rust-crypto" as rust_crypto;
 
 use std::io;
 use std::os;
