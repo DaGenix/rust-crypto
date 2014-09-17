@@ -180,7 +180,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             input.rewind(self.in_hist.len());
             let (in_hist, next_in) = split_at(input.take_next(next_in_size), self.in_hist.len());
             output.rewind(self.out_hist.len());
-            let (out_hist, next_out) = output.take_next(next_out_size).mut_split_at(
+            let (out_hist, next_out) = output.take_next(next_out_size).split_at_mut(
                 self.out_hist.len());
             self.processor.process_block(
                 in_hist,
@@ -435,7 +435,7 @@ impl PaddingProcessor for PkcsPadding {
     fn pad_input<W: WriteBuffer>(&mut self, input_buffer: &mut W) {
         let rem = input_buffer.remaining();
         assert!(rem != 0 && rem <= 255);
-        for v in input_buffer.take_remaining().mut_iter() {
+        for v in input_buffer.take_remaining().iter_mut() {
             *v = rem as u8;
         }
     }
@@ -566,7 +566,7 @@ struct CbcEncryptorProcessor<T> {
 
 impl <T: BlockEncryptor> BlockProcessor for CbcEncryptorProcessor<T> {
     fn process_block(&mut self, _: &[u8], out_hist: &[u8], input: &[u8], output: &mut [u8]) {
-        for ((&x, &y), o) in input.iter().zip(out_hist.iter()).zip(self.temp.mut_iter()) {
+        for ((&x, &y), o) in input.iter().zip(out_hist.iter()).zip(self.temp.iter_mut()) {
             *o = x ^ y;
         }
         self.algo.encrypt_block(self.temp.as_slice(), output.as_mut_slice());
@@ -615,7 +615,7 @@ struct CbcDecryptorProcessor<T> {
 impl <T: BlockDecryptor> BlockProcessor for CbcDecryptorProcessor<T> {
     fn process_block(&mut self, in_hist: &[u8], _: &[u8], input: &[u8], output: &mut [u8]) {
         self.algo.decrypt_block(input, self.temp.as_mut_slice());
-        for ((&x, &y), o) in self.temp.iter().zip(in_hist.iter()).zip(output.mut_iter()) {
+        for ((&x, &y), o) in self.temp.iter().zip(in_hist.iter()).zip(output.iter_mut()) {
             *o = x ^ y;
         }
     }
@@ -656,7 +656,7 @@ impl <T: BlockDecryptor, X: PaddingProcessor> Decryptor for CbcDecryptor<T, X> {
 }
 
 fn add_ctr(ctr: &mut [u8], mut ammount: u8) {
-    for i in ctr.mut_iter().rev() {
+    for i in ctr.iter_mut().rev() {
         let prev = *i;
         *i += ammount;
         if *i >= prev {
@@ -700,7 +700,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
             let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input.slice_from(i).iter();
-            let out_it = output.mut_slice_from(i).mut_iter();
+            let out_it = output.slice_from_mut(i).iter_mut();
             for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
                 *o = x ^ y;
             }
@@ -737,7 +737,7 @@ pub struct CtrModeX8<A> {
 }
 
 fn construct_ctr_x8(in_ctr: &[u8], out_ctr_x8: &mut [u8]) {
-    for (i, ctr_i) in out_ctr_x8.mut_chunks(in_ctr.len()).enumerate() {
+    for (i, ctr_i) in out_ctr_x8.chunks_mut(in_ctr.len()).enumerate() {
         slice::bytes::copy_memory(ctr_i, in_ctr);
         add_ctr(ctr_i, i as u8);
     }
@@ -768,14 +768,14 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
                 self.algo.encrypt_block_x8(self.ctr_x8.as_slice(), wb.take_remaining());
-                for ctr_i in self.ctr_x8.as_mut_slice().mut_chunks(self.algo.block_size()) {
+                for ctr_i in self.ctr_x8.as_mut_slice().chunks_mut(self.algo.block_size()) {
                     add_ctr(ctr_i, 8);
                 }
             }
             let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input.slice_from(i).iter();
-            let out_it = output.mut_slice_from(i).mut_iter();
+            let out_it = output.slice_from_mut(i).iter_mut();
             for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
                 *o = x ^ y;
             }
@@ -1056,7 +1056,7 @@ mod test {
                     }
                     let mut tmp_in = RefReadBuffer::new(input.slice(in_pos, in_end(in_pos, true)));
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end));
+                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos, out_end));
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferUnderflow) => assert!(tmp_in.is_empty()),
@@ -1068,7 +1068,7 @@ mod test {
                 Ok(BufferOverflow) => {
                     let mut tmp_in = RefReadBuffer::new(input.slice(in_pos, in_end(in_pos, false)));
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end));
+                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos, out_end));
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferOverflow) => assert!(tmp_out.is_full()),
@@ -1084,7 +1084,7 @@ mod test {
 
         if !eof.get() {
             eof.set(true);
-            let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end(out_pos)));
+            let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos, out_end(out_pos)));
             state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
             out_pos += tmp_out.position();
         }
@@ -1096,7 +1096,7 @@ mod test {
                 }
                 Ok(BufferOverflow) => {
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output.mut_slice(out_pos, out_end));
+                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos, out_end));
                     state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
                     assert!(tmp_out.is_full());
                     out_pos += tmp_out.position();
