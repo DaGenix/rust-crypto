@@ -119,7 +119,7 @@ impl FortunaGenerator {
         // Concatenate all the blocks
         for j in range(0, k) {
             block_encryptor.encrypt_block(self.ctr.as_slice(),
-                                          out.mut_slice(AES_BLOCK_SIZE * j,
+                                          out.slice_mut(AES_BLOCK_SIZE * j,
                                                         AES_BLOCK_SIZE * (j + 1)));
             self.increment_counter();
         }
@@ -131,11 +131,11 @@ impl FortunaGenerator {
         assert!(n <= MAX_GEN_SIZE);
 
         // Generate output
-        self.generate_blocks(n, out.mut_slice_to(n * AES_BLOCK_SIZE));
+        self.generate_blocks(n, out.slice_to_mut(n * AES_BLOCK_SIZE));
         if rem > 0 {
             let mut buf = [0, ..AES_BLOCK_SIZE];
             self.generate_blocks(1, buf.as_mut_slice());
-            out.mut_slice_from(n * AES_BLOCK_SIZE).clone_from_slice(buf.slice_to(rem));
+            out.slice_from_mut(n * AES_BLOCK_SIZE).clone_from_slice(buf.slice_to(rem));
         }
 
         // Rekey
@@ -224,7 +224,7 @@ impl Rng for Fortuna {
             let mut hash = [0, ..(32 * NUM_POOLS)];
             let mut n_pools = 0;
             while self.reseed_count % (1 << n_pools) == 0 {
-                (&mut self.pool[n_pools]).result(hash.mut_slice(n_pools * 32, (n_pools + 1) * 32));
+                (&mut self.pool[n_pools]).result(hash.slice_mut(n_pools * 32, (n_pools + 1) * 32));
                 n_pools += 1;
                 assert!(n_pools < NUM_POOLS);
                 assert!(n_pools < 32); // width of counter
@@ -236,7 +236,7 @@ impl Rng for Fortuna {
             fail!("rust-crypto: an unseeded Fortuna was asked for random bytes!");
         }
         // Generate return data
-        for dest in dest.mut_chunks(MAX_GEN_SIZE) {
+        for dest in dest.chunks_mut(MAX_GEN_SIZE) {
             self.generator.generate_random_data(dest);
         }
     }

@@ -198,10 +198,10 @@ impl Digest for Md5 {
             self.finished = true;
         }
 
-        write_u32_le(out.mut_slice(0, 4), self.state.s0);
-        write_u32_le(out.mut_slice(4, 8), self.state.s1);
-        write_u32_le(out.mut_slice(8, 12), self.state.s2);
-        write_u32_le(out.mut_slice(12, 16), self.state.s3);
+        write_u32_le(out.slice_mut(0, 4), self.state.s0);
+        write_u32_le(out.slice_mut(4, 8), self.state.s1);
+        write_u32_le(out.slice_mut(8, 12), self.state.s2);
+        write_u32_le(out.slice_mut(12, 16), self.state.s3);
     }
 
     fn output_bits(&self) -> uint { 128 }

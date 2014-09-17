@@ -24,7 +24,7 @@ pub struct Hmac<D> {
 }
 
 fn derive_key(key: &mut [u8], mask: u8) {
-    for elem in key.mut_iter() {
+    for elem in key.iter_mut() {
         *elem ^= mask;
     }
 }
@@ -40,7 +40,7 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     } else {
         let output_size = digest.output_bytes();
         digest.input(key);
-        digest.result(expanded_key.mut_slice_to(output_size));
+        digest.result(expanded_key.slice_to_mut(output_size));
         digest.reset();
     }
     return expanded_key;
