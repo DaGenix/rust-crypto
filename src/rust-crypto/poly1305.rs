@@ -211,10 +211,10 @@ impl Mac for Poly1305 {
         if !self.final{
             self.finish();
         }
-        write_u32_le(output.mut_slice( 0,  4), self.h[0]);
-        write_u32_le(output.mut_slice( 4,  8), self.h[1]);
-        write_u32_le(output.mut_slice( 8, 12), self.h[2]);
-        write_u32_le(output.mut_slice(12, 16), self.h[3]);
+        write_u32_le(output.slice_mut( 0,  4), self.h[0]);
+        write_u32_le(output.slice_mut( 4,  8), self.h[1]);
+        write_u32_le(output.slice_mut( 8, 12), self.h[2]);
+        write_u32_le(output.slice_mut(12, 16), self.h[3]);
     }
 
     fn output_bytes(&self) -> uint { 16 }

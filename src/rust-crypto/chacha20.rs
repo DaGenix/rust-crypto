@@ -82,7 +82,7 @@ impl ChaCha20 {
         }
 
         for i in range(0, self.state.len()) {
-            write_u32_le(self.output.mut_slice(i*4, (i+1)*4), self.state[i] + x[i]);
+            write_u32_le(self.output.slice_mut(i*4, (i+1)*4), self.state[i] + x[i]);
         }
 
         self.state[12] += 1;
@@ -107,7 +107,7 @@ impl ChaCha20 {
 impl SynchronousStreamCipher for ChaCha20 {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         assert!(input.len() == output.len());
-        for (x, y) in input.iter().zip(output.mut_iter()) {
+        for (x, y) in input.iter().zip(output.iter_mut()) {
             *y = *x ^ self.next();
         }
     }

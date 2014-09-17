@@ -24,7 +24,7 @@ pub fn write_u64_be(dst: &mut[u8], mut input: u64) {
     input = input.to_be();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping_memory(dst.unsafe_mut_ref(0), tmp, 8);
+        ptr::copy_nonoverlapping_memory(dst.unsafe_mut(0), tmp, 8);
     }
 }
 
@@ -35,7 +35,7 @@ pub fn write_u32_be(dst: &mut [u8], mut input: u32) {
     input = input.to_be();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping_memory(dst.unsafe_mut_ref(0), tmp, 4);
+        ptr::copy_nonoverlapping_memory(dst.unsafe_mut(0), tmp, 4);
     }
 }
 
@@ -46,7 +46,7 @@ pub fn write_u32_le(dst: &mut[u8], mut input: u32) {
     input = input.to_le();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping_memory(dst.unsafe_mut_ref(0), tmp, 4);
+        ptr::copy_nonoverlapping_memory(dst.unsafe_mut(0), tmp, 4);
     }
 }
 
@@ -54,7 +54,7 @@ pub fn write_u32_le(dst: &mut[u8], mut input: u32) {
 pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     assert!(dst.len() * 8 == input.len());
     unsafe {
-        let mut x = dst.unsafe_mut_ref(0) as *mut u64;
+        let mut x = dst.unsafe_mut(0) as *mut u64;
         let mut y = input.unsafe_get(0) as *const u8;
         for _ in range(0, dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
@@ -70,7 +70,7 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
 pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x = dst.unsafe_mut_ref(0) as *mut u32;
+        let mut x = dst.unsafe_mut(0) as *mut u32;
         let mut y = input.unsafe_get(0) as *const u8;
         for _ in range(0, dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
@@ -86,7 +86,7 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
 pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x = dst.unsafe_mut_ref(0) as *mut u32;
+        let mut x = dst.unsafe_mut(0) as *mut u32;
         let mut y = input.unsafe_get(0) as *const u8;
         for _ in range(0, dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
@@ -260,14 +260,14 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                 let buffer_remaining = size - self.buffer_idx;
                 if input.len() >= buffer_remaining {
                         copy_memory(
-                            self.buffer.mut_slice(self.buffer_idx, size),
+                            self.buffer.slice_mut(self.buffer_idx, size),
                             input.slice_to(buffer_remaining));
                     self.buffer_idx = 0;
                     func(self.buffer);
                     i += buffer_remaining;
                 } else {
                     copy_memory(
-                        self.buffer.mut_slice(self.buffer_idx, self.buffer_idx + input.len()),
+                        self.buffer.slice_mut(self.buffer_idx, self.buffer_idx + input.len()),
                         input);
                     self.buffer_idx += input.len();
                     return;
@@ -286,7 +286,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             // be empty.
             let input_remaining = input.len() - i;
             copy_memory(
-                self.buffer.mut_slice(0, input_remaining),
+                self.buffer.slice_mut(0, input_remaining),
                 input.slice_from(i));
             self.buffer_idx += input_remaining;
         }
@@ -297,13 +297,13 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
 
         fn zero_until(&mut self, idx: uint) {
             assert!(idx >= self.buffer_idx);
-            self.buffer.mut_slice(self.buffer_idx, idx).set_memory(0);
+            self.buffer.slice_mut(self.buffer_idx, idx).set_memory(0);
             self.buffer_idx = idx;
         }
 
         fn next<'s>(&'s mut self, len: uint) -> &'s mut [u8] {
             self.buffer_idx += len;
-            return self.buffer.mut_slice(self.buffer_idx - len, self.buffer_idx);
+            return self.buffer.slice_mut(self.buffer_idx - len, self.buffer_idx);
         }
 
         fn full_buffer<'s>(&'s mut self) -> &'s [u8] {

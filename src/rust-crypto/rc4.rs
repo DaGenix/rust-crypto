@@ -23,7 +23,7 @@ impl Rc4 {
     pub fn new(key: &[u8]) -> Rc4 {
         assert!(key.len() >= 1 && key.len() <= 256);
         let mut rc4 = Rc4 { i: 0, j: 0, state: [0, ..256] };
-        for (i, x) in rc4.state.mut_iter().enumerate() {
+        for (i, x) in rc4.state.iter_mut().enumerate() {
             *x = i as u8;
         }
         let mut j: u8 = 0;
@@ -45,7 +45,7 @@ impl Rc4 {
 impl SynchronousStreamCipher for Rc4 {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         assert!(input.len() == output.len());
-        for (x, y) in input.iter().zip(output.mut_iter()) {
+        for (x, y) in input.iter().zip(output.iter_mut()) {
             *y = *x ^ self.next();
         }
     }
