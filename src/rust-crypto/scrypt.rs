@@ -80,13 +80,13 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
     for i in range(0u, 16) {
         write_u32_le(
-            output.mut_slice(i * 4, (i + 1) * 4),
+            output.slice_mut(i * 4, (i + 1) * 4),
             x[i] + read_u32_le(input.slice(i * 4, (i + 1) * 4)));
     }
 }
 
 fn xor(x: &[u8], y: &[u8], output: &mut [u8]) {
-    for ((out, &x_i), &y_i) in output.mut_iter().zip(x.iter()).zip(y.iter()) {
+    for ((out, &x_i), &y_i) in output.iter_mut().zip(x.iter()).zip(y.iter()) {
         *out = x_i ^ y_i;
     }
 }
@@ -105,7 +105,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
         xor(x, chunk, t);
         salsa20_8(t, x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
-        output.mut_slice(pos, pos + 64).clone_from_slice(x);
+        output.slice_mut(pos, pos + 64).clone_from_slice(x);
     }
 }
 
@@ -127,7 +127,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
 
     let len = b.len();
 
-    for chunk in v.mut_chunks(len) {
+    for chunk in v.chunks_mut(len) {
         chunk.clone_from_slice(b);
         scrypt_block_mix(chunk, b);
     }
@@ -242,7 +242,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     let mut v = Vec::from_elem(n * r * 128, 0u8);
     let mut t = Vec::from_elem(r * 128, 0u8);
 
-    for chunk in b.as_mut_slice().mut_chunks(r * 128) {
+    for chunk in b.as_mut_slice().chunks_mut(r * 128) {
         scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
     }
 
@@ -294,8 +294,8 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
         result.push_str("1$");
         let mut tmp = [0u8, ..9];
         tmp[0] = params.log_n;
-        write_u32_le(tmp.mut_slice(1, 5), params.r);
-        write_u32_le(tmp.mut_slice(5, 9), params.p);
+        write_u32_le(tmp.slice_mut(1, 5), params.r);
+        write_u32_le(tmp.slice_mut(5, 9), params.p);
         result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
     }
     result.push_char('$');

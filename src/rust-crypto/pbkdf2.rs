@@ -50,7 +50,7 @@ fn calculate_block<M: Mac>(
         mac.input(block);
         mac.raw_result(scratch);
         mac.reset();
-        for (output, &input) in block.mut_iter().zip(scratch.iter()) {
+        for (output, &input) in block.iter_mut().zip(scratch.iter()) {
             *output ^= input;
         }
     }
@@ -60,7 +60,7 @@ fn calculate_block<M: Mac>(
         mac.input(scratch);
         mac.raw_result(scratch);
         mac.reset();
-        for (output, &input) in block.mut_iter().zip(scratch.iter()) {
+        for (output, &input) in block.iter_mut().zip(scratch.iter()) {
             *output ^= input;
         }
     }
@@ -92,7 +92,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
 
     let mut idx: u32 = 0;
 
-    for chunk in output.mut_chunks(os) {
+    for chunk in output.chunks_mut(os) {
         // The block index starts at 1. So, this is supposed to run on the first execution.
         idx = idx.checked_add(&1).expect("PBKDF2 size limit exceeded.");
 

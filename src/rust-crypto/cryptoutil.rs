@@ -24,7 +24,7 @@ pub fn write_u64_be(dst: &mut[u8], mut input: u64) {
     input = input.to_be();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping_memory(dst.unsafe_mut_ref(0), tmp, 8);
+        ptr::copy_nonoverlapping_memory(dst.unsafe_mut(0), tmp, 8);
     }
 }
 
@@ -35,7 +35,7 @@ pub fn write_u32_be(dst: &mut [u8], mut input: u32) {
     input = input.to_be();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping_memory(dst.unsafe_mut_ref(0), tmp, 4);
+        ptr::copy_nonoverlapping_memory(dst.unsafe_mut(0), tmp, 4);
     }
 }
 
@@ -46,7 +46,7 @@ pub fn write_u32_le(dst: &mut[u8], mut input: u32) {
     input = input.to_le();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping_memory(dst.unsafe_mut_ref(0), tmp, 4);
+        ptr::copy_nonoverlapping_memory(dst.unsafe_mut(0), tmp, 4);
     }
 }
 
@@ -54,7 +54,7 @@ pub fn write_u32_le(dst: &mut[u8], mut input: u32) {
 pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     assert!(dst.len() * 8 == input.len());
     unsafe {
-        let mut x = dst.unsafe_mut_ref(0) as *mut u64;
+        let mut x = dst.unsafe_mut(0) as *mut u64;
         let mut y = input.unsafe_get(0) as *const u8;
         for _ in range(0, dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
@@ -70,7 +70,7 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
 pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x = dst.unsafe_mut_ref(0) as *mut u32;
+        let mut x = dst.unsafe_mut(0) as *mut u32;
         let mut y = input.unsafe_get(0) as *const u8;
         for _ in range(0, dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
@@ -86,7 +86,7 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
 pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x = dst.unsafe_mut_ref(0) as *mut u32;
+        let mut x = dst.unsafe_mut(0) as *mut u32;
         let mut y = input.unsafe_get(0) as *const u8;
         for _ in range(0, dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
