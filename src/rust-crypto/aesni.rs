@@ -4,131 +4,65 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//use std::vec::Vec;
+use aes::{KeySize, KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
-pub struct AesNi128Encryptor {
-    round_keys: [u8, ..16 * (10 + 1)]
+pub struct AesNiEncryptor {
+    rounds: uint,
+    round_keys: Vec<u8>
 }
 
-pub struct AesNi128Decryptor {
-    round_keys: [u8, ..16 * (10 + 1)]
+pub struct AesNiDecryptor {
+    rounds: uint,
+    round_keys: Vec<u8>
 }
 
-impl AesNi128Encryptor {
-    pub fn new(key: &[u8]) -> AesNi128Encryptor {
-        let mut e = AesNi128Encryptor {
-            round_keys: ([0u8, ..16 * (10 + 1)])
+impl AesNiEncryptor {
+    pub fn new(key_size: KeySize, key: &[u8]) -> AesNiEncryptor {
+        let (rounds, setup_function) = match key_size {
+            KeySize128 => (10, setup_working_key_aesni_128),
+            KeySize192 => (12, setup_working_key_aesni_192),
+            KeySize256 => (14, setup_working_key_aesni_256)
         };
-        setup_working_key_aesni_128(key, Encryption, e.round_keys);
+        let round_keys = Vec::from_elem(16 * (rounds + 1), 0u8);
+        let mut e = AesNiEncryptor {
+            rounds: rounds,
+            round_keys: round_keys
+        };
+        setup_function(key, Encryption, e.round_keys.as_mut_slice());
         return e;
     }
 }
 
-impl AesNi128Decryptor {
-    pub fn new(key: &[u8]) -> AesNi128Decryptor {
-        let mut d = AesNi128Decryptor {
-            round_keys: ([0u8, ..16 * (10 + 1)])
+impl AesNiDecryptor {
+    pub fn new(key_size: KeySize, key: &[u8]) -> AesNiDecryptor {
+        let (rounds, setup_function) = match key_size {
+            KeySize128 => (10, setup_working_key_aesni_128),
+            KeySize192 => (12, setup_working_key_aesni_192),
+            KeySize256 => (14, setup_working_key_aesni_256)
         };
-        setup_working_key_aesni_128(key, Decryption, d.round_keys);
+        let round_keys = Vec::from_elem(16 * (rounds + 1), 0u8);
+        let mut d = AesNiDecryptor {
+            rounds: rounds,
+            round_keys: round_keys
+        };
+        setup_function(key, Decryption, d.round_keys.as_mut_slice());
         return d;
     }
 }
 
-impl BlockEncryptor for AesNi128Encryptor {
+impl BlockEncryptor for AesNiEncryptor {
     fn block_size(&self) -> uint { 16 }
     fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        encrypt_block_aseni(10, input, self.round_keys, output);
+        encrypt_block_aseni(self.rounds, input, self.round_keys.as_slice(), output);
     }
 }
 
-impl BlockDecryptor for AesNi128Decryptor {
+impl BlockDecryptor for AesNiDecryptor {
     fn block_size(&self) -> uint { 16 }
     fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        decrypt_block_aseni(10, input, self.round_keys, output);
-    }
-}
-
-pub struct AesNi192Encryptor {
-    round_keys: [u8, ..16 * (12 + 1)]
-}
-
-pub struct AesNi192Decryptor {
-    round_keys: [u8, ..16 * (12 + 1)]
-}
-
-impl AesNi192Encryptor {
-    pub fn new(key: &[u8]) -> AesNi192Encryptor {
-        let mut e = AesNi192Encryptor {
-            round_keys: ([0u8, ..16 * (12 + 1)])
-        };
-        setup_working_key_aesni_192(key, Encryption, e.round_keys);
-        return e;
-    }
-}
-
-impl AesNi192Decryptor {
-    pub fn new(key: &[u8]) -> AesNi192Decryptor {
-        let mut d =  AesNi192Decryptor {
-            round_keys: ([0u8, ..16 * (12 + 1)])
-        };
-        setup_working_key_aesni_192(key, Decryption, d.round_keys);
-        return d;
-    }
-}
-
-impl BlockEncryptor for AesNi192Encryptor {
-    fn block_size(&self) -> uint { 16 }
-    fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        encrypt_block_aseni(12, input, self.round_keys, output);
-    }
-}
-
-impl BlockDecryptor for AesNi192Decryptor {
-    fn block_size(&self) -> uint { 16 }
-    fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        decrypt_block_aseni(12, input, self.round_keys, output);
-    }
-}
-
-pub struct AesNi256Encryptor {
-    round_keys: [u8, ..16 * (14 + 1)]
-}
-
-pub struct AesNi256Decryptor {
-    round_keys: [u8, ..16 * (14 + 1)]
-}
-
-impl AesNi256Encryptor {
-    pub fn new(key: &[u8]) -> AesNi256Encryptor {
-        let mut e = AesNi256Encryptor {
-            round_keys: ([0u8, ..16 * (14 + 1)])
-        };
-        setup_working_key_aesni_256(key, Encryption, e.round_keys);
-        return e;
-    }
-}
-
-impl AesNi256Decryptor {
-    pub fn new(key: &[u8]) -> AesNi256Decryptor {
-        let mut d = AesNi256Decryptor {
-            round_keys: ([0u8, ..16 * (14 + 1)])
-        };
-        setup_working_key_aesni_256(key, Decryption, d.round_keys);
-        return d;
-    }
-}
-
-impl BlockEncryptor for AesNi256Encryptor {
-    fn block_size(&self) -> uint { 16 }
-    fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        encrypt_block_aseni(14, input, self.round_keys, output);
-    }
-}
-
-impl BlockDecryptor for AesNi256Decryptor {
-    fn block_size(&self) -> uint { 16 }
-    fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        decrypt_block_aseni(14, input, self.round_keys, output);
+        decrypt_block_aseni(self.rounds, input, self.round_keys.as_slice(), output);
     }
 }
 
