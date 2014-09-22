@@ -10,3 +10,5 @@ path = "src/rust-crypto/lib.rs"
 [[bin]]
 name = "rust-crypto-util"
 path = "src/rust-crypto-util/tool.rs"
+test = false
+bench = false
