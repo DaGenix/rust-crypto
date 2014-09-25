@@ -1330,7 +1330,7 @@ mod test {
         let mut cipher = [3u8, ..528];
 
         let aes_enc = aessafe::AesSafe128Encryptor::new(key);
-        let mut enc = CbcEncryptor::new(aes_enc, PkcsPadding, Vec::from_slice(iv));
+        let mut enc = CbcEncryptor::new(aes_enc, PkcsPadding, iv.to_vec());
 
         bh.iter( || {
             enc.reset(iv);
@@ -1356,7 +1356,7 @@ mod test {
         let mut cipher = [3u8, ..528];
 
         let aes_enc = aessafe::AesSafe128Encryptor::new(key);
-        let mut enc = CtrMode::new(aes_enc, Vec::from_slice(ctr));
+        let mut enc = CtrMode::new(aes_enc, ctr.to_vec());
 
         bh.iter( || {
             enc.reset(ctr);

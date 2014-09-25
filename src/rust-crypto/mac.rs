@@ -59,7 +59,7 @@ impl MacResult {
      */
     pub fn new(code: &[u8]) -> MacResult {
         return MacResult {
-            code: Vec::from_slice(code)
+            code: code.to_vec()
         };
     }
 
