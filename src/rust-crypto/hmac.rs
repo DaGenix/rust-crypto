@@ -134,14 +134,14 @@ mod test {
         return vec![
             Test {
                 key: Vec::from_elem(16, 0x0bu8),
-                data: "Hi There".as_bytes().to_owned(),
+                data: b"Hi There".to_vec(),
                 expected: vec![
                     0x92, 0x94, 0x72, 0x7a, 0x36, 0x38, 0xbb, 0x1c,
                     0x13, 0xf4, 0x8e, 0xf8, 0x15, 0x8b, 0xfc, 0x9d ]
             },
             Test {
-                key: "Jefe".as_bytes().to_owned(),
-                data: "what do ya want for nothing?".as_bytes().to_owned(),
+                key: b"Jefe".to_vec(),
+                data: b"what do ya want for nothing?".to_vec(),
                 expected: vec![
                     0x75, 0x0c, 0x78, 0x3e, 0x6a, 0xb0, 0xb5, 0x03,
                     0xea, 0xa8, 0x6e, 0x31, 0x0a, 0x5d, 0xb7, 0x38 ]
