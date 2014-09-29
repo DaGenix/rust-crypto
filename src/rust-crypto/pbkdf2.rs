@@ -143,11 +143,11 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
     let mut tmp = [0u8, ..4];
     write_u32_be(tmp, c);
     result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
-    result.push_char('$');
+    result.push('$');
     result.push_str(salt.as_slice().to_base64(base64::STANDARD).as_slice());
-    result.push_char('$');
+    result.push('$');
     result.push_str(dk.to_base64(base64::STANDARD).as_slice());
-    result.push_char('$');
+    result.push('$');
 
     return Ok(result);
 }
@@ -263,8 +263,8 @@ mod test {
     fn tests() -> Vec<Test> {
         return vec![
             Test {
-                password: "password".as_bytes().to_owned(),
-                salt: "salt".as_bytes().to_owned(),
+                password: b"password".to_vec(),
+                salt: b"salt".to_vec(),
                 c: 1,
                 expected: vec![
                     0x0c, 0x60, 0xc8, 0x0f, 0x96, 0x1f, 0x0e, 0x71,
@@ -272,8 +272,8 @@ mod test {
                     0x2f, 0xe0, 0x37, 0xa6 ]
             },
             Test {
-                password: "password".as_bytes().to_owned(),
-                salt: "salt".as_bytes().to_owned(),
+                password: b"password".to_vec(),
+                salt: b"salt".to_vec(),
                 c: 2,
                 expected: vec![
                     0xea, 0x6c, 0x01, 0x4d, 0xc7, 0x2d, 0x6f, 0x8c,
@@ -281,8 +281,8 @@ mod test {
                     0xd8, 0xde, 0x89, 0x57 ]
             },
             Test {
-                password: "password".as_bytes().to_owned(),
-                salt: "salt".as_bytes().to_owned(),
+                password: b"password".to_vec(),
+                salt: b"salt".to_vec(),
                 c: 4096,
                 expected: vec![
                     0x4b, 0x00, 0x79, 0x01, 0xb7, 0x65, 0x48, 0x9a,
@@ -290,8 +290,8 @@ mod test {
                     0x65, 0xa4, 0x29, 0xc1 ]
             },
             Test {
-                password: "passwordPASSWORDpassword".as_bytes().to_owned(),
-                salt: "saltSALTsaltSALTsaltSALTsaltSALTsalt".as_bytes().to_owned(),
+                password: b"passwordPASSWORDpassword".to_vec(),
+                salt: b"saltSALTsaltSALTsaltSALTsaltSALTsalt".to_vec(),
                 c: 4096,
                 expected: vec![
                     0x3d, 0x2e, 0xec, 0x4f, 0xe4, 0x1c, 0x84, 0x9b,

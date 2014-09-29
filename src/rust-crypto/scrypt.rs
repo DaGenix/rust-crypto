@@ -298,11 +298,11 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
         write_u32_le(tmp.slice_mut(5, 9), params.p);
         result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
     }
-    result.push_char('$');
+    result.push('$');
     result.push_str(salt.as_slice().to_base64(base64::STANDARD).as_slice());
-    result.push_char('$');
+    result.push('$');
     result.push_str(dk.to_base64(base64::STANDARD).as_slice());
-    result.push_char('$');
+    result.push('$');
 
     return Ok(result);
 }

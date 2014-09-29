@@ -237,17 +237,17 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send>(
     match key_size {
         KeySize128 => {
             let aes_dec = aessafe::AesSafe128Decryptor::new(key);
-            let dec = box CbcDecryptor::new(aes_dec, padding, Vec::from_slice(iv));
+            let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
             dec as Box<Decryptor>
         }
         KeySize192 => {
             let aes_dec = aessafe::AesSafe192Decryptor::new(key);
-            let dec = box CbcDecryptor::new(aes_dec, padding, Vec::from_slice(iv));
+            let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
             dec as Box<Decryptor>
         }
         KeySize256 => {
             let aes_dec = aessafe::AesSafe256Decryptor::new(key);
-            let dec = box CbcDecryptor::new(aes_dec, padding, Vec::from_slice(iv));
+            let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
             dec as Box<Decryptor>
         }
     }
