@@ -21,6 +21,7 @@ pub mod buffer;
 pub mod chacha20;
 mod cryptoutil;
 pub mod digest;
+pub mod ghash;
 pub mod hmac;
 pub mod mac;
 pub mod md5;
