@@ -438,10 +438,10 @@ mod test {
     fn run_test<E: BlockEncryptor, D: BlockDecryptor>(enc: &mut E, dec: &mut D, test: &Test) {
         let mut tmp = [0u8, ..16];
         for data in test.data.iter() {
-            enc.encrypt_block(data.plain.as_slice(), tmp);
-            assert!(tmp == data.cipher.as_slice());
-            dec.decrypt_block(data.cipher.as_slice(), tmp);
-            assert!(tmp == data.plain.as_slice());
+            enc.encrypt_block(data.plain[], tmp);
+            assert!(tmp == data.cipher[]);
+            dec.decrypt_block(data.cipher[], tmp);
+            assert!(tmp == data.plain[]);
         }
     }
 
@@ -452,8 +452,8 @@ mod test {
         if util::supports_aesni() {
             let tests = tests128();
             for t in tests.iter() {
-                let mut enc = aesni::AesNiEncryptor::new(KeySize128, t.key.as_slice());
-                let mut dec = aesni::AesNiDecryptor::new(KeySize128, t.key.as_slice());
+                let mut enc = aesni::AesNiEncryptor::new(KeySize128, t.key[]);
+                let mut dec = aesni::AesNiDecryptor::new(KeySize128, t.key[]);
                 run_test(&mut enc, &mut dec, t);
             }
         }
@@ -466,8 +466,8 @@ mod test {
         if util::supports_aesni() {
             let tests = tests192();
             for t in tests.iter() {
-                let mut enc = aesni::AesNiEncryptor::new(KeySize192, t.key.as_slice());
-                let mut dec = aesni::AesNiDecryptor::new(KeySize192, t.key.as_slice());
+                let mut enc = aesni::AesNiEncryptor::new(KeySize192, t.key[]);
+                let mut dec = aesni::AesNiDecryptor::new(KeySize192, t.key[]);
                 run_test(&mut enc, &mut dec, t);
             }
         }
@@ -480,8 +480,8 @@ mod test {
         if util::supports_aesni() {
             let tests = tests256();
             for t in tests.iter() {
-                let mut enc = aesni::AesNiEncryptor::new(KeySize256, t.key.as_slice());
-                let mut dec = aesni::AesNiDecryptor::new(KeySize256, t.key.as_slice());
+                let mut enc = aesni::AesNiEncryptor::new(KeySize256, t.key[]);
+                let mut dec = aesni::AesNiDecryptor::new(KeySize256, t.key[]);
                 run_test(&mut enc, &mut dec, t);
             }
         }
@@ -491,8 +491,8 @@ mod test {
     fn test_aessafe_128() {
         let tests = tests128();
         for t in tests.iter() {
-            let mut enc = aessafe::AesSafe128Encryptor::new(t.key.as_slice());
-            let mut dec = aessafe::AesSafe128Decryptor::new(t.key.as_slice());
+            let mut enc = aessafe::AesSafe128Encryptor::new(t.key[]);
+            let mut dec = aessafe::AesSafe128Decryptor::new(t.key[]);
             run_test(&mut enc, &mut dec, t);
         }
     }
@@ -501,8 +501,8 @@ mod test {
     fn test_aessafe_192() {
         let tests = tests192();
         for t in tests.iter() {
-            let mut enc = aessafe::AesSafe192Encryptor::new(t.key.as_slice());
-            let mut dec = aessafe::AesSafe192Decryptor::new(t.key.as_slice());
+            let mut enc = aessafe::AesSafe192Encryptor::new(t.key[]);
+            let mut dec = aessafe::AesSafe192Decryptor::new(t.key[]);
             run_test(&mut enc, &mut dec, t);
         }
     }
@@ -511,8 +511,8 @@ mod test {
     fn test_aessafe_256() {
         let tests = tests256();
         for t in tests.iter() {
-            let mut enc = aessafe::AesSafe256Encryptor::new(t.key.as_slice());
-            let mut dec = aessafe::AesSafe256Decryptor::new(t.key.as_slice());
+            let mut enc = aessafe::AesSafe256Encryptor::new(t.key[]);
+            let mut dec = aessafe::AesSafe256Decryptor::new(t.key[]);
             run_test(&mut enc, &mut dec, t);
         }
     }

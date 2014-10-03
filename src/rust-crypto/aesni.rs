@@ -30,7 +30,7 @@ impl AesNiEncryptor {
             rounds: rounds,
             round_keys: round_keys
         };
-        setup_function(key, Encryption, e.round_keys.as_mut_slice());
+        setup_function(key, Encryption, e.round_keys[mut]);
         return e;
     }
 }
@@ -47,7 +47,7 @@ impl AesNiDecryptor {
             rounds: rounds,
             round_keys: round_keys
         };
-        setup_function(key, Decryption, d.round_keys.as_mut_slice());
+        setup_function(key, Decryption, d.round_keys[mut]);
         return d;
     }
 }
@@ -55,14 +55,14 @@ impl AesNiDecryptor {
 impl BlockEncryptor for AesNiEncryptor {
     fn block_size(&self) -> uint { 16 }
     fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        encrypt_block_aseni(self.rounds, input, self.round_keys.as_slice(), output);
+        encrypt_block_aseni(self.rounds, input, self.round_keys[], output);
     }
 }
 
 impl BlockDecryptor for AesNiDecryptor {
     fn block_size(&self) -> uint { 16 }
     fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        decrypt_block_aseni(self.rounds, input, self.round_keys.as_slice(), output);
+        decrypt_block_aseni(self.rounds, input, self.round_keys[], output);
     }
 }
 

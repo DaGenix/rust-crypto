@@ -179,7 +179,7 @@ impl Blake2b {
 
     fn apply_key(&mut self) {
         let mut block : [u8, ..BLAKE2B_BLOCKBYTES] = [0, ..BLAKE2B_BLOCKBYTES];
-        copy_memory(block, self.key.slice_to(self.key_length as uint));
+        copy_memory(block, self.key[..self.key_length as uint]);
         self.update(block);
         unsafe {
             volatile_set_memory(block.as_mut_ptr(), 0, block.len());
@@ -213,7 +213,7 @@ impl Blake2b {
         let mut ms: [u64, ..16] = [0, ..16];
         let mut vs: [u64, ..16] = [0, ..16];
 
-        read_u64v_le(ms, self.buf.slice(0, BLAKE2B_BLOCKBYTES));
+        read_u64v_le(ms, self.buf[0..BLAKE2B_BLOCKBYTES]);
 
         for (v, h) in vs.iter_mut().zip(self.h.iter()) {
             *v = *h;
@@ -240,7 +240,7 @@ impl Blake2b {
         round!( 10, vs, ms );
         round!( 11, vs, ms );
 
-        for (h_elem, (v_low, v_high)) in self.h.iter_mut().zip( vs.slice(0,8).iter().zip(vs.slice(8, 16).iter()) ) {
+        for (h_elem, (v_low, v_high)) in self.h.iter_mut().zip( vs[0..8].iter().zip(vs[8..16].iter()) ) {
             *h_elem = *h_elem ^ *v_low ^ *v_high;
         }
     }
@@ -251,7 +251,7 @@ impl Blake2b {
             let fill = 2 * BLAKE2B_BLOCKBYTES - left;
 
             if input.len() > fill {
-                copy_memory( self.buf.slice_from_mut(left), input.slice(0, fill) ); // Fill buffer
+                copy_memory( self.buf[mut left..], input[0..fill] ); // Fill buffer
                 self.buflen += fill;
                 self.increment_counter( BLAKE2B_BLOCKBYTES as u64);
                 self.compress();
@@ -262,9 +262,9 @@ impl Blake2b {
                 copy_memory(first_half, second_half);
 
                 self.buflen -= BLAKE2B_BLOCKBYTES;
-                input = input.slice(fill, input.len());
+                input = input[fill..input.len()];
             } else { // inlen <= fill
-                copy_memory(self.buf.slice_from_mut(left), input);
+                copy_memory(self.buf[mut left..], input);
                 self.buflen += input.len();
                 break;
             }
@@ -289,16 +289,16 @@ impl Blake2b {
             self.increment_counter(incby);
             self.set_lastblock();
 
-            for b in self.buf.slice_from_mut(self.buflen).iter_mut() {
+            for b in self.buf[mut self.buflen..].iter_mut() {
                 *b = 0;
             }
             self.compress();
 
-            write_u64v_le(self.buf.slice_mut(0, 64), self.h);
+            write_u64v_le(self.buf[mut 0..64], self.h);
             self.computed = true;
         }
         let outlen = out.len();
-        copy_memory(out, self.buf.slice(0, outlen));
+        copy_memory(out, self.buf[0..outlen]);
     }
 
     pub fn blake2b(out: &mut[u8], input: &[u8], key: &[u8]) {
@@ -377,7 +377,7 @@ impl Mac for Blake2b {
      */
     fn result(&mut self) -> MacResult {
         let mut mac : Vec<u8> = Vec::from_fn(self.digest_length as uint, |_| 0);
-        self.raw_result(mac.as_mut_slice());
+        self.raw_result(mac[mut]);
         MacResult::new_from_owned(mac)
     }
 
@@ -414,7 +414,7 @@ mod digest_tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(out_str.as_slice() == t.output_str);
+            assert!(out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -425,12 +425,12 @@ mod digest_tests {
             let mut left = len;
             while left > 0u {
                 let take = (left + 1u) / 2u;
-                sh.input_str(t.input.slice(len - left, take + len - left));
+                sh.input_str(t.input[len - left..take + len - left]);
                 left = left - take;
             }
 
             let out_str = sh.result_str();
-            assert!(out_str.as_slice() == t.output_str);
+            assert!(out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -456,7 +456,7 @@ mod digest_tests {
 
         let mut sh = Blake2b::new(64);
 
-        test_hash(&mut sh, tests.as_slice());
+        test_hash(&mut sh, tests[]);
     }
 }
 
@@ -469,7 +469,7 @@ mod mac_tests {
     #[test]
     fn test_blake2b_mac() {
         let key = Vec::from_fn(64, |i| i as u8);
-        let mut m = Blake2b::new_keyed(64, key.as_slice());
+        let mut m = Blake2b::new_keyed(64, key[]);
         m.input([1,2,4,8]);
         let expected = [
             0x8e, 0xc6, 0xcb, 0x71, 0xc4, 0x5c, 0x3c, 0x90,

@@ -39,29 +39,29 @@ impl ChaCha20 {
             _  => unreachable!(),
         };
 
-        state[0] = read_u32_le(constant.slice( 0,  4));
-        state[1] = read_u32_le(constant.slice( 4,  8));
-        state[2] = read_u32_le(constant.slice( 8, 12));
-        state[3] = read_u32_le(constant.slice(12, 16));
-        state[4] = read_u32_le(key.slice( 0,  4));
-        state[5] = read_u32_le(key.slice( 4,  8));
-        state[6] = read_u32_le(key.slice( 8, 12));
-        state[7] = read_u32_le(key.slice(12, 16));
+        state[0] = read_u32_le(constant[0..4]);
+        state[1] = read_u32_le(constant[4..8]);
+        state[2] = read_u32_le(constant[8..12]);
+        state[3] = read_u32_le(constant[12..16]);
+        state[4] = read_u32_le(key[0..4]);
+        state[5] = read_u32_le(key[4..8]);
+        state[6] = read_u32_le(key[8..12]);
+        state[7] = read_u32_le(key[12..16]);
         if key.len() == 16 {
             state[ 8] = state[4];
             state[ 9] = state[5];
             state[10] = state[6];
             state[11] = state[7];
         } else {
-            state[ 8] = read_u32_le(key.slice(16, 20));
-            state[ 9] = read_u32_le(key.slice(20, 24));
-            state[10] = read_u32_le(key.slice(24, 28));
-            state[11] = read_u32_le(key.slice(28, 32));
+            state[ 8] = read_u32_le(key[16..20]);
+            state[ 9] = read_u32_le(key[20..24]);
+            state[10] = read_u32_le(key[24..28]);
+            state[11] = read_u32_le(key[28..32]);
         }
         state[12] = 0;
         state[13] = 0;
-        state[14] = read_u32_le(nonce.slice(0, 4));
-        state[15] = read_u32_le(nonce.slice(4, 8));
+        state[14] = read_u32_le(nonce[0..4]);
+        state[15] = read_u32_le(nonce[4..8]);
 
         state
     }
@@ -82,7 +82,7 @@ impl ChaCha20 {
         }
 
         for i in range(0, self.state.len()) {
-            write_u32_le(self.output.slice_mut(i*4, (i+1)*4), self.state[i] + x[i]);
+            write_u32_le(self.output[mut i*4..(i+1)*4], self.state[i] + x[i]);
         }
 
         self.state[12] += 1;
@@ -262,7 +262,7 @@ mod test {
             let mut c = ChaCha20::new(tv.key, tv.nonce);
             let input = Vec::from_elem(tv.keystream.len(), 0u8);
             let mut output = Vec::from_elem(input.len(), 0u8);
-            c.process(input.as_slice(), output.as_mut_slice());
+            c.process(input[], output[mut]);
             assert_eq!(output, tv.keystream);
         }
     }

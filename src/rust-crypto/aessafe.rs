@@ -597,10 +597,10 @@ fn un_bit_slice_4x1_with_u32(bs: &Bs8State<u32>) -> u32 {
 fn un_bit_slice_1x16_with_u32(bs: &Bs8State<u32>, output: &mut [u8]) {
     let (a, b, c, d) = un_bit_slice_4x4_with_u32(bs);
 
-    write_u32_le(output.slice_mut(0, 4), a);
-    write_u32_le(output.slice_mut(4, 8), b);
-    write_u32_le(output.slice_mut(8, 12), c);
-    write_u32_le(output.slice_mut(12, 16), d);
+    write_u32_le(output[mut 0..4], a);
+    write_u32_le(output[mut 4..8], b);
+    write_u32_le(output[mut 8..12], c);
+    write_u32_le(output[mut 12..16], d);
 }
 
 // Bit Slice a 128 byte array of eight 16 byte blocks. Each block is in column major order.
@@ -634,14 +634,14 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
             ((data[15] as u32) << 24));
     }
 
-    let t0 = read_row_major(data.slice(0, 16));
-    let t1 = read_row_major(data.slice(16, 32));
-    let t2 = read_row_major(data.slice(32, 48));
-    let t3 = read_row_major(data.slice(48, 64));
-    let t4 = read_row_major(data.slice(64, 80));
-    let t5 = read_row_major(data.slice(80, 96));
-    let t6 = read_row_major(data.slice(96, 112));
-    let t7 = read_row_major(data.slice(112, 128));
+    let t0 = read_row_major(data[0..16]);
+    let t1 = read_row_major(data[16..32]);
+    let t2 = read_row_major(data[32..48]);
+    let t3 = read_row_major(data[48..64]);
+    let t4 = read_row_major(data[64..80]);
+    let t5 = read_row_major(data[80..96]);
+    let t6 = read_row_major(data[96..112]);
+    let t7 = read_row_major(data[112..128]);
 
     let x0 = (t0 & bit0) | (t1.lsh(1) & bit1) | (t2.lsh(2) & bit2) | (t3.lsh(3) & bit3) |
         (t4.lsh(4) & bit4) | (t5.lsh(5) & bit5) | (t6.lsh(6) & bit6) | (t7.lsh(7) & bit7);
@@ -668,10 +668,10 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
 fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32x4> {
     let mut tmp = [0u8, ..128];
     for i in range(0u, 8) {
-        write_u32_le(tmp.slice_mut(i * 16, i * 16 + 4), a);
-        write_u32_le(tmp.slice_mut(i * 16 + 4, i * 16 + 8), b);
-        write_u32_le(tmp.slice_mut(i * 16 + 8, i * 16 + 12), c);
-        write_u32_le(tmp.slice_mut(i * 16 + 12, i * 16 + 16), d);
+        write_u32_le(tmp[mut i * 16..i * 16 + 4], a);
+        write_u32_le(tmp[mut i * 16 + 4..i * 16 + 8], b);
+        write_u32_le(tmp[mut i * 16 + 8..i * 16 + 12], c);
+        write_u32_le(tmp[mut i * 16 + 12..i * 16 + 16], d);
     }
     return bit_slice_1x128_with_u32x4(tmp);
 }
@@ -728,14 +728,14 @@ fn un_bit_slice_1x128_with_u32x4(bs: &Bs8State<u32x4>, output: &mut [u8]) {
         output[15] = (a3 >> 24) as u8;
     }
 
-    write_row_major(&x0, output.slice_mut(0, 16));
-    write_row_major(&x1, output.slice_mut(16, 32));
-    write_row_major(&x2, output.slice_mut(32, 48));
-    write_row_major(&x3, output.slice_mut(48, 64));
-    write_row_major(&x4, output.slice_mut(64, 80));
-    write_row_major(&x5, output.slice_mut(80, 96));
-    write_row_major(&x6, output.slice_mut(96, 112));
-    write_row_major(&x7, output.slice_mut(112, 128))
+    write_row_major(&x0, output[mut 0..16]);
+    write_row_major(&x1, output[mut 16..32]);
+    write_row_major(&x2, output[mut 32..48]);
+    write_row_major(&x3, output[mut 48..64]);
+    write_row_major(&x4, output[mut 64..80]);
+    write_row_major(&x5, output[mut 80..96]);
+    write_row_major(&x6, output[mut 96..112]);
+    write_row_major(&x7, output[mut 112..128])
 }
 
 // The Gf2Ops, Gf4Ops, and Gf8Ops traits specify the functions needed to calculate the AES S-Box

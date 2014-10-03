@@ -80,8 +80,8 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
     for i in range(0u, 16) {
         write_u32_le(
-            output.slice_mut(i * 4, (i + 1) * 4),
-            x[i] + read_u32_le(input.slice(i * 4, (i + 1) * 4)));
+            output[mut i * 4..(i + 1) * 4],
+            x[i] + read_u32_le(input[i * 4..(i + 1) * 4]));
     }
 }
 
@@ -96,7 +96,7 @@ fn xor(x: &[u8], y: &[u8], output: &mut [u8]) {
 // output - the output vector. Must be the same length as input.
 fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
     let mut x = [0u8, ..64];
-    x.clone_from_slice(input.slice_from(input.len() - 64));
+    x.clone_from_slice(input[input.len() - 64..]);
 
     let mut t = [0u8, ..64];
 
@@ -105,7 +105,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
         xor(x, chunk, t);
         salsa20_8(t, x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
-        output.slice_mut(pos, pos + 64).clone_from_slice(x);
+        output[mut pos..pos + 64].clone_from_slice(x);
     }
 }
 
@@ -121,7 +121,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
         let mask = n - 1;
         // This cast is safe since we're going to get the value mod n (which is a power of 2), so we
         // don't have to care about truncating any of the high bits off
-        let result = (read_u32_le(x.slice(x.len() - 64, x.len() - 60)) as uint) & mask;
+        let result = (read_u32_le(x[x.len() - 64..x.len() - 60]) as uint) & mask;
         return result;
     }
 
@@ -134,7 +134,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
 
     for _ in range(0, n) {
         let j = integerify(b, n);
-        xor(b, v.slice(j * len, (j + 1) * len), t);
+        xor(b, v[mut j * len..(j + 1) * len], t);
         scrypt_block_mix(t, b);
     }
 }
@@ -237,16 +237,16 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     let mut mac = Hmac::new(Sha256::new(), password);
 
     let mut b = Vec::from_elem(p * r * 128, 0u8);
-    pbkdf2(&mut mac, salt, 1, b.as_mut_slice());
+    pbkdf2(&mut mac, salt, 1, b[mut]);
 
     let mut v = Vec::from_elem(n * r * 128, 0u8);
     let mut t = Vec::from_elem(r * 128, 0u8);
 
-    for chunk in b.as_mut_slice().chunks_mut(r * 128) {
-        scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
+    for chunk in b[mut].chunks_mut(r * 128) {
+        scrypt_ro_mix(chunk, v[mut], t[mut], n);
     }
 
-    pbkdf2(&mut mac, b.as_slice(), 1, output.as_mut_slice());
+    pbkdf2(&mut mac, b[], 1, output[mut]);
 }
 
 /**
@@ -280,7 +280,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
     // 256-bit derived key
     let mut dk = [0u8, ..32];
 
-    scrypt(password.as_bytes(), salt.as_slice(), params, dk);
+    scrypt(password.as_bytes(), salt[], params, dk);
 
     let mut result = "$rscrypt$".into_string();
     if params.r < 256 && params.p < 256 {
@@ -289,19 +289,19 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
         tmp[0] = params.log_n;
         tmp[1] = params.r as u8;
         tmp[2] = params.p as u8;
-        result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
+        result.push_str(tmp.to_base64(base64::STANDARD)[]);
     } else {
         result.push_str("1$");
         let mut tmp = [0u8, ..9];
         tmp[0] = params.log_n;
-        write_u32_le(tmp.slice_mut(1, 5), params.r);
-        write_u32_le(tmp.slice_mut(5, 9), params.p);
-        result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
+        write_u32_le(tmp[mut 1..5], params.r);
+        write_u32_le(tmp[mut 5..9], params.p);
+        result.push_str(tmp.to_base64(base64::STANDARD)[]);
     }
     result.push('$');
-    result.push_str(salt.as_slice().to_base64(base64::STANDARD).as_slice());
+    result.push_str(salt[].to_base64(base64::STANDARD)[]);
     result.push('$');
-    result.push_str(dk.to_base64(base64::STANDARD).as_slice());
+    result.push_str(dk.to_base64(base64::STANDARD)[]);
     result.push('$');
 
     return Ok(result);
@@ -347,7 +347,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
                 },
                 None => return Err(ERR_STR)
             };
-            let pvec = pvec.as_slice();
+            let pvec = pvec[];
             match fstr {
                 "0" => {
                     if pvec.len() != 3 { return Err(ERR_STR); }
@@ -360,7 +360,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
                     if pvec.len() != 9 { return Err(ERR_STR); }
                     let log_n = pvec[0];
                     let mut pval = [0u32, ..2];
-                    read_u32v_le(pval, pvec.slice(1, 9));
+                    read_u32v_le(pval, pvec[1..9]);
                     params = ScryptParams::new(log_n, pval[0], pval[1]);
                 }
                 _ => return Err(ERR_STR)
@@ -400,13 +400,13 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     }
 
     let mut output = Vec::from_elem(hash.len(), 0u8);
-    scrypt(password.as_bytes(), salt.as_slice(), &params, output.as_mut_slice());
+    scrypt(password.as_bytes(), salt[], &params, output[mut]);
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output.as_slice(), hash.as_slice()));
+    return Ok(fixed_time_eq(output[], hash[]));
 }
 
 #[cfg(test)]
@@ -483,7 +483,7 @@ mod test {
         for t in tests.iter() {
             let mut result = Vec::from_elem(t.expected.len(), 0u8);
             let params = ScryptParams::new(t.log_n, t.r, t.p);
-            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result.as_mut_slice());
+            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result[mut]);
             assert!(result == t.expected);
         }
     }
@@ -499,20 +499,20 @@ mod test {
         // cryptographically strong, however.
         assert!(out1 != out2);
 
-        match scrypt_check(password, out1.as_slice()) {
+        match scrypt_check(password, out1[]) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
-        match scrypt_check(password, out2.as_slice()) {
+        match scrypt_check(password, out2[]) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
 
-        match scrypt_check("wrong", out1.as_slice()) {
+        match scrypt_check("wrong", out1[]) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }
-        match scrypt_check("wrong", out2.as_slice()) {
+        match scrypt_check("wrong", out2[]) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }
