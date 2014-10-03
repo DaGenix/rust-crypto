@@ -4,8 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(target_arch = "x86")]
-#[cfg(target_arch = "x86_64")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub fn supports_aesni() -> bool {
 	let mut flags: u32;
     unsafe {
@@ -28,8 +27,7 @@ pub fn supports_aesni() -> bool {
     (flags & 0x02000000) != 0
 }
 
-#[cfg(target_arch = "x86")]
-#[cfg(target_arch = "x86_64")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 #[allow(dead_assignment)]
 #[allow(unused_variable)]
 unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
