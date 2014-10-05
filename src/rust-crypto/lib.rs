@@ -10,7 +10,6 @@
 #![feature(asm)]
 #![feature(macro_rules)]
 #![feature(simd)]
-#![feature(slicing_syntax)]
 
 extern crate serialize;
 extern crate time;
