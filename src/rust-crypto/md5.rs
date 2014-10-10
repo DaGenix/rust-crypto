@@ -198,10 +198,10 @@ impl Digest for Md5 {
             self.finished = true;
         }
 
-        write_u32_le(out.slice_mut(0, 4), self.state.s0);
-        write_u32_le(out.slice_mut(4, 8), self.state.s1);
-        write_u32_le(out.slice_mut(8, 12), self.state.s2);
-        write_u32_le(out.slice_mut(12, 16), self.state.s3);
+        write_u32_le(out[mut 0..4], self.state.s0);
+        write_u32_le(out[mut 4..8], self.state.s1);
+        write_u32_le(out[mut 8..12], self.state.s2);
+        write_u32_le(out[mut 12..16], self.state.s3);
     }
 
     fn output_bits(&self) -> uint { 128 }
@@ -228,7 +228,7 @@ mod tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(out_str.as_slice() == t.output_str);
+            assert!(out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -244,7 +244,7 @@ mod tests {
             }
 
             let out_str = sh.result_str();
-            assert!(out_str.as_slice() == t.output_str);
+            assert!(out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -272,7 +272,7 @@ mod tests {
 
         let mut sh = Md5::new();
 
-        test_hash(&mut sh, tests.as_slice());
+        test_hash(&mut sh, tests[]);
     }
 
     #[test]

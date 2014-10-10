@@ -33,10 +33,10 @@ impl Gf128 {
 
     fn from_bytes(bytes: &[u8]) -> Gf128 {
         assert!(bytes.len() == 16);
-        let d = read_u32_be(bytes.slice(0, 4));
-        let c = read_u32_be(bytes.slice(4, 8));
-        let b = read_u32_be(bytes.slice(8, 12));
-        let a = read_u32_be(bytes.slice(12, 16));
+        let d = read_u32_be(bytes[0..4]);
+        let c = read_u32_be(bytes[4..8]);
+        let b = read_u32_be(bytes[8..12]);
+        let a = read_u32_be(bytes[12..16]);
         Gf128::new(a, b, c, d)
     }
 
@@ -44,10 +44,10 @@ impl Gf128 {
         let simd::u32x4(a, b, c, d) = self.d;
         let mut result: [u8, ..16] = unsafe { mem::uninitialized() };
 
-        write_u32_be(result.slice_mut(0, 4), d);
-        write_u32_be(result.slice_mut(4, 8), c);
-        write_u32_be(result.slice_mut(8, 12), b);
-        write_u32_be(result.slice_mut(12, 16), a);
+        write_u32_be(result[mut 0..4], d);
+        write_u32_be(result[mut 4..8], c);
+        write_u32_be(result[mut 8..12], b);
+        write_u32_be(result[mut 12..16], a);
 
         result
     }
@@ -154,13 +154,13 @@ fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8
         None => data,
         Some(mut rest) => {
             if 16 - rest_len > data_len {
-                copy_memory(rest.slice_from_mut(rest_len), data);
+                copy_memory(rest[mut rest_len..], data);
                 *srest = Some(rest);
                 return;
             }
 
             let (fill, data) = data.split_at(16 - rest_len);
-            copy_memory(rest.slice_from_mut(rest_len), fill);
+            copy_memory(rest[mut rest_len..], fill);
             state.add_and_mul(Gf128::from_bytes(rest), hs);
             data
         }
@@ -293,8 +293,8 @@ impl Mac for Ghash {
 
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8, ..16];
-        self.raw_result(mac.as_mut_slice());
-        return MacResult::new(mac.as_slice());
+        self.raw_result(mac[mut]);
+        return MacResult::new(mac[]);
     }
 
     fn raw_result(&mut self, output: &mut [u8]) {
@@ -533,7 +533,7 @@ mod test {
     fn hash() {
         for &(h, a, c, g) in cases.iter() {
             let ghash = Ghash::new(h);
-            assert_eq!(ghash.input_a(a).input_c(c).result().as_slice(), g);
+            assert_eq!(ghash.input_a(a).input_c(c).result()[], g);
         }
     }
 
@@ -547,7 +547,7 @@ mod test {
                             .input_a(a2)
                             .input_c(c1)
                             .input_c(c2)
-                            .result().as_slice(), g);
+                            .result()[], g);
         }
     }
 }
@@ -566,7 +566,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(key);
             ghash.input(bytes);
-            ghash.raw_result(mac.as_mut_slice());
+            ghash.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -579,7 +579,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(key);
             ghash.input(bytes);
-            ghash.raw_result(mac.as_mut_slice());
+            ghash.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -592,7 +592,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(key);
             ghash.input(bytes);
-            ghash.raw_result(mac.as_mut_slice());
+            ghash.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
     }

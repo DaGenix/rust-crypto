@@ -71,8 +71,8 @@ pub trait Digest {
      */
     fn result_str(&mut self) -> String {
         let mut buf = Vec::from_elem((self.output_bits()+7)/8, 0u8);
-        self.result(buf.as_mut_slice());
-        return to_hex(buf.as_slice());
+        self.result(buf[mut]);
+        return to_hex(buf[]);
     }
 }
 
@@ -80,7 +80,7 @@ fn to_hex(rr: &[u8]) -> String {
     let mut s = String::new();
     for b in rr.iter() {
         let hex = format!("{:02x}", *b);
-        s.push_str(hex.as_slice());
+        s.push_str(hex[]);
     }
     return s;
 }

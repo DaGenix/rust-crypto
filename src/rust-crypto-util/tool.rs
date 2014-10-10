@@ -40,10 +40,10 @@ fn run_scrypt(matches: &Matches) {
         print_usage();
         return;
     }
-    let logn = from_str::<u8>(matches.opt_str("logn").unwrap().as_slice()).unwrap();
-    let r = from_str::<u32>(matches.opt_str("r").unwrap().as_slice()).unwrap();
-    let p = from_str::<u32>(matches.opt_str("p").unwrap().as_slice()).unwrap();
-    let dklen = from_str::<uint>(matches.opt_str("dklen").unwrap().as_slice()).unwrap();
+    let logn = from_str::<u8>(matches.opt_str("logn").unwrap()[]).unwrap();
+    let r = from_str::<u32>(matches.opt_str("r").unwrap()[]).unwrap();
+    let p = from_str::<u32>(matches.opt_str("p").unwrap()[]).unwrap();
+    let dklen = from_str::<uint>(matches.opt_str("dklen").unwrap()[]).unwrap();
 
     if !matches.opt_present("rawsalt") || !matches.opt_present("rawpassword") ||
        !matches.opt_present("rawoutput") {
@@ -58,9 +58,9 @@ fn run_scrypt(matches: &Matches) {
 
     let params = scrypt::ScryptParams::new(logn, r, p);
     let mut output = Vec::from_elem(dklen, 0u8);
-    scrypt::scrypt(pass.as_slice(), salt.as_slice(), &params, output.as_mut_slice());
+    scrypt::scrypt(pass[], salt[], &params, output[mut]);
 
-    match io::stdout().write(output.as_slice()) {
+    match io::stdout().write(output[]) {
         Ok(_) => { },
         Err(_) => fail!("Error writing result")
     }
@@ -83,7 +83,7 @@ fn main() {
         optflag("", "rawoutput", "Use raw output mode"),
     ];
 
-    let matches = match getopts(args.tail(), opts.as_slice()) {
+    let matches = match getopts(args.tail(), opts[]) {
         Ok(m) => { m }
         Err(f) => { fail!(f.to_string()) }
     };
@@ -97,7 +97,7 @@ fn main() {
         print_usage();
         return;
     }
-    let algorithm_name = matches.free[0].as_slice();
+    let algorithm_name = matches.free[0][];
 
     match algorithm_name {
         "scrypt" => run_scrypt(&matches),

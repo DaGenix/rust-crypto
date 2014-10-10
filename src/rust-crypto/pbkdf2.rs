@@ -97,11 +97,11 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         idx = idx.checked_add(&1).expect("PBKDF2 size limit exceeded.");
 
         if chunk.len() == os {
-            calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), chunk);
+            calculate_block(mac, salt, c, idx, scratch[mut], chunk);
         } else {
             let mut tmp = Vec::from_elem(os, 0u8);
-            calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), tmp.as_mut_slice());
-            chunk.clone_from_slice(tmp.as_slice());
+            calculate_block(mac, salt, c, idx, scratch[mut], tmp[mut]);
+            chunk.clone_from_slice(tmp[]);
         }
     }
 }
@@ -137,16 +137,16 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
 
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
-    pbkdf2(&mut mac, salt.as_slice(), c, dk);
+    pbkdf2(&mut mac, salt[], c, dk);
 
     let mut result = "$rpbkdf2$0$".into_string();
     let mut tmp = [0u8, ..4];
     write_u32_be(tmp, c);
-    result.push_str(tmp.to_base64(base64::STANDARD).as_slice());
+    result.push_str(tmp.to_base64(base64::STANDARD)[]);
     result.push('$');
-    result.push_str(salt.as_slice().to_base64(base64::STANDARD).as_slice());
+    result.push_str(salt[].to_base64(base64::STANDARD)[]);
     result.push('$');
-    result.push_str(dk.to_base64(base64::STANDARD).as_slice());
+    result.push_str(dk.to_base64(base64::STANDARD)[]);
     result.push('$');
 
     return Ok(result);
@@ -195,7 +195,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         Some(pstr) => match pstr.from_base64() {
             Ok(pvec) => {
                 if pvec.len() != 4 { return Err(ERR_STR); }
-                read_u32_be(pvec.as_slice())
+                read_u32_be(pvec[])
             }
             Err(_) => return Err(ERR_STR)
         },
@@ -235,13 +235,13 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
     let mut output = Vec::from_elem(hash.len(), 0u8);
-    pbkdf2(&mut mac, salt.as_slice(), c, output.as_mut_slice());
+    pbkdf2(&mut mac, salt[], c, output[mut]);
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output.as_slice(), hash.as_slice()));
+    return Ok(fixed_time_eq(output[], hash[]));
 }
 
 #[cfg(test)]
@@ -313,9 +313,9 @@ mod test {
     fn test_pbkdf2() {
         let tests = tests();
         for t in tests.iter() {
-            let mut mac = Hmac::new(Sha1::new(), t.password.as_slice());
+            let mut mac = Hmac::new(Sha1::new(), t.password[]);
             let mut result = Vec::from_elem(t.expected.len(), 0u8);
-            pbkdf2(&mut mac, t.salt.as_slice(), t.c, result.as_mut_slice());
+            pbkdf2(&mut mac, t.salt[], t.c, result[mut]);
             assert!(result == t.expected);
         }
     }
@@ -331,20 +331,20 @@ mod test {
         // cryptographically strong, however.
         assert!(out1 != out2);
 
-        match pbkdf2_check(password, out1.as_slice()) {
+        match pbkdf2_check(password, out1[]) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
-        match pbkdf2_check(password, out2.as_slice()) {
+        match pbkdf2_check(password, out2[]) {
             Ok(r) => assert!(r),
             Err(_) => fail!()
         }
 
-        match pbkdf2_check("wrong", out1.as_slice()) {
+        match pbkdf2_check("wrong", out1[]) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }
-        match pbkdf2_check("wrong", out2.as_slice()) {
+        match pbkdf2_check("wrong", out2[]) {
             Ok(r) => assert!(!r),
             Err(_) => fail!()
         }

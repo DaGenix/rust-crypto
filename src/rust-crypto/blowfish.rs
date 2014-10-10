@@ -314,10 +314,10 @@ impl BlockEncryptor for Blowfish {
         assert!(input.len() == 8);
         assert!(output.len() == 8);
         let mut block = [0u32, 0u32];
-        read_u32v_be(block.as_mut_slice(), input);
+        read_u32v_be(block[mut], input);
         let (l, r) = self.encrypt(block[0], block[1]);
-        write_u32_be(output.slice_mut(0, 4), l);
-        write_u32_be(output.slice_mut(4, 8), r);
+        write_u32_be(output[mut 0..4], l);
+        write_u32_be(output[mut 4..8], r);
     }
 }
 
@@ -330,10 +330,10 @@ impl BlockDecryptor for Blowfish {
         assert!(input.len() == 8);
         assert!(output.len() == 8);
         let mut block = [0u32, 0u32];
-        read_u32v_be(block.as_mut_slice(), input);
+        read_u32v_be(block[mut], input);
         let (l, r) = self.decrypt(block[0], block[1]);
-        write_u32_be(output.slice_mut(0, 4), l);
-        write_u32_be(output.slice_mut(4, 8), r);
+        write_u32_be(output[mut 0..4], l);
+        write_u32_be(output[mut 4..8], r);
     }
 }
 
@@ -527,9 +527,9 @@ mod test {
         let tests = eay_test_vectors();
         let mut output = [0u8, ..8];
         for test in tests.iter() {
-            let state = Blowfish::new(test.key.as_slice());
-            state.encrypt_block(test.plaintext.as_slice(), output.as_mut_slice());
-            assert!(test.ciphertext.as_slice() == output.as_slice());
+            let state = Blowfish::new(test.key[]);
+            state.encrypt_block(test.plaintext[], output[mut]);
+            assert!(test.ciphertext[] == output[]);
         }
     }
     
@@ -538,9 +538,9 @@ mod test {
         let tests = eay_test_vectors();
         let mut output = [0u8, ..8];
         for test in tests.iter() {
-            let state = Blowfish::new(test.key.as_slice());
-            state.decrypt_block(test.ciphertext.as_slice(), output.as_mut_slice());
-            assert!(test.plaintext.as_slice() == output.as_slice());
+            let state = Blowfish::new(test.key[]);
+            state.decrypt_block(test.ciphertext[], output[mut]);
+            assert!(test.plaintext[] == output[]);
         }
     }
 }

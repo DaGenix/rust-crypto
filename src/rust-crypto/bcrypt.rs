@@ -34,8 +34,8 @@ pub fn bcrypt(cost: uint, salt: &[u8], password: &[u8], output: &mut [u8]) {
             ctext[i] = l;
             ctext[i+1] = r;
         }
-        write_u32_be(output.slice_mut(i*4, (i+1)*4), ctext[i]);
-        write_u32_be(output.slice_mut((i+1)*4, (i+2)*4), ctext[i+1]);
+        write_u32_be(output[mut i*4..(i+1)*4], ctext[i]);
+        write_u32_be(output[mut (i+1)*4..(i+2)*4], ctext[i+1]);
     }
 }
 
@@ -140,8 +140,8 @@ mod test {
         let tests = openwall_test_vectors();
         let mut output = [0u8, ..24];
         for test in tests.iter() {
-            bcrypt(test.cost, test.salt.as_slice(), test.input.as_slice(), output.as_mut_slice());
-            assert_eq!(output.slice(0, 23), test.output.as_slice());
+            bcrypt(test.cost, test.salt[], test.input[], output[mut]);
+            assert_eq!(output[0..23], test.output[]);
         }
     }
 }

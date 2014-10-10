@@ -103,7 +103,7 @@ mod test {
         for t in tests.iter() {
             let mut rc4 = Rc4::new(t.key.as_bytes());
             let mut result = Vec::from_elem(t.output.len(), 0u8);
-            rc4.process(t.input.as_bytes(), result.as_mut_slice());
+            rc4.process(t.input.as_bytes(), result[mut]);
             assert!(result == t.output);
         }
     }

@@ -36,11 +36,11 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let bs = digest.block_size();
     let mut expanded_key = Vec::from_elem(bs, 0u8);
     if key.len() <= bs {
-        slice::bytes::copy_memory(expanded_key.as_mut_slice(), key);
+        slice::bytes::copy_memory(expanded_key[mut], key);
     } else {
         let output_size = digest.output_bytes();
         digest.input(key);
-        digest.result(expanded_key.slice_to_mut(output_size));
+        digest.result(expanded_key[mut ..output_size]);
         digest.reset();
     }
     return expanded_key;
@@ -51,8 +51,8 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
 fn create_keys<D: Digest>(digest: &mut D, key: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let mut i_key = expand_key(digest, key);
     let mut o_key = i_key.clone();
-    derive_key(i_key.as_mut_slice(), 0x36);
-    derive_key(o_key.as_mut_slice(), 0x5c);
+    derive_key(i_key[mut], 0x36);
+    derive_key(o_key[mut], 0x5c);
     return (i_key, o_key);
 }
 
@@ -67,7 +67,7 @@ impl <D: Digest> Hmac<D> {
      */
     pub fn new(mut digest: D, key: &[u8]) -> Hmac<D> {
         let (i_key, o_key) = create_keys(&mut digest, key);
-        digest.input(i_key.as_slice());
+        digest.input(i_key[]);
         return Hmac {
             digest: digest,
             i_key: i_key,
@@ -85,7 +85,7 @@ impl <D: Digest> Mac for Hmac<D> {
 
     fn reset(&mut self) {
         self.digest.reset();
-        self.digest.input(self.i_key.as_slice());
+        self.digest.input(self.i_key[]);
         self.finished = false;
     }
 
@@ -93,7 +93,7 @@ impl <D: Digest> Mac for Hmac<D> {
         let output_size = self.digest.output_bytes();
         let mut code = Vec::from_elem(output_size, 0u8);
 
-        self.raw_result(code.as_mut_slice());
+        self.raw_result(code[mut]);
 
         return MacResult::new_from_owned(code);
     }
@@ -103,7 +103,7 @@ impl <D: Digest> Mac for Hmac<D> {
             self.digest.result(output);
 
             self.digest.reset();
-            self.digest.input(self.o_key.as_slice());
+            self.digest.input(self.o_key[]);
             self.digest.input(output);
 
             self.finished = true;
@@ -160,18 +160,18 @@ mod test {
     fn test_hmac_md5() {
         let tests = tests();
         for t in tests.iter() {
-            let mut hmac = Hmac::new(Md5::new(), t.key.as_slice());
+            let mut hmac = Hmac::new(Md5::new(), t.key[]);
 
-            hmac.input(t.data.as_slice());
+            hmac.input(t.data[]);
             let result = hmac.result();
-            let expected = MacResult::new(t.expected.as_slice());
+            let expected = MacResult::new(t.expected[]);
             assert!(result == expected);
 
             hmac.reset();
 
-            hmac.input(t.data.as_slice());
+            hmac.input(t.data[]);
             let result2 = hmac.result();
-            let expected2 = MacResult::new(t.expected.as_slice());
+            let expected2 = MacResult::new(t.expected[]);
             assert!(result2 == expected2);
         }
     }
@@ -180,12 +180,12 @@ mod test {
     fn test_hmac_md5_incremental() {
         let tests = tests();
         for t in tests.iter() {
-            let mut hmac = Hmac::new(Md5::new(), t.key.as_slice());
+            let mut hmac = Hmac::new(Md5::new(), t.key[]);
             for i in range(0, t.data.len()) {
                 hmac.input(t.data.slice(i, i + 1));
             }
             let result = hmac.result();
-            let expected = MacResult::new(t.expected.as_slice());
+            let expected = MacResult::new(t.expected[]);
             assert!(result == expected);
         }
     }

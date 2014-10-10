@@ -291,14 +291,14 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                 let buffer_remaining = size - self.buffer_idx;
                 if input.len() >= buffer_remaining {
                         copy_memory(
-                            self.buffer.mut_slice(self.buffer_idx, size),
-                            input.slice_to(buffer_remaining));
+                            self.buffer[mut self.buffer_idx..size],
+                            input[..buffer_remaining]);
                     self.buffer_idx = 0;
                     func(self.buffer);
                     i += buffer_remaining;
                 } else {
                     copy_memory(
-                        self.buffer.mut_slice(self.buffer_idx, self.buffer_idx + input.len()),
+                        self.buffer[mut self.buffer_idx..self.buffer_idx + input.len()],
                         input);
                     self.buffer_idx += input.len();
                     return;
@@ -308,7 +308,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             // While we have at least a full buffer size chunks's worth of data, process that data
             // without copying it into the buffer
             while input.len() - i >= size {
-                func(input.slice(i, i + size));
+                func(input[i..i + size]);
                 i += size;
             }
 
@@ -317,8 +317,8 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             // be empty.
             let input_remaining = input.len() - i;
             copy_memory(
-                self.buffer.mut_slice(0, input_remaining),
-                input.slice_from(i));
+                self.buffer[mut 0..input_remaining],
+                input[i..]);
             self.buffer_idx += input_remaining;
         }
 
@@ -328,25 +328,25 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
 
         fn zero_until(&mut self, idx: uint) {
             assert!(idx >= self.buffer_idx);
-            self.buffer.mut_slice(self.buffer_idx, idx).set_memory(0);
+            self.buffer[mut self.buffer_idx..idx].set_memory(0);
             self.buffer_idx = idx;
         }
 
         fn next<'s>(&'s mut self, len: uint) -> &'s mut [u8] {
             self.buffer_idx += len;
-            return self.buffer.mut_slice(self.buffer_idx - len, self.buffer_idx);
+            return self.buffer[mut self.buffer_idx - len..self.buffer_idx];
         }
 
         fn full_buffer<'s>(&'s mut self) -> &'s [u8] {
             assert!(self.buffer_idx == $size);
             self.buffer_idx = 0;
-            return self.buffer.slice_to($size);
+            return self.buffer[..$size];
         }
 
         fn current_buffer<'s>(&'s mut self) -> &'s [u8] {
             let tmp = self.buffer_idx;
             self.buffer_idx = 0;
-            return self.buffer.slice_to(tmp);
+            return self.buffer[..tmp];
         }
 
         fn position(&self) -> uint { self.buffer_idx }
@@ -445,13 +445,13 @@ pub mod test {
             let next = range.ind_sample(&mut rng);
             let remaining = total_size - count;
             let size = if next > remaining { remaining } else { next };
-            digest.input(buffer.slice_to(size));
+            digest.input(buffer[..size]);
             count += size;
         }
 
         let result_str = digest.result_str();
 
-        assert!(expected == result_str.as_slice());
+        assert!(expected == result_str[]);
     }
 
     // A normal addition - no overflow occurs
