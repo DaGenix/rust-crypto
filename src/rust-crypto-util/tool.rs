@@ -7,6 +7,8 @@
 #![license = "MIT/ASL2"]
 #![crate_name = "rust-crypto-util"]
 
+#![feature(slicing_syntax)]
+
 extern crate getopts;
 extern crate "rust-crypto" as rust_crypto;
 
