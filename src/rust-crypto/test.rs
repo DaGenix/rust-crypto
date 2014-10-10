@@ -7,16 +7,17 @@
 #![feature(asm)]
 #![feature(macro_rules)]
 #![feature(simd)]
+#![feature(slicing_syntax)]
 
 extern crate serialize;
 extern crate test;
 
-pub mod aes;
-pub mod aessafe;
+//pub mod aes;
+//pub mod aessafe;
 pub mod bcrypt;
 pub mod bcrypt_pbkdf;
 pub mod blake2b;
-pub mod blockmodes;
+//pub mod blockmodes;
 pub mod blowfish;
 pub mod buffer;
 pub mod chacha20;
@@ -37,6 +38,5 @@ pub mod sha2;
 pub mod symmetriccipher;
 pub mod util;
 
-#[cfg(target_arch = "x86")]
-#[cfg(target_arch = "x86_64")]
-pub mod aesni;
+//#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+//pub mod aesni;
