@@ -321,7 +321,7 @@ mod test {
 
     // Test cases from:
     // <http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-spec.pdf>
-    static cases: &'static [(&'static [u8], &'static [u8], &'static [u8], &'static [u8])] = &[
+    static CASES: &'static [(&'static [u8], &'static [u8], &'static [u8], &'static [u8])] = &[
         // Format: (H, A, C, GHASH(H, A, C))
 
         // Test 1
@@ -531,7 +531,7 @@ mod test {
 
     #[test]
     fn hash() {
-        for &(h, a, c, g) in cases.iter() {
+        for &(h, a, c, g) in CASES.iter() {
             let ghash = Ghash::new(h);
             assert_eq!(ghash.input_a(a).input_c(c).result()[], g);
         }
@@ -539,7 +539,7 @@ mod test {
 
     #[test]
     fn split_input() {
-        for &(h, a, c, g) in cases.iter() {
+        for &(h, a, c, g) in CASES.iter() {
             let ghash = Ghash::new(h);
             let (a1, a2) = a.split_at(a.len() / 2);
             let (c1, c2) = c.split_at(c.len() / 2);

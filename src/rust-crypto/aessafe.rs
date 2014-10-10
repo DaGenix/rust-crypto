@@ -1091,7 +1091,7 @@ trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Clone + Default 
 
 // Arrays to convert to and from a polynomial basis and a normal basis. The affine transformation
 // step is included in these matrices as well, so that doesn't have to be done seperately.
-static A2X_u32: [[u32, ..8], ..8] = [
+static A2X_U32: [[u32, ..8], ..8] = [
     [ 0,  0,  0, -1, -1,  0,  0, -1],
     [-1, -1,  0,  0, -1, -1, -1, -1],
     [ 0, -1,  0,  0, -1, -1, -1, -1],
@@ -1102,7 +1102,7 @@ static A2X_u32: [[u32, ..8], ..8] = [
     [-1, -1, -1, -1, -1, -1, -1, -1]
 ];
 
-static X2A_u32: [[u32, ..8], ..8] = [
+static X2A_U32: [[u32, ..8], ..8] = [
     [ 0,  0, -1,  0,  0, -1, -1,  0],
     [ 0,  0,  0, -1, -1, -1, -1,  0],
     [ 0, -1, -1, -1,  0, -1, -1,  0],
@@ -1113,7 +1113,7 @@ static X2A_u32: [[u32, ..8], ..8] = [
     [ 0,  0,  0,  0,  0, -1, -1,  0],
 ];
 
-static X2S_u32: [[u32, ..8], ..8] = [
+static X2S_U32: [[u32, ..8], ..8] = [
     [ 0,  0,  0, -1, -1,  0, -1,  0],
     [-1,  0, -1, -1,  0, -1,  0,  0],
     [ 0, -1, -1, -1, -1,  0,  0, -1],
@@ -1124,7 +1124,7 @@ static X2S_u32: [[u32, ..8], ..8] = [
     [ 0,  0, -1,  0,  0, -1,  0,  0],
 ];
 
-static S2X_u32: [[u32, ..8], ..8] = [
+static S2X_U32: [[u32, ..8], ..8] = [
     [0, 0 ,  -1, -1,  0,  0,  0, -1],
     [-1,  0,  0, -1, -1, -1, -1,  0],
     [-1,  0, -1,  0,  0,  0,  0,  0],
@@ -1136,10 +1136,10 @@ static S2X_u32: [[u32, ..8], ..8] = [
 ];
 
 impl AesBitValueOps for u32 {
-    fn a2x() -> &'static [[u32, ..8], ..8] { &A2X_u32 }
-    fn x2s() -> &'static [[u32, ..8], ..8] { &X2S_u32 }
-    fn s2x() -> &'static [[u32, ..8], ..8] { &S2X_u32 }
-    fn x2a() -> &'static [[u32, ..8], ..8] { &X2A_u32 }
+    fn a2x() -> &'static [[u32, ..8], ..8] { &A2X_U32 }
+    fn x2s() -> &'static [[u32, ..8], ..8] { &X2S_U32 }
+    fn s2x() -> &'static [[u32, ..8], ..8] { &S2X_U32 }
+    fn x2a() -> &'static [[u32, ..8], ..8] { &X2A_U32 }
     fn x63() -> Bs8State<u32> { Bs8State(-1, -1, 0, 0, 0, -1, -1, 0) }
 
     fn shift_row(&self) -> u32 {
@@ -1217,7 +1217,7 @@ impl Default for u32x4 {
 
 // Arrays to convert to and from a polynomial basis and a normal basis. The affine transformation
 // step is included in these matrices as well, so that doesn't have to be done seperately.
-static a2x_u32x4: [[u32x4, ..8], ..8] = [
+static A2X_U32X4: [[u32x4, ..8], ..8] = [
     [o!(), o!(), o!(), x!(), x!(), o!(), o!(), x!()],
     [x!(), x!(), o!(), o!(), x!(), x!(), x!(), x!()],
     [o!(), x!(), o!(), o!(), x!(), x!(), x!(), x!()],
@@ -1228,7 +1228,7 @@ static a2x_u32x4: [[u32x4, ..8], ..8] = [
     [x!(), x!(), x!(), x!(), x!(), x!(), x!(), x!()]
 ];
 
-static x2a_u32x4: [[u32x4, ..8], ..8] = [
+static X2A_U32X4: [[u32x4, ..8], ..8] = [
     [o!(), o!(), x!(), o!(), o!(), x!(), x!(), o!()],
     [o!(), o!(), o!(), x!(), x!(), x!(), x!(), o!()],
     [o!(), x!(), x!(), x!(), o!(), x!(), x!(), o!()],
@@ -1239,7 +1239,7 @@ static x2a_u32x4: [[u32x4, ..8], ..8] = [
     [o!(), o!(), o!(), o!(), o!(), x!(), x!(), o!()],
 ];
 
-static x2s_u32x4: [[u32x4, ..8], ..8] = [
+static X2S_U32X4: [[u32x4, ..8], ..8] = [
     [o!(), o!(), o!(), x!(), x!(), o!(), x!(), o!()],
     [x!(), o!(), x!(), x!(), o!(), x!(), o!(), o!()],
     [o!(), x!(), x!(), x!(), x!(), o!(), o!(), x!()],
@@ -1250,7 +1250,7 @@ static x2s_u32x4: [[u32x4, ..8], ..8] = [
     [o!(), o!(), x!(), o!(), o!(), x!(), o!(), o!()],
 ];
 
-static s2x_u32x4: [[u32x4, ..8], ..8] = [
+static S2X_U32X4: [[u32x4, ..8], ..8] = [
     [o!(), o!(), x!(), x!(), o!(), o!(), o!(), x!()],
     [x!(), o!(), o!(), x!(), x!(), x!(), x!(), o!()],
     [x!(), o!(), x!(), o!(), o!(), o!(), o!(), o!()],
@@ -1262,10 +1262,10 @@ static s2x_u32x4: [[u32x4, ..8], ..8] = [
 ];
 
 impl AesBitValueOps for u32x4 {
-    fn a2x() -> &'static [[u32x4, ..8], ..8] { &a2x_u32x4 }
-    fn x2s() -> &'static [[u32x4, ..8], ..8] { &x2s_u32x4 }
-    fn s2x() -> &'static [[u32x4, ..8], ..8] { &s2x_u32x4 }
-    fn x2a() -> &'static [[u32x4, ..8], ..8] { &x2a_u32x4 }
+    fn a2x() -> &'static [[u32x4, ..8], ..8] { &A2X_U32X4 }
+    fn x2s() -> &'static [[u32x4, ..8], ..8] { &X2S_U32X4 }
+    fn s2x() -> &'static [[u32x4, ..8], ..8] { &S2X_U32X4 }
+    fn x2a() -> &'static [[u32x4, ..8], ..8] { &X2A_U32X4 }
     fn x63() -> Bs8State<u32x4> { Bs8State(x!(), x!(), o!(), o!(), o!(), x!(), x!(), o!()) }
 
     fn shift_row(&self) -> u32x4 {
