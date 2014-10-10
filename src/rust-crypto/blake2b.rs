@@ -271,7 +271,7 @@ impl Blake2b {
         }
     }
 
-    fn final( &mut self, out: &mut [u8] ) {
+    fn finalize( &mut self, out: &mut [u8] ) {
         assert!(out.len() == self.digest_length as uint);
         if !self.computed {
             if self.buflen > BLAKE2B_BLOCKBYTES {
@@ -305,7 +305,7 @@ impl Blake2b {
         let mut hasher : Blake2b = if key.len() > 0 { Blake2b::new_keyed(out.len(), key) } else { Blake2b::new(out.len()) };
 
         hasher.update(input);
-        hasher.final(out);
+        hasher.finalize(out);
     }
 
 }
@@ -331,7 +331,7 @@ impl Digest for Blake2b {
         self.apply_param(&Blake2b::default_param(len));
     }
     fn input(&mut self, msg: &[u8]) { self.update(msg); }
-    fn result(&mut self, out: &mut [u8]) { self.final(out); }
+    fn result(&mut self, out: &mut [u8]) { self.finalize(out); }
     fn output_bits(&self) -> uint { 8 * (self.digest_length as uint) }
     fn block_size(&self) -> uint { 8 * BLAKE2B_BLOCKBYTES }
 }
@@ -387,7 +387,7 @@ impl Mac for Blake2b {
      * the security provided by a Mac function.
      */
     fn raw_result(&mut self, output: &mut [u8]) {
-        self.final(output);
+        self.finalize(output);
     }
 
     /**

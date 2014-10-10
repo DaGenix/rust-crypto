@@ -13,18 +13,18 @@ use cryptoutil::{read_u32_le, write_u32_le};
 use mac::{Mac, MacResult};
 
 pub struct Poly1305 {
-    r        : [u32, ..5],
-    h        : [u32, ..5],
-    pad      : [u32, ..4],
-    leftover : uint,
-    buffer   : [u8, ..16],
-    final    : bool,
+    r         : [u32, ..5],
+    h         : [u32, ..5],
+    pad       : [u32, ..4],
+    leftover  : uint,
+    buffer    : [u8, ..16],
+    finalized : bool,
 }
 
 impl Poly1305 {
     pub fn new(key: &[u8]) -> Poly1305 {
         assert!(key.len() == 32);
-        let mut poly = Poly1305{ r: [0u32, ..5], h: [0u32, ..5], pad: [0u32, ..4], leftover: 0, buffer: [0u8, ..16], final: false };
+        let mut poly = Poly1305{ r: [0u32, ..5], h: [0u32, ..5], pad: [0u32, ..4], leftover: 0, buffer: [0u8, ..16], finalized: false };
 
         // r &= 0xffffffc0ffffffc0ffffffc0fffffff
         poly.r[0] = (read_u32_le(key.slice( 0,  4))     ) & 0x3ffffff;
@@ -42,7 +42,7 @@ impl Poly1305 {
     }
 
     fn block(&mut self, m: &[u8]) {
-        let hibit : u32 = if self.final { 0 } else { 1 << 24 };
+        let hibit : u32 = if self.finalized { 0 } else { 1 << 24 };
 
         let r0 = self.r[0];
         let r1 = self.r[1];
@@ -98,7 +98,7 @@ impl Poly1305 {
             for i in range(self.leftover+1, 16) {
                 self.buffer[i] = 0;
             }
-            self.final = true;
+            self.finalized = true;
             let tmp = self.buffer;
             self.block(tmp);
         }
@@ -161,7 +161,7 @@ impl Poly1305 {
 
 impl Mac for Poly1305 {
     fn input(&mut self, data: &[u8]) {
-        assert!(!self.final);
+        assert!(!self.finalized);
         let mut m = data;
 
         if self.leftover > 0 {
@@ -197,7 +197,7 @@ impl Mac for Poly1305 {
     fn reset(&mut self) {
         self.h = [0u32, ..5];
         self.leftover = 0;
-        self.final = false;
+        self.finalized = false;
     }
 
     fn result(&mut self) -> MacResult {
@@ -208,7 +208,7 @@ impl Mac for Poly1305 {
 
     fn raw_result(&mut self, output: &mut [u8]) {
         assert!(output.len() >= 16);
-        if !self.final{
+        if !self.finalized{
             self.finish();
         }
         write_u32_le(output.slice_mut( 0,  4), self.h[0]);
