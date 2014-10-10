@@ -306,8 +306,7 @@ pub fn ctr(
 
 #[cfg(test)]
 mod test {
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     use aesni;
 
     use aessafe;
@@ -445,8 +444,7 @@ mod test {
         }
     }
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[test]
     fn test_aesni_128() {
         if util::supports_aesni() {
@@ -459,8 +457,7 @@ mod test {
         }
     }
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[test]
     fn test_aesni_192() {
         if util::supports_aesni() {
@@ -473,8 +470,7 @@ mod test {
         }
     }
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[test]
     fn test_aesni_256() {
         if util::supports_aesni() {
@@ -673,8 +669,7 @@ mod test {
 mod bench {
     use test::Bencher;
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     use aesni;
 
     use aessafe;
@@ -682,22 +677,19 @@ mod bench {
     use util;
     use aes::{KeySize, KeySize128, KeySize192, KeySize256};
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]
     pub fn aesni_128_bench(bh: &mut Bencher) {
         aesni_bench(bh, KeySize128);
     }
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]
     pub fn aesni_192_bench(bh: &mut Bencher) {
         aesni_bench(bh, KeySize192);
     }
 
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]
     pub fn aesni_256_bench(bh: &mut Bencher) {
         aesni_bench(bh, KeySize256);
