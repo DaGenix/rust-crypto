@@ -28,8 +28,8 @@ use cryptoutil::{write_u32_le, read_u32v_le, add_bytes_to_bits, FixedBuffer,
 use digest::Digest;
 
 // Some unexported constants
-static DIGEST_BUF_LEN: uint = 5u;
-static WORK_BUF_LEN: uint = 16u;
+const DIGEST_BUF_LEN: uint = 5u;
+const WORK_BUF_LEN: uint = 16u;
 
 /// Structure representing the state of a Ripemd160 computation
 pub struct Ripemd160 {

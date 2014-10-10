@@ -32,11 +32,11 @@ static SIGMA : [[uint, ..16], ..12] = [
   [ 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 ],
 ];
 
-static BLAKE2B_BLOCKBYTES : uint = 128;
-static BLAKE2B_OUTBYTES : uint = 64;
-static BLAKE2B_KEYBYTES : uint = 64;
-static BLAKE2B_SALTBYTES : uint = 16;
-static BLAKE2B_PERSONALBYTES : uint = 16;
+const BLAKE2B_BLOCKBYTES : uint = 128;
+const BLAKE2B_OUTBYTES : uint = 64;
+const BLAKE2B_KEYBYTES : uint = 64;
+const BLAKE2B_SALTBYTES : uint = 16;
+const BLAKE2B_PERSONALBYTES : uint = 16;
 
 pub struct Blake2b {
     h: [u64, ..8],
