@@ -57,17 +57,17 @@ use symmetriccipher::BlockEncryptor;
 /// Length in bytes that the first pool must be before a "catastrophic
 /// reseed" is allowed to happen. (A direct reseed through the
 /// `SeedableRng` API is not affected by this limit.)
-pub static MIN_POOL_SIZE: uint = 64;
+pub const MIN_POOL_SIZE: uint = 64;
 /// Maximum number of bytes to generate before rekeying
-static MAX_GEN_SIZE: uint = (1 << 20);
+const MAX_GEN_SIZE: uint = (1 << 20);
 /// Length in bytes of the AES key
-static KEY_LEN: uint = 32;
+const KEY_LEN: uint = 32;
 /// Length in bytes of the AES counter
-static CTR_LEN: uint = 16;
+const CTR_LEN: uint = 16;
 /// Length in bytes of the AES block
-static AES_BLOCK_SIZE: uint = 16;
+const AES_BLOCK_SIZE: uint = 16;
 /// Number of pools used to accumulate entropy
-static NUM_POOLS: uint = 32;
+const NUM_POOLS: uint = 32;
 
 /// The underlying PRNG (PC 9.4)
 struct FortunaGenerator {
