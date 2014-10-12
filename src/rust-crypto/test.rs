@@ -11,6 +11,7 @@
 
 extern crate serialize;
 extern crate test;
+extern crate time;
 
 pub mod aes;
 pub mod aessafe;
@@ -23,6 +24,7 @@ pub mod buffer;
 pub mod chacha20;
 mod cryptoutil;
 pub mod digest;
+pub mod fortuna;
 pub mod ghash;
 pub mod hmac;
 pub mod mac;
