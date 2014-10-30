@@ -179,23 +179,23 @@ impl ToBits for u64 {
     }
 }
 
-/// Adds the specified number of bytes to the bit count. fail!() if this would cause numeric
+/// Adds the specified number of bytes to the bit count. panic!() if this would cause numeric
 /// overflow.
 pub fn add_bytes_to_bits<T: Int + CheckedAdd + ToBits>(bits: T, bytes: T) -> T {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
 
     if new_high_bits > Zero::zero() {
-        fail!("Numeric overflow occured.")
+        panic!("Numeric overflow occured.")
     }
 
     match bits.checked_add(&new_low_bits) {
         Some(x) => return x,
-        None => fail!("Numeric overflow occured.")
+        None => panic!("Numeric overflow occured.")
     }
 }
 
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
-/// the high order value. fail!() if this would cause numeric overflow.
+/// the high order value. panic!() if this would cause numeric overflow.
 pub fn add_bytes_to_bits_tuple
         <T: Int + Unsigned + CheckedAdd + ToBits>
         (bits: (T, T), bytes: T) -> (T, T) {
@@ -214,7 +214,7 @@ pub fn add_bytes_to_bits_tuple
             } else {
                 match hi.checked_add(&new_high_bits) {
                     Some(y) => return (y, x),
-                    None => fail!("Numeric overflow occured.")
+                    None => panic!("Numeric overflow occured.")
                 }
             }
         },
@@ -222,7 +222,7 @@ pub fn add_bytes_to_bits_tuple
             let one: T = One::one();
             let z = match new_high_bits.checked_add(&one) {
                 Some(w) => w,
-                None => fail!("Numeric overflow occured.")
+                None => panic!("Numeric overflow occured.")
             };
             match hi.checked_add(&z) {
                 // This re-executes the addition that was already performed earlier when overflow
@@ -233,7 +233,7 @@ pub fn add_bytes_to_bits_tuple
                 // be Unsigned - overflow is not defined for Signed types. This function could be
                 // implemented for signed types as well if that were needed.
                 Some(y) => return (y, low + new_low_bits),
-                None => fail!("Numeric overflow occured.")
+                None => panic!("Numeric overflow occured.")
             }
         }
     }

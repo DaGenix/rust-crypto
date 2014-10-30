@@ -170,20 +170,20 @@ impl ScryptParams {
 
         let rp = match r.checked_mul(&p) {
             Some(x) => x,
-            None => fail!("Invalid Scrypt parameters.")
+            None => panic!("Invalid Scrypt parameters.")
         };
 
         let rp128 = match rp.checked_mul(&128) {
             Some(x) => x,
-            None => fail!("Invalid Scrypt parameters.")
+            None => panic!("Invalid Scrypt parameters.")
         };
 
         let nr128 = match n.checked_mul(&r) {
             Some(x) => match x.checked_mul(&128) {
                 Some(y) => y,
-                None => fail!("Invalid Scrypt parameters.")
+                None => panic!("Invalid Scrypt parameters.")
             },
-            None => fail!("Invalid Scrypt parameters.")
+            None => panic!("Invalid Scrypt parameters.")
         };
 
         // Check that we won't attempt to allocate too much memory or get an integer overflow.
@@ -501,20 +501,20 @@ mod test {
 
         match scrypt_check(password, out1[]) {
             Ok(r) => assert!(r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
         match scrypt_check(password, out2[]) {
             Ok(r) => assert!(r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
 
         match scrypt_check("wrong", out1[]) {
             Ok(r) => assert!(!r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
         match scrypt_check("wrong", out2[]) {
             Ok(r) => assert!(!r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
     }
 

@@ -333,20 +333,20 @@ mod test {
 
         match pbkdf2_check(password, out1[]) {
             Ok(r) => assert!(r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
         match pbkdf2_check(password, out2[]) {
             Ok(r) => assert!(r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
 
         match pbkdf2_check("wrong", out1[]) {
             Ok(r) => assert!(!r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
         match pbkdf2_check("wrong", out2[]) {
             Ok(r) => assert!(!r),
-            Err(_) => fail!()
+            Err(_) => panic!()
         }
     }
 }
