@@ -232,7 +232,7 @@ impl Rng for Fortuna {
         }
         // Fail on unseeded RNG
         if self.reseed_count == 0 {
-            fail!("rust-crypto: an unseeded Fortuna was asked for random bytes!");
+            panic!("rust-crypto: an unseeded Fortuna was asked for random bytes!");
         }
         // Generate return data
         for dest in dest.chunks_mut(MAX_GEN_SIZE) {

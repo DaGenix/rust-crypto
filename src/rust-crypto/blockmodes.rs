@@ -980,8 +980,8 @@ mod test {
             let mut buff_out = RefWriteBuffer::new(cipher_out[mut]);
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
-                Ok(BufferOverflow) => fail!("Encryption not completed"),
-                Err(_) => fail!("Error"),
+                Ok(BufferOverflow) => panic!("Encryption not completed"),
+                Err(_) => panic!("Error"),
             }
         }
         assert!(test.get_cipher() == cipher_out[]);
@@ -992,8 +992,8 @@ mod test {
             let mut buff_out = RefWriteBuffer::new(plain_out[mut]);
             match dec.decrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
-                Ok(BufferOverflow) => fail!("Decryption not completed"),
-                Err(_) => fail!("Error"),
+                Ok(BufferOverflow) => panic!("Decryption not completed"),
+                Err(_) => panic!("Error"),
             }
         }
         assert!(test.get_plain() == plain_out[]);
@@ -1077,8 +1077,8 @@ mod test {
                     in_pos += tmp_in.position();
                     out_pos += tmp_out.position();
                 }
-                Err(InvalidPadding) => fail!("Invalid Padding"),
-                Err(InvalidLength) => fail!("Invalid Length")
+                Err(InvalidPadding) => panic!("Invalid Padding"),
+                Err(InvalidLength) => panic!("Invalid Length")
             }
         }
 
@@ -1101,8 +1101,8 @@ mod test {
                     assert!(tmp_out.is_full());
                     out_pos += tmp_out.position();
                 }
-                Err(InvalidPadding) => fail!("Invalid Padding"),
-                Err(InvalidLength) => fail!("Invalid Length")
+                Err(InvalidPadding) => panic!("Invalid Padding"),
+                Err(InvalidLength) => panic!("Invalid Length")
             }
         }
     }
@@ -1314,8 +1314,8 @@ mod test {
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
-                Ok(BufferOverflow) => fail!("Encryption not completed"),
-                Err(_) => fail!("Error"),
+                Ok(BufferOverflow) => panic!("Encryption not completed"),
+                Err(_) => panic!("Error"),
             }
         });
 
@@ -1340,8 +1340,8 @@ mod test {
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
-                Ok(BufferOverflow) => fail!("Encryption not completed"),
-                Err(_) => fail!("Error"),
+                Ok(BufferOverflow) => panic!("Encryption not completed"),
+                Err(_) => panic!("Error"),
             }
         });
 
@@ -1366,8 +1366,8 @@ mod test {
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
-                Ok(BufferOverflow) => fail!("Encryption not completed"),
-                Err(_) => fail!("Error"),
+                Ok(BufferOverflow) => panic!("Encryption not completed"),
+                Err(_) => panic!("Error"),
             }
         });
 
@@ -1392,8 +1392,8 @@ mod test {
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
-                Ok(BufferOverflow) => fail!("Encryption not completed"),
-                Err(_) => fail!("Error"),
+                Ok(BufferOverflow) => panic!("Encryption not completed"),
+                Err(_) => panic!("Error"),
             }
         });
 

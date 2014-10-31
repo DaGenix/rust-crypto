@@ -64,7 +64,7 @@ fn run_scrypt(matches: &Matches) {
 
     match io::stdout().write(output[]) {
         Ok(_) => { },
-        Err(_) => fail!("Error writing result")
+        Err(_) => panic!("Error writing result")
     }
 }
 
@@ -87,7 +87,7 @@ fn main() {
 
     let matches = match getopts(args.tail(), opts[]) {
         Ok(m) => { m }
-        Err(f) => { fail!(f.to_string()) }
+        Err(f) => { panic!(f.to_string()) }
     };
 
     if matches.opt_present("h") || matches.opt_present("help") {

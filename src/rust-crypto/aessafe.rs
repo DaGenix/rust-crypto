@@ -358,7 +358,7 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32, ..4]
         16 => (4, 10u),
         24 => (6, 12u),
         32 => (8, 14u),
-        _ => fail!("Invalid AES key size.")
+        _ => panic!("Invalid AES key size.")
     };
 
     // The key is copied directly into the first few round keys
