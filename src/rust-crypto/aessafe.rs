@@ -972,9 +972,6 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Clone + Default> Gf8Ops<T> for Bs8State<T
 }
 
 impl <T: AesBitValueOps + 'static> AesOps for Bs8State<T> {
-    // This is necessary to work around RUST #17906 and should
-    // be removed once that issue is resolved.
-    #[inline(never)]
     fn sub_bytes(&self) -> Bs8State<T> {
         let nb: Bs8State<T> = self.change_basis(AesBitValueOps::a2x());
         let inv = nb.inv();
@@ -983,9 +980,6 @@ impl <T: AesBitValueOps + 'static> AesOps for Bs8State<T> {
         return nb2.xor(&x63);
     }
 
-    // This is necessary to work around RUST #17906 and should
-    // be removed once that issue is resolved.
-    #[inline(never)]
     fn inv_sub_bytes(&self) -> Bs8State<T> {
         let x63: Bs8State<T> = AesBitValueOps::x63();
         let t = self.xor(&x63);
