@@ -250,7 +250,7 @@ mod tests {
         for t in tests.iter() {
             (*sh).input_str(t.input);
             sh.result(out);
-            assert!(t.output[] == out);
+            assert!(t.output[] == out[]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
@@ -270,7 +270,7 @@ mod tests {
                 left = left - take;
             }
             sh.result(out);
-            assert!(t.output[] == out);
+            assert!(t.output[] == out[]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
