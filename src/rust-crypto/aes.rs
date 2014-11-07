@@ -438,9 +438,9 @@ mod test {
         let mut tmp = [0u8, ..16];
         for data in test.data.iter() {
             enc.encrypt_block(data.plain[], tmp);
-            assert!(tmp == data.cipher[]);
+            assert!(tmp[] == data.cipher[]);
             dec.decrypt_block(data.cipher[], tmp);
-            assert!(tmp == data.plain[]);
+            assert!(tmp[] == data.plain[]);
         }
     }
 
@@ -559,9 +559,9 @@ mod test {
         let dec = aessafe::AesSafe128DecryptorX8::new(key);
         let mut tmp = [0u8, ..128];
         enc.encrypt_block_x8(plain, tmp);
-        assert!(tmp == cipher);
+        assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(cipher, tmp);
-        assert!(tmp == plain);
+        assert!(tmp[] == plain[]);
     }
 
     #[test]
@@ -608,9 +608,9 @@ mod test {
         let dec = aessafe::AesSafe192DecryptorX8::new(key);
         let mut tmp = [0u8, ..128];
         enc.encrypt_block_x8(plain, tmp);
-        assert!(tmp == cipher);
+        assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(cipher, tmp);
-        assert!(tmp == plain);
+        assert!(tmp[] == plain[]);
     }
 
     #[test]
@@ -659,9 +659,9 @@ mod test {
         let dec = aessafe::AesSafe256DecryptorX8::new(key);
         let mut tmp = [0u8, ..128];
         enc.encrypt_block_x8(plain, tmp);
-        assert!(tmp == cipher);
+        assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(cipher, tmp);
-        assert!(tmp == plain);
+        assert!(tmp[] == plain[]);
     }
 }
 

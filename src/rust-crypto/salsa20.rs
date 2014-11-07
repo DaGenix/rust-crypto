@@ -211,7 +211,7 @@ mod test {
 
         let mut salsa20 = Salsa20::new(key, nonce);
         salsa20.process(input, stream);
-        assert!(stream == result);
+        assert!(stream[] == result[]);
     }
     
     #[test]
@@ -234,7 +234,7 @@ mod test {
 
         let mut salsa20 = Salsa20::new(key, nonce);
         salsa20.process(input, stream);
-        assert!(stream == result);
+        assert!(stream[] == result[]);
     }
 
     #[test]
@@ -272,7 +272,7 @@ mod test {
 
         let mut xsalsa20 = Salsa20::new_xsalsa20(key, nonce);
         xsalsa20.process(input, stream);
-        assert!(stream == result);
+        assert!(stream[] == result[]);
     }
 }
 
