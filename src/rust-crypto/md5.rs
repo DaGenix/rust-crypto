@@ -9,6 +9,7 @@
 // except according to those terms.
 
 use std::iter::range_step;
+use std::num::Int;
 
 use cryptoutil::{write_u32_le, read_u32v_le, FixedBuffer, FixedBuffer64, StandardPadding};
 use digest::Digest;

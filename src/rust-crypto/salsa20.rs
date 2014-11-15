@@ -9,6 +9,7 @@ use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCi
 use cryptoutil::{read_u32v_le, symm_enc_or_dec, write_u32_le};
 
 use std::slice::bytes::copy_memory;
+use std::num::Int;
 
 pub struct Salsa20 {
     state: [u8, ..64],

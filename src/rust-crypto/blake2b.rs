@@ -7,6 +7,7 @@
 use cryptoutil::{read_u64v_le, write_u64v_le};
 use std::slice::bytes::{copy_memory};
 use std::intrinsics::volatile_set_memory;
+use std::num::Int;
 use digest::Digest;
 use mac::{Mac, MacResult};
 
