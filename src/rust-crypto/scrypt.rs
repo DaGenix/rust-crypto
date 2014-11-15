@@ -13,7 +13,7 @@
  */
 
 use std::io::IoResult;
-use std::num::ToPrimitive;
+use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
 use std::rand::{OsRng, Rng};
 use std::slice::CloneSlicePrelude;
@@ -168,18 +168,18 @@ impl ScryptParams {
 
         let n = 1u32 << log_n as uint;
 
-        let rp = match r.checked_mul(&p) {
+        let rp = match r.checked_mul(p) {
             Some(x) => x,
             None => panic!("Invalid Scrypt parameters.")
         };
 
-        let rp128 = match rp.checked_mul(&128) {
+        let rp128 = match rp.checked_mul(128) {
             Some(x) => x,
             None => panic!("Invalid Scrypt parameters.")
         };
 
-        let nr128 = match n.checked_mul(&r) {
-            Some(x) => match x.checked_mul(&128) {
+        let nr128 = match n.checked_mul(r) {
+            Some(x) => match x.checked_mul(128) {
                 Some(y) => y,
                 None => panic!("Invalid Scrypt parameters.")
             },

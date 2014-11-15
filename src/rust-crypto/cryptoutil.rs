@@ -10,7 +10,7 @@
 
 use std;
 use std::mem;
-use std::num::{One, Zero, Int, CheckedAdd};
+use std::num::{Int, Unsigned};
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
@@ -181,14 +181,14 @@ impl ToBits for u64 {
 
 /// Adds the specified number of bytes to the bit count. panic!() if this would cause numeric
 /// overflow.
-pub fn add_bytes_to_bits<T: Int + CheckedAdd + ToBits>(bits: T, bytes: T) -> T {
+pub fn add_bytes_to_bits<T: Int + ToBits>(bits: T, bytes: T) -> T {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
 
-    if new_high_bits > Zero::zero() {
+    if new_high_bits > Int::zero() {
         panic!("Numeric overflow occured.")
     }
 
-    match bits.checked_add(&new_low_bits) {
+    match bits.checked_add(new_low_bits) {
         Some(x) => return x,
         None => panic!("Numeric overflow occured.")
     }
@@ -197,7 +197,7 @@ pub fn add_bytes_to_bits<T: Int + CheckedAdd + ToBits>(bits: T, bytes: T) -> T {
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
 /// the high order value. panic!() if this would cause numeric overflow.
 pub fn add_bytes_to_bits_tuple
-        <T: Int + Unsigned + CheckedAdd + ToBits>
+        <T: Int + Unsigned + ToBits>
         (bits: (T, T), bytes: T) -> (T, T) {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
     let (hi, low) = bits;
@@ -205,26 +205,26 @@ pub fn add_bytes_to_bits_tuple
     // Add the low order value - if there is no overflow, then add the high order values
     // If the addition of the low order values causes overflow, add one to the high order values
     // before adding them.
-    match low.checked_add(&new_low_bits) {
+    match low.checked_add(new_low_bits) {
         Some(x) => {
-            if new_high_bits == Zero::zero() {
+            if new_high_bits == Int::zero() {
                 // This is the fast path - every other alternative will rarely occur in practice
                 // considering how large an input would need to be for those paths to be used.
                 return (hi, x);
             } else {
-                match hi.checked_add(&new_high_bits) {
+                match hi.checked_add(new_high_bits) {
                     Some(y) => return (y, x),
                     None => panic!("Numeric overflow occured.")
                 }
             }
         },
         None => {
-            let one: T = One::one();
-            let z = match new_high_bits.checked_add(&one) {
+            let one: T = Int::one();
+            let z = match new_high_bits.checked_add(one) {
                 Some(w) => w,
                 None => panic!("Numeric overflow occured.")
             };
-            match hi.checked_add(&z) {
+            match hi.checked_add(z) {
                 // This re-executes the addition that was already performed earlier when overflow
                 // occured, this time allowing the overflow to happen. Technically, this could be
                 // avoided by using the checked add intrinsic directly, but that involves using
