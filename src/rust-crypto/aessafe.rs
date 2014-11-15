@@ -125,6 +125,7 @@ finite field which allows for efficient computation of the AES S-Boxes. See [7] 
 
 use std::default::Default;
 use std::iter::range_step;
+use std::num::Int;
 
 use cryptoutil::{read_u32v_le, write_u32_le};
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDecryptorX8};
