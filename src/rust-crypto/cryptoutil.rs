@@ -422,7 +422,7 @@ impl <T: FixedBuffer> StandardPadding for T {
 
 #[cfg(test)]
 pub mod test {
-    use std::num::Bounded;
+    use std::num::Int;
 
     use std::rand::IsaacRng;
     use std::rand::distributions::{IndependentSample, Range};
@@ -464,7 +464,7 @@ pub mod test {
     #[test]
     #[should_fail]
     fn test_add_bytes_to_bits_overflow() {
-        add_bytes_to_bits::<u64>(Bounded::max_value(), 1);
+        add_bytes_to_bits::<u64>(Int::max_value(), 1);
     }
 
     // A normal addition - no overflow occurs (fast path)
@@ -476,7 +476,7 @@ pub mod test {
     // The low order value overflows into the high order value
     #[test]
     fn test_add_bytes_to_bits_tuple_ok2() {
-        assert!(add_bytes_to_bits_tuple::<u64>((5, Bounded::max_value()), 1) == (6, 7));
+        assert!(add_bytes_to_bits_tuple::<u64>((5, Int::max_value()), 1) == (6, 7));
     }
 
     // The value to add is too large to be converted into bits without overflowing its type
@@ -489,7 +489,7 @@ pub mod test {
     #[test]
     #[should_fail]
     fn test_add_bytes_to_bits_tuple_overflow() {
-        add_bytes_to_bits_tuple::<u64>((Bounded::max_value(), Bounded::max_value()), 1);
+        add_bytes_to_bits_tuple::<u64>((Int::max_value(), Int::max_value()), 1);
     }
 
     // The value to add is too large to convert to bytes without overflowing its type, but the high
@@ -497,7 +497,7 @@ pub mod test {
     #[test]
     #[should_fail]
     fn test_add_bytes_to_bits_tuple_overflow2() {
-        let value: u64 = Bounded::max_value();
+        let value: u64 = Int::max_value();
         add_bytes_to_bits_tuple::<u64>((value - 1, 0), 0x8000000000000000);
     }
 }
