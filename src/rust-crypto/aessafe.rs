@@ -149,7 +149,7 @@ macro_rules! define_aes_struct(
         $rounds:expr
     ) => (
         pub struct $name {
-            sk: [Bs8State<u32>, ..$rounds + 1]
+            sk: [Bs8State<u32>, ..($rounds + 1)]
         }
     )
 )
@@ -164,9 +164,9 @@ macro_rules! define_aes_impl(
         impl $name {
             pub fn new(key: &[u8]) -> $name {
                 let mut a =  $name {
-                    sk: [Bs8State(0, 0, 0, 0, 0, 0, 0, 0), ..$rounds + 1]
+                    sk: [Bs8State(0, 0, 0, 0, 0, 0, 0, 0), ..($rounds + 1)]
                 };
-                let mut tmp = [[0u32, ..4], ..$rounds + 1];
+                let mut tmp = [[0u32, ..4], ..($rounds + 1)];
                 create_round_keys(key, $mode, tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_4x4_with_u32(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
@@ -236,7 +236,7 @@ macro_rules! define_aes_struct_x8(
         $rounds:expr
     ) => (
         pub struct $name {
-            sk: [Bs8State<u32x4>, ..$rounds + 1]
+            sk: [Bs8State<u32x4>, ..($rounds + 1)]
         }
     )
 )
@@ -251,9 +251,9 @@ macro_rules! define_aes_impl_x8(
         impl $name {
             pub fn new(key: &[u8]) -> $name {
                 let mut a =  $name {
-                    sk: [Bs8State(o!(), o!(), o!(), o!(), o!(), o!(), o!(), o!()), ..$rounds + 1]
+                    sk: [Bs8State(o!(), o!(), o!(), o!(), o!(), o!(), o!(), o!()), ..($rounds + 1)]
                 };
-                let mut tmp = [[0u32, ..4], ..$rounds + 1];
+                let mut tmp = [[0u32, ..4], ..($rounds + 1)];
                 create_round_keys(key, $mode, tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_fill_4x4_with_u32x4(
