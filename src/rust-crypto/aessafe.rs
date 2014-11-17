@@ -123,6 +123,7 @@ finite field which allows for efficient computation of the AES S-Boxes. See [7] 
       http://www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA434781.
 */
 
+use std::num::Int;
 use std::default::Default;
 use std::iter::range_step;
 

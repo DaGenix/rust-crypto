@@ -11,6 +11,7 @@
 
 use std::io::IoResult;
 use std::rand::{OsRng, Rng};
+use std::num::Int;
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
@@ -94,7 +95,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
 
     for chunk in output.chunks_mut(os) {
         // The block index starts at 1. So, this is supposed to run on the first execution.
-        idx = idx.checked_add(&1).expect("PBKDF2 size limit exceeded.");
+        idx = idx.checked_add(1).expect("PBKDF2 size limit exceeded.");
 
         if chunk.len() == os {
             calculate_block(mac, salt, c, idx, scratch[mut], chunk);
