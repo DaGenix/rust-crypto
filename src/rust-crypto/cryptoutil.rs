@@ -10,7 +10,7 @@
 
 use std;
 use std::mem;
-use std::num::{One, Zero, Int, CheckedAdd};
+use std::num::{One, Zero, Int};
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
@@ -181,7 +181,7 @@ impl ToBits for u64 {
 
 /// Adds the specified number of bytes to the bit count. panic!() if this would cause numeric
 /// overflow.
-pub fn add_bytes_to_bits<T: Int + CheckedAdd + ToBits>(bits: T, bytes: T) -> T {
+pub fn add_bytes_to_bits<T: Int + ToBits>(bits: T, bytes: T) -> T {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
 
     if new_high_bits > Zero::zero() {
@@ -197,7 +197,7 @@ pub fn add_bytes_to_bits<T: Int + CheckedAdd + ToBits>(bits: T, bytes: T) -> T {
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
 /// the high order value. panic!() if this would cause numeric overflow.
 pub fn add_bytes_to_bits_tuple
-        <T: Int + Unsigned + CheckedAdd + ToBits>
+        <T: Int + Unsigned + ToBits>
         (bits: (T, T), bytes: T) -> (T, T) {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
     let (hi, low) = bits;
