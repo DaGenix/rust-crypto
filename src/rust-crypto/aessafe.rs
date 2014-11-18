@@ -167,7 +167,7 @@ macro_rules! define_aes_impl(
                     sk: [Bs8State(0, 0, 0, 0, 0, 0, 0, 0), ..($rounds + 1)]
                 };
                 let mut tmp = [[0u32, ..4], ..($rounds + 1)];
-                create_round_keys(key, $mode, &mut tmp);
+                create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_4x4_with_u32(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
                 }
@@ -254,7 +254,7 @@ macro_rules! define_aes_impl_x8(
                     sk: [Bs8State(o!(), o!(), o!(), o!(), o!(), o!(), o!(), o!()), ..($rounds + 1)]
                 };
                 let mut tmp = [[0u32, ..4], ..($rounds + 1)];
-                create_round_keys(key, $mode, &mut tmp);
+                create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_fill_4x4_with_u32x4(
                         tmp[i][0],
@@ -387,14 +387,14 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32, ..4]
 
     // Decryption round keys require extra processing
     match key_type {
-        Decryption => {
+        KeyType::Decryption => {
             for j in range(1u, rounds) {
                 for i in range(0u, 4) {
                     round_keys[j][i] = inv_mcol(round_keys[j][i]);
                 }
             }
         },
-        Encryption => { }
+        KeyType::Encryption => { }
     }
 }
 

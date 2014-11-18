@@ -4,7 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use aes::{KeySize, KeySize128, KeySize192, KeySize256};
+use aes::KeySize;
+use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
 pub struct AesNiEncryptor {
@@ -28,7 +29,7 @@ impl AesNiEncryptor {
             rounds: rounds,
             round_keys: [0u8, ..240]
         };
-        setup_function(key, Encryption, e.round_keys.slice_mut(0, size(e.rounds)));
+        setup_function(key, KeyType::Encryption, e.round_keys.slice_mut(0, size(e.rounds)));
         return e;
     }
 }
@@ -44,7 +45,7 @@ impl AesNiDecryptor {
             rounds: rounds,
             round_keys: [0u8, ..240]
         };
-        setup_function(key, Decryption, d.round_keys.slice_mut(0, size(d.rounds)));
+        setup_function(key, KeyType::Decryption, d.round_keys.slice_mut(0, size(d.rounds)));
         return d;
     }
 
@@ -144,13 +145,13 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
         )
 
         match key_type {
-            Decryption => {
+            KeyType::Decryption => {
                 // range of rounds keys from #1 to #9; skip the first and last key
                 for i in range(1u, 10) {
                     aesimc(round_key.unsafe_mut(16 * i));
                 }
             }
-            Encryption => { /* nothing more to do */ }
+            KeyType::Encryption => { /* nothing more to do */ }
         }
     }
 }
@@ -247,13 +248,13 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
         )
 
         match key_type {
-            Decryption => {
+            KeyType::Decryption => {
                 // range of rounds keys from #1 to #11; skip the first and last key
                 for i in range(1u, 12) {
                     aesimc(round_key.unsafe_mut(16 * i));
                 }
             }
-            Encryption => { /* nothing more to do */ }
+            KeyType::Encryption => { /* nothing more to do */ }
         }
     }
 }
@@ -358,13 +359,13 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
         )
 
         match key_type {
-            Decryption => {
+            KeyType::Decryption => {
                 // range of rounds keys from #1 to #13; skip the first and last key
                 for i in range(1u, 14) {
                     aesimc(round_key.unsafe_mut(16 * i));
                 }
             }
-            Encryption => { /* nothing more to do */ }
+            KeyType::Encryption => { /* nothing more to do */ }
         }
     }
 }
