@@ -7,6 +7,8 @@
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use cryptoutil::symm_enc_or_dec;
 
+pub use self::SymmetricCipherError::{InvalidLength, InvalidPadding};
+
 pub trait BlockEncryptor {
     fn block_size(&self) -> uint;
     fn encrypt_block(&self, input: &[u8], output: &mut [u8]);

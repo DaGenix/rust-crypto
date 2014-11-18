@@ -17,6 +17,8 @@ use cryptoutil::symm_enc_or_dec;
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, Encryptor, BlockDecryptor, Decryptor,
     SynchronousStreamCipher, SymmetricCipherError, InvalidPadding, InvalidLength};
 
+use self::BlockEngineState::{FastMode, NeedInput, NeedOutput, LastInput, LastInput2, Finished, Error};
+
 /// The BlockProcessor trait is used to implement modes that require processing complete blocks of
 /// data. The methods of this trait are called by the BlockEngine which is in charge of properly
 /// buffering input data.
