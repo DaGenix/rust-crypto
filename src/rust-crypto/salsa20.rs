@@ -91,39 +91,39 @@ impl Salsa20 {
         copy_memory(new_key[mut 12..16], xsalsa20.output[60..64]);
         copy_memory(new_key[mut 16..32], xsalsa20.output[24..40]);
 
-        xsalsa20.expand32(new_key, nonce[16..24]);
+        xsalsa20.expand32(&new_key, nonce[16..24]);
 
         return xsalsa20;
     }
 
     fn expand16(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(self.state[mut 0..4], [101u8, 120, 112, 97]);
+        copy_memory(self.state[mut 0..4], &[101u8, 120, 112, 97]);
         copy_memory(self.state[mut 4..20], key);
-        copy_memory(self.state[mut 20..24], [110u8, 100, 32, 49]);
+        copy_memory(self.state[mut 20..24], &[110u8, 100, 32, 49]);
         copy_memory(self.state[mut 24..32], nonce);
-        copy_memory(self.state[mut 40..44], [54u8, 45, 98, 121]);
+        copy_memory(self.state[mut 40..44], &[54u8, 45, 98, 121]);
         copy_memory(self.state[mut 44..60], key);
-        copy_memory(self.state[mut 60..64], [116u8, 101, 32, 107]);
+        copy_memory(self.state[mut 60..64], &[116u8, 101, 32, 107]);
     }
 
     fn expand32(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(self.state[mut 0..4], [101u8, 120, 112, 97]);
+        copy_memory(self.state[mut 0..4], &[101u8, 120, 112, 97]);
         copy_memory(self.state[mut 4..20], key[0..16]);
-        copy_memory(self.state[mut 20..24], [110u8, 100, 32, 51]);
+        copy_memory(self.state[mut 20..24], &[110u8, 100, 32, 51]);
         copy_memory(self.state[mut 24..32], nonce);
-        copy_memory(self.state[mut 40..44], [50u8, 45, 98, 121]);
+        copy_memory(self.state[mut 40..44], &[50u8, 45, 98, 121]);
         copy_memory(self.state[mut 44..60], key[16..32]);
-        copy_memory(self.state[mut 60..64], [116u8, 101, 32, 107]);
+        copy_memory(self.state[mut 60..64], &[116u8, 101, 32, 107]);
     }
 
     fn hsalsa20_expand(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(self.state[mut 0..4], [101u8, 120, 112, 97]);
+        copy_memory(self.state[mut 0..4], &[101u8, 120, 112, 97]);
         copy_memory(self.state[mut 4..20], key[0..16]);
-        copy_memory(self.state[mut 20..24], [110u8, 100, 32, 51]);
+        copy_memory(self.state[mut 20..24], &[110u8, 100, 32, 51]);
         copy_memory(self.state[mut 24..40], nonce);
-        copy_memory(self.state[mut 40..44], [50u8, 45, 98, 121]);
+        copy_memory(self.state[mut 40..44], &[50u8, 45, 98, 121]);
         copy_memory(self.state[mut 44..60], key[16..32]);
-        copy_memory(self.state[mut 60..64], [116u8, 101, 32, 107]);
+        copy_memory(self.state[mut 60..64], &[116u8, 101, 32, 107]);
     }
 
     fn hash(&mut self) {
@@ -132,8 +132,8 @@ impl Salsa20 {
         
         let mut x = [0u32, ..16];
         let mut z = [0u32, ..16];
-        read_u32v_le(x[mut], self.state);
-        read_u32v_le(z[mut], self.state);
+        read_u32v_le(x[mut], &self.state);
+        read_u32v_le(z[mut], &self.state);
         for _ in range(0u, 10) {
             doubleround(&mut z);
         }
@@ -147,7 +147,7 @@ impl Salsa20 {
 
     fn hsalsa20_hash(&mut self) {
         let mut x = [0u32, ..16];
-        read_u32v_le(x[mut], self.state);
+        read_u32v_le(x[mut], &self.state);
         for _ in range(0u, 10) {
             doubleround(&mut x);
         }
@@ -210,8 +210,8 @@ mod test {
              0xF9, 0xE4, 0x60, 0xBC, 0x65, 0xEF, 0x95, 0xDA, 
              0x58, 0xF7, 0x40, 0xB7, 0xD1, 0xDB, 0xB0, 0xAA];
 
-        let mut salsa20 = Salsa20::new(key, nonce);
-        salsa20.process(input, stream);
+        let mut salsa20 = Salsa20::new(&key, &nonce);
+        salsa20.process(&input, &mut stream);
         assert!(stream[] == result[]);
     }
     
@@ -233,8 +233,8 @@ mod test {
              0x44, 0x65, 0x2A, 0x83, 0xE7, 0x2A, 0x9C, 0x46,
              0x18, 0x76, 0xAF, 0x4D, 0x7E, 0xF1, 0xA1, 0x17];
 
-        let mut salsa20 = Salsa20::new(key, nonce);
-        salsa20.process(input, stream);
+        let mut salsa20 = Salsa20::new(&key, &nonce);
+        salsa20.process(&input, &mut stream);
         assert!(stream[] == result[]);
     }
 
@@ -271,8 +271,8 @@ mod test {
              0x9d, 0x0a, 0x5c, 0x8a, 0x82, 0xf4, 0x29, 0x23,
              0x1f, 0x00, 0x80];
 
-        let mut xsalsa20 = Salsa20::new_xsalsa20(key, nonce);
-        xsalsa20.process(input, stream);
+        let mut xsalsa20 = Salsa20::new_xsalsa20(&key, &nonce);
+        xsalsa20.process(&input, &mut stream);
         assert!(stream[] == result[]);
     }
 }
@@ -285,33 +285,33 @@ mod bench {
 
     #[bench]
     pub fn salsa20_10(bh: & mut Bencher) {
-        let mut salsa20 = Salsa20::new([0, ..32], [0, ..8]);
+        let mut salsa20 = Salsa20::new(&[0, ..32], &[0, ..8]);
         let input = [1u8, ..10];
         let mut output = [0u8, ..10];
         bh.iter( || {
-            salsa20.process(input, output);
+            salsa20.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }
     
     #[bench]
     pub fn salsa20_1k(bh: & mut Bencher) {
-        let mut salsa20 = Salsa20::new([0, ..32], [0, ..8]);
+        let mut salsa20 = Salsa20::new(&[0, ..32], &[0, ..8]);
         let input = [1u8, ..1024];
         let mut output = [0u8, ..1024];
         bh.iter( || {
-            salsa20.process(input, output);
+            salsa20.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }
  
     #[bench]
     pub fn salsa20_64k(bh: & mut Bencher) {
-        let mut salsa20 = Salsa20::new([0, ..32], [0, ..8]);
+        let mut salsa20 = Salsa20::new(&[0, ..32], &[0, ..8]);
         let input = [1u8, ..65536];
         let mut output = [0u8, ..65536];
         bh.iter( || {
-            salsa20.process(input, output);
+            salsa20.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }

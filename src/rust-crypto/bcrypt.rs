@@ -157,7 +157,7 @@ mod bench {
         let salt = [0u8, ..16];
         let mut out  = [0u8, ..24];
         bh.iter( || {
-            bcrypt(5, salt, pass, out);
+            bcrypt(5, &salt, &pass, &mut out);
         });
     }
 }

@@ -20,7 +20,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
     }
 
     let mut buf = [0u32, ..8];
-    read_u32v_be(buf, b"OxychromaticBlowfishSwatDynamite");
+    read_u32v_be(&mut buf, b"OxychromaticBlowfishSwatDynamite");
 
     for i in range_step(0u, 8, 2) {
         for _ in range(0u, 64) {
@@ -58,18 +58,18 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8
 
         h.reset();
         h.input(salt);
-        h.input(count);
-        h.result(hsalt);
+        h.input(&count);
+        h.result(&mut hsalt);
 
-        bcrypt_hash(hpass, hsalt, &mut out);
+        bcrypt_hash(&hpass, &hsalt, &mut out);
         let mut tmp = out;
 
         for _ in range(1, rounds) {
             h.reset();
-            h.input(tmp);
-            h.result(hsalt);
+            h.input(&tmp);
+            h.result(&mut hsalt);
 
-            bcrypt_hash(hpass, hsalt, &mut tmp);
+            bcrypt_hash(&hpass, &hsalt, &mut tmp);
             for i in range(0, out.len()) {
                 out[i] ^= tmp[i];
             }
@@ -158,7 +158,7 @@ mod test {
 
         for t in tests.iter() {
             let mut out = [0u8, ..32];
-            bcrypt_hash(t.hpass, t.hsalt, &mut out);
+            bcrypt_hash(&t.hpass, &t.hsalt, &mut out);
             assert_eq!(out[], t.out[]);
         }
     }
@@ -275,7 +275,7 @@ mod bench {
         let mut out  = [0u8, ..32];
 
         b.iter(|| {
-            bcrypt_pbkdf(pass, salt, 5, out[mut]);
+            bcrypt_pbkdf(&pass, &salt, 5, out[mut]);
         });
     }
 }

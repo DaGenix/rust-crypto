@@ -1303,14 +1303,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128Encryptor::new(key);
+        let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = EcbEncryptor::new(aes_enc, NoPadding);
 
         bh.iter( || {
             enc.reset();
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
@@ -1329,14 +1329,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128Encryptor::new(key);
+        let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = CbcEncryptor::new(aes_enc, PkcsPadding, iv.to_vec());
 
         bh.iter( || {
-            enc.reset(iv);
+            enc.reset(&iv);
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
@@ -1355,14 +1355,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128Encryptor::new(key);
+        let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = CtrMode::new(aes_enc, ctr.to_vec());
 
         bh.iter( || {
-            enc.reset(ctr);
+            enc.reset(&ctr);
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
@@ -1381,14 +1381,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128EncryptorX8::new(key);
-        let mut enc = CtrModeX8::new(aes_enc, ctr);
+        let aes_enc = aessafe::AesSafe128EncryptorX8::new(&key);
+        let mut enc = CtrModeX8::new(aes_enc, &ctr);
 
         bh.iter( || {
-            enc.reset(ctr);
+            enc.reset(&ctr);
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}

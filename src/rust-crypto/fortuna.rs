@@ -198,8 +198,8 @@ impl Fortuna {
         // These restrictions (and `s` in [0, 255]) are part of the Fortuna spec.
         assert!(e.len() > 0);
         assert!(e.len() <= 32);
-        (&mut self.pool[i]).input([s]);
-        (&mut self.pool[i]).input([e.len() as u8]);
+        (&mut self.pool[i]).input(&[s]);
+        (&mut self.pool[i]).input(&[e.len() as u8]);
         (&mut self.pool[i]).input(e);
     }
 }
@@ -286,7 +286,7 @@ mod tests {
     #[should_fail]
     fn test_badly_seeded() {
         let mut f: Fortuna = Fortuna::new_unseeded();
-        f.add_random_event(0, 0, [10, ..32]);
+        f.add_random_event(0, 0, &[10, ..32]);
         let _ = f.next_u32();
     }
 
@@ -294,7 +294,7 @@ mod tests {
     #[should_fail]
     fn test_too_big_event() {
         let mut f: Fortuna = Fortuna::new_unseeded();
-        f.add_random_event(0, 0, [10, ..33]);
+        f.add_random_event(0, 0, &[10, ..33]);
     }
 
     #[test]
@@ -318,18 +318,18 @@ mod tests {
 
         // These three should all be different
         let mut f4: Fortuna = Fortuna::new_unseeded();
-        f4.add_random_event(0, 0, [10, ..32]);
-        f4.add_random_event(0, 0, [10, ..32]);
+        f4.add_random_event(0, 0, &[10, ..32]);
+        f4.add_random_event(0, 0, &[10, ..32]);
         let x = f4.next_u32();
 
         let mut f5: Fortuna = Fortuna::new_unseeded();
-        f5.add_random_event(0, 0, [10, ..32]);
-        f5.add_random_event(0, 0, [20, ..32]);
+        f5.add_random_event(0, 0, &[10, ..32]);
+        f5.add_random_event(0, 0, &[20, ..32]);
         let y = f5.next_u32();
 
         let mut f6: Fortuna = Fortuna::new_unseeded();
-        f6.add_random_event(0, 0, [20, ..32]);
-        f6.add_random_event(0, 0, [10, ..32]);
+        f6.add_random_event(0, 0, &[20, ..32]);
+        f6.add_random_event(0, 0, &[10, ..32]);
         let z = f6.next_u32();
 
         assert!(x != y);
@@ -371,7 +371,7 @@ mod tests {
         f.fill_bytes(output[mut]);
         assert_eq!(expected[], output[]);
 
-        f.reseed([5]);
+        f.reseed(&[5]);
 
         let expected = [217, 168, 141, 167,  46,   9, 218, 188,  98, 124,
                         109, 128, 242,  22, 189, 120, 180, 124,  15, 192,
@@ -398,10 +398,10 @@ mod tests {
         // the previous test. These results agree with pycrypto on a fresh slate
         let mut f = Fortuna::new_unseeded();
         f.pool = [Pool::new(), ..NUM_POOLS];
-        f.add_random_event(0, 0, [0, ..32]);
-        f.add_random_event(0, 0, [0, ..32]);
+        f.add_random_event(0, 0, &[0, ..32]);
+        f.add_random_event(0, 0, &[0, ..32]);
         for i in range(0, 32) {
-	    f.add_random_event(1, i, [1, 2]);
+	    f.add_random_event(1, i, &[1, 2]);
         }
 
         // from Crypto.Random.Fortuna import FortunaAccumulator
@@ -425,8 +425,8 @@ mod tests {
         assert_eq!(expected[], output[]);
 
         // Immediately (less than 100ms)
-        f.add_random_event(0, 0, [0, ..32]);
-        f.add_random_event(0, 0, [0, ..32]);
+        f.add_random_event(0, 0, &[0, ..32]);
+        f.add_random_event(0, 0, &[0, ..32]);
 
         // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")  
         // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
@@ -493,7 +493,7 @@ mod bench {
         let mut f: Fortuna = SeedableRng::from_seed([100, ..64][]);
         let mut bytes = [0u8, ..1024];
         bh.iter( || {
-            f.fill_bytes(bytes);
+            f.fill_bytes(&mut bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -503,7 +503,7 @@ mod bench {
         let mut f: Fortuna = SeedableRng::from_seed([100, ..64][]);
         let mut bytes = [0u8, ..65536];
         bh.iter( || {
-            f.fill_bytes(bytes);
+            f.fill_bytes(&mut bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

@@ -261,7 +261,7 @@ mod test {
         );
 
         for tv in test_vectors.iter() {
-            let mut c = ChaCha20::new(tv.key, tv.nonce);
+            let mut c = ChaCha20::new(&tv.key, &tv.nonce);
             let input = Vec::from_elem(tv.keystream.len(), 0u8);
             let mut output = Vec::from_elem(input.len(), 0u8);
             c.process(input[], output[mut]);
@@ -278,33 +278,33 @@ mod bench {
 
     #[bench]
     pub fn chacha20_10(bh: & mut Bencher) {
-        let mut chacha20 = ChaCha20::new([0, ..32], [0, ..8]);
+        let mut chacha20 = ChaCha20::new(&[0, ..32], &[0, ..8]);
         let input = [1u8, ..10];
         let mut output = [0u8, ..10];
         bh.iter( || {
-            chacha20.process(input, output);
+            chacha20.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }
 
     #[bench]
     pub fn chacha20_1k(bh: & mut Bencher) {
-        let mut chacha20 = ChaCha20::new([0, ..32], [0, ..8]);
+        let mut chacha20 = ChaCha20::new(&[0, ..32], &[0, ..8]);
         let input = [1u8, ..1024];
         let mut output = [0u8, ..1024];
         bh.iter( || {
-            chacha20.process(input, output);
+            chacha20.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }
 
     #[bench]
     pub fn chacha20_64k(bh: & mut Bencher) {
-        let mut chacha20 = ChaCha20::new([0, ..32], [0, ..8]);
+        let mut chacha20 = ChaCha20::new(&[0, ..32], &[0, ..8]);
         let input = [1u8, ..65536];
         let mut output = [0u8, ..65536];
         bh.iter( || {
-            chacha20.process(input, output);
+            chacha20.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }

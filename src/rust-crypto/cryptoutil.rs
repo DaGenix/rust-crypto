@@ -294,7 +294,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                             self.buffer[mut self.buffer_idx..size],
                             input[..buffer_remaining]);
                     self.buffer_idx = 0;
-                    func(self.buffer);
+                    func(&self.buffer);
                     i += buffer_remaining;
                 } else {
                     copy_memory(

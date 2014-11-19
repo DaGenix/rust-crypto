@@ -80,7 +80,7 @@ impl Md5State {
 
         let mut data = [0u32, ..16];
 
-        read_u32v_le(data, input);
+        read_u32v_le(&mut data, input);
 
         // round 1
         for i in range_step(0u, 16, 4) {
@@ -300,7 +300,7 @@ mod bench {
         let mut sh = Md5::new();
         let bytes = [1u8, ..10];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -310,7 +310,7 @@ mod bench {
         let mut sh = Md5::new();
         let bytes = [1u8, ..1024];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -320,7 +320,7 @@ mod bench {
         let mut sh = Md5::new();
         let bytes = [1u8, ..65536];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

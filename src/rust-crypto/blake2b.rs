@@ -120,7 +120,7 @@ impl Blake2b {
             key: [0, ..BLAKE2B_KEYBYTES],
             key_length: key.len() as u8
         };
-        copy_memory(b.key, key);
+        copy_memory(&mut b.key, key);
         b
     }
 
@@ -129,7 +129,7 @@ impl Blake2b {
 
         let mut param_bytes : [u8, ..64] = [0, ..64];
         {
-            let mut writer = BufWriter::new(param_bytes);
+            let mut writer = BufWriter::new(&mut param_bytes);
             writer.write_u8(p.digest_length).unwrap();
             writer.write_u8(p.key_length).unwrap();
             writer.write_u8(p.fanout).unwrap();
@@ -138,12 +138,12 @@ impl Blake2b {
             writer.write_le_u64(p.node_offset).unwrap();
             writer.write_u8(p.node_depth).unwrap();
             writer.write_u8(p.inner_length).unwrap();
-            writer.write(p.reserved).unwrap();
-            writer.write(p.salt).unwrap();
-            writer.write(p.personal).unwrap();
+            writer.write(&p.reserved).unwrap();
+            writer.write(&p.salt).unwrap();
+            writer.write(&p.personal).unwrap();
         }
         let mut param_words : [u64, ..8] = [0, ..8];
-        read_u64v_le(param_words, param_bytes);
+        read_u64v_le(&mut param_words, &param_bytes);
         for (h, param_word) in self.h.iter_mut().zip(param_words.iter()) {
             *h = *h ^ *param_word;
         }
@@ -175,13 +175,13 @@ impl Blake2b {
 
     pub fn new( outlen: uint ) -> Blake2b {
         assert!(outlen > 0 && outlen <= BLAKE2B_OUTBYTES);
-        Blake2b::init_param(&Blake2b::default_param(outlen as u8), [])
+        Blake2b::init_param(&Blake2b::default_param(outlen as u8), &[])
     }
 
     fn apply_key(&mut self) {
         let mut block : [u8, ..BLAKE2B_BLOCKBYTES] = [0, ..BLAKE2B_BLOCKBYTES];
-        copy_memory(block, self.key[..self.key_length as uint]);
-        self.update(block);
+        copy_memory(&mut block, self.key[..self.key_length as uint]);
+        self.update(&block);
         unsafe {
             volatile_set_memory(block.as_mut_ptr(), 0, block.len());
         }
@@ -214,7 +214,7 @@ impl Blake2b {
         let mut ms: [u64, ..16] = [0, ..16];
         let mut vs: [u64, ..16] = [0, ..16];
 
-        read_u64v_le(ms, self.buf[0..BLAKE2B_BLOCKBYTES]);
+        read_u64v_le(&mut ms, self.buf[0..BLAKE2B_BLOCKBYTES]);
 
         for (v, h) in vs.iter_mut().zip(self.h.iter()) {
             *v = *h;
@@ -295,7 +295,7 @@ impl Blake2b {
             }
             self.compress();
 
-            write_u64v_le(self.buf[mut 0..64], self.h);
+            write_u64v_le(self.buf[mut 0..64], &self.h);
             self.computed = true;
         }
         let outlen = out.len();
@@ -471,7 +471,7 @@ mod mac_tests {
     fn test_blake2b_mac() {
         let key = Vec::from_fn(64, |i| i as u8);
         let mut m = Blake2b::new_keyed(64, key[]);
-        m.input([1,2,4,8]);
+        m.input(&[1,2,4,8]);
         let expected = [
             0x8e, 0xc6, 0xcb, 0x71, 0xc4, 0x5c, 0x3c, 0x90,
             0x91, 0xd0, 0x8a, 0x37, 0x1e, 0xa8, 0x5d, 0xc1,
@@ -499,7 +499,7 @@ mod bench {
         let mut sh = Blake2b::new(64);
         let bytes = [1u8, ..10];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -509,7 +509,7 @@ mod bench {
         let mut sh = Blake2b::new(64);
         let bytes = [1u8, ..1024];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -519,7 +519,7 @@ mod bench {
         let mut sh = Blake2b::new(64);
         let bytes = [1u8, ..65536];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
