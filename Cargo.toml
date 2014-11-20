@@ -13,12 +13,6 @@ readme = "README.md"
 name = "rust-crypto"
 path = "src/rust-crypto/lib.rs"
 
-[[bin]]
-name = "rust-crypto-util"
-path = "src/rust-crypto-util/tool.rs"
-test = false
-bench = false
-
 [profile.test]
 opt-level = 2
 
