@@ -100,7 +100,7 @@ impl Poly1305 {
             }
             self.finalized = true;
             let tmp = self.buffer;
-            self.block(tmp);
+            self.block(&tmp);
         }
 
         // fully carry h
@@ -178,7 +178,7 @@ impl Mac for Poly1305 {
 
             // self.block(self.buffer[]);
             let tmp = self.buffer;
-            self.block(tmp);
+            self.block(&tmp);
 
             self.leftover = 0;
         }
@@ -266,10 +266,10 @@ mod test {
         ];
 
         let mut mac = [0u8, ..16];
-        poly1305(key, msg, mac[mut]);
+        poly1305(&key, &msg, mac[mut]);
         assert_eq!(mac[], expected[]);
 
-        let mut poly = Poly1305::new(key);
+        let mut poly = Poly1305::new(&key);
         poly.input(msg[0..32]);
         poly.input(msg[32..96]);
         poly.input(msg[96..112]);
@@ -305,7 +305,7 @@ mod test {
         ];
 
         let mut mac = [0u8, ..16];
-        poly1305(wrap_key, wrap_msg, mac[mut]);
+        poly1305(&wrap_key, &wrap_msg, mac[mut]);
         assert_eq!(mac[], wrap_mac[]);
 
         let total_key = [
@@ -320,15 +320,15 @@ mod test {
             0xd2, 0x87, 0xf9, 0x7c, 0x44, 0x62, 0x3d, 0x39,
         ];
 
-        let mut tpoly = Poly1305::new(total_key);
+        let mut tpoly = Poly1305::new(&total_key);
         for i in range(0u, 256) {
             let key = Vec::from_elem(32,  i as u8);
             let msg = Vec::from_elem(256, i as u8);
             let mut mac = [0u8, ..16];
-            poly1305(key[], msg.slice(0, i), mac);
-            tpoly.input(mac);
+            poly1305(key[], msg.slice(0, i), &mut mac);
+            tpoly.input(&mac);
         }
-        tpoly.raw_result(mac);
+        tpoly.raw_result(&mut mac);
         assert_eq!(mac[], total_mac[]);
     }
 
@@ -342,7 +342,7 @@ mod test {
             0xc2, 0x6b, 0x33, 0xb9, 0x1c, 0xcc, 0x03, 0x07,
         ];
         let mut mac = [0u8, ..16];
-        poly1305(key, msg, mac[mut]);
+        poly1305(key, &msg, mac[mut]);
         assert_eq!(mac[], expected[]);
 
         let msg = b"Hello world!";
@@ -367,8 +367,8 @@ mod bench {
         let key     = [0u8, ..32];
         let bytes   = [1u8, ..10];
         bh.iter( || {
-            let mut poly = Poly1305::new(key);
-            poly.input(bytes);
+            let mut poly = Poly1305::new(&key);
+            poly.input(&bytes);
             poly.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
@@ -380,8 +380,8 @@ mod bench {
         let key     = [0u8, ..32];
         let bytes   = [1u8, ..1024];
         bh.iter( || {
-            let mut poly = Poly1305::new(key);
-            poly.input(bytes);
+            let mut poly = Poly1305::new(&key);
+            poly.input(&bytes);
             poly.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
@@ -393,8 +393,8 @@ mod bench {
         let key     = [0u8, ..32];
         let bytes   = [1u8, ..65536];
         bh.iter( || {
-            let mut poly = Poly1305::new(key);
-            poly.input(bytes);
+            let mut poly = Poly1305::new(&key);
+            poly.input(&bytes);
             poly.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;

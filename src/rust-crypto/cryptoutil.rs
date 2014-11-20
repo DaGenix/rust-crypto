@@ -14,7 +14,8 @@ use std::num::{Int, Unsigned};
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
-use buffer::{ReadBuffer, WriteBuffer, BufferResult, BufferUnderflow, BufferOverflow};
+use buffer::{ReadBuffer, WriteBuffer, BufferResult};
+use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
 use symmetriccipher::{SynchronousStreamCipher, SymmetricCipherError};
 
 /// Write a u64 into a vector, which must be 8 bytes long. The value is written in big-endian
@@ -294,7 +295,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                             self.buffer[mut self.buffer_idx..size],
                             input[..buffer_remaining]);
                     self.buffer_idx = 0;
-                    func(self.buffer);
+                    func(&self.buffer);
                     i += buffer_remaining;
                 } else {
                     copy_memory(

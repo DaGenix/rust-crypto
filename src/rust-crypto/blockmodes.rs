@@ -12,10 +12,12 @@ use std::cmp;
 use std::slice;
 
 use buffer::{ReadBuffer, WriteBuffer, OwnedReadBuffer, OwnedWriteBuffer, BufferResult,
-    BufferUnderflow, BufferOverflow, RefReadBuffer, RefWriteBuffer};
+    RefReadBuffer, RefWriteBuffer};
+use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
 use cryptoutil::symm_enc_or_dec;
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, Encryptor, BlockDecryptor, Decryptor,
-    SynchronousStreamCipher, SymmetricCipherError, InvalidPadding, InvalidLength};
+    SynchronousStreamCipher, SymmetricCipherError};
+use symmetriccipher::SymmetricCipherError::{InvalidPadding, InvalidLength};
 
 /// The BlockProcessor trait is used to implement modes that require processing complete blocks of
 /// data. The methods of this trait are called by the BlockEngine which is in charge of properly
@@ -114,7 +116,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             out_read_scratch: None,
             processor: processor,
             padding: padding,
-            state: FastMode
+            state: BlockEngineState::FastMode
         }
     }
 
@@ -158,9 +160,9 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
         // self.out_hist.
         if !has_next(input, output, self.block_size) {
             if input.is_empty() {
-                return FastMode;
+                return BlockEngineState::FastMode;
             } else {
-                return NeedInput;
+                return BlockEngineState::NeedInput;
             }
         } else {
             let next_in = input.take_next(self.block_size);
@@ -202,9 +204,9 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 last_out);
         }
         if input.is_empty() {
-            return FastMode;
+            return BlockEngineState::FastMode;
         } else {
-            return NeedInput;
+            return BlockEngineState::NeedInput;
         }
     }
 
@@ -244,10 +246,10 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 // FastMode tries to process as much data as possible while minimizing copies.
                 // FastMode doesn't make use of the scratch buffers and only updates the history
                 // just before exiting.
-                FastMode => {
+                BlockEngineState::FastMode => {
                     self.state = self.fast_mode(input, output);
                     match self.state {
-                        FastMode => {
+                        BlockEngineState::FastMode => {
                             // If FastMode completes but stays in the FastMode state, it means that
                             // we've run out of input data.
                             return Ok(BufferUnderflow);
@@ -261,16 +263,16 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 // occurs. IF eof doesn't occur, the data is processed and then we go to the
                 // NeedOutput state. Otherwise, we go to the LastInput state. This state always
                 // writes all available data into in_scratch before transitioning to the next state.
-                NeedInput => {
+                BlockEngineState::NeedInput => {
                     input.push_to(&mut self.in_scratch);
                     if !input.is_empty() {
                         // !is_empty() guarantees two things - in_scratch is full and its not the
                         // last block. This state must never process the last block.
                         process_scratch(self);
-                        self.state = NeedOutput;
+                        self.state = BlockEngineState::NeedOutput;
                     } else {
                         if eof {
-                            self.state = LastInput;
+                            self.state = BlockEngineState::LastInput;
                         } else {
                             return Ok(BufferUnderflow);
                         }
@@ -279,12 +281,12 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
 
                 // The NeedOutput state just writes buffered processed data to the output stream
                 // until all of it has been written.
-                NeedOutput => {
+                BlockEngineState::NeedOutput => {
                     let mut rout = self.out_read_scratch.take().unwrap();
                     rout.push_to(output);
                     if rout.is_empty() {
                         self.out_write_scratch = Some(rout.into_write_buffer());
-                        self.state = FastMode;
+                        self.state = BlockEngineState::FastMode;
                     } else {
                         self.out_read_scratch = Some(rout);
                         return Ok(BufferOverflow);
@@ -295,7 +297,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 // last block handling is a little tricky due to modes have special needs regarding
                 // padding. When the last block of data is detected, this state is transitioned to
                 // for handling.
-                LastInput => {
+                BlockEngineState::LastInput => {
                     // We we arrive in this state, we know that all input data that is going to be
                     // supplied has been suplied and that that data has been written to in_scratch
                     // by the NeedInput state. Furthermore, we know that one of three things must be
@@ -326,28 +328,28 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                         if self.in_scratch.is_full() {
                             process_scratch(self);
                             if self.padding.strip_output(self.out_read_scratch.as_mut().unwrap()) {
-                                self.state = Finished;
+                                self.state = BlockEngineState::Finished;
                             } else {
-                                self.state = Error(InvalidPadding);
+                                self.state = BlockEngineState::Error(InvalidPadding);
                             }
                         } else if self.in_scratch.is_empty() {
-                            self.state = Finished;
+                            self.state = BlockEngineState::Finished;
                         } else {
-                            self.state = Error(InvalidLength);
+                            self.state = BlockEngineState::Error(InvalidLength);
                         }
                     } else {
                         process_scratch(self);
                         self.padding.pad_input(&mut self.in_scratch);
                         if self.in_scratch.is_full() {
-                            self.state = LastInput2;
+                            self.state = BlockEngineState::LastInput2;
                         } else if self.in_scratch.is_empty() {
                             if self.padding.strip_output(self.out_read_scratch.as_mut().unwrap()) {
-                                self.state = Finished;
+                                self.state = BlockEngineState::Finished;
                             } else {
-                                self.state = Error(InvalidPadding);
+                                self.state = BlockEngineState::Error(InvalidPadding);
                             }
                         } else {
-                            self.state = Error(InvalidLength);
+                            self.state = BlockEngineState::Error(InvalidLength);
                         }
                     }
                 }
@@ -355,16 +357,16 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 // See the comments on LastInput for more details. This state handles final blocks
                 // of data in the case that the input was a multiple of the block size and the mode
                 // decided to add a full extra block of padding.
-                LastInput2 => {
+                BlockEngineState::LastInput2 => {
                     let mut rout = self.out_read_scratch.take().unwrap();
                     rout.push_to(output);
                     if rout.is_empty() {
                         self.out_write_scratch = Some(rout.into_write_buffer());
                         process_scratch(self);
                         if self.padding.strip_output(self.out_read_scratch.as_mut().unwrap()) {
-                            self.state = Finished;
+                            self.state = BlockEngineState::Finished;
                         } else {
-                            self.state = Error(InvalidPadding);
+                            self.state = BlockEngineState::Error(InvalidPadding);
                         }
                     } else {
                         self.out_read_scratch = Some(rout);
@@ -374,7 +376,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
 
                 // The Finished mode just writes the data in out_scratch to the output until there
                 // is no more data left.
-                Finished => {
+                BlockEngineState::Finished => {
                     match self.out_read_scratch {
                         Some(ref mut rout) => {
                             rout.push_to(output);
@@ -389,14 +391,14 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 }
 
                 // The Error state is used to store error information.
-                Error(err) => {
+                BlockEngineState::Error(err) => {
                     return Err(err);
                 }
             }
         }
     }
     fn reset(&mut self) {
-        self.state = FastMode;
+        self.state = BlockEngineState::FastMode;
         self.in_scratch.reset();
         if self.out_read_scratch.is_some() {
             let ors = self.out_read_scratch.take().unwrap();
@@ -809,9 +811,10 @@ mod test {
     use aessafe;
     use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8,
         NoPadding, PkcsPadding};
-    use buffer::{BufferUnderflow, BufferOverflow, ReadBuffer, WriteBuffer, RefReadBuffer,
-        RefWriteBuffer, BufferResult};
-    use symmetriccipher::{Encryptor, Decryptor, SymmetricCipherError, InvalidLength, InvalidPadding};
+    use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
+    use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
+    use symmetriccipher::{Encryptor, Decryptor};
+    use symmetriccipher::SymmetricCipherError::{mod, InvalidLength, InvalidPadding};
 
     use std::cmp;
     use test::Bencher;
@@ -1303,14 +1306,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128Encryptor::new(key);
+        let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = EcbEncryptor::new(aes_enc, NoPadding);
 
         bh.iter( || {
             enc.reset();
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
@@ -1329,14 +1332,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128Encryptor::new(key);
+        let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = CbcEncryptor::new(aes_enc, PkcsPadding, iv.to_vec());
 
         bh.iter( || {
-            enc.reset(iv);
+            enc.reset(&iv);
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
@@ -1355,14 +1358,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128Encryptor::new(key);
+        let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = CtrMode::new(aes_enc, ctr.to_vec());
 
         bh.iter( || {
-            enc.reset(ctr);
+            enc.reset(&ctr);
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
@@ -1381,14 +1384,14 @@ mod test {
         let plain = [3u8, ..512];
         let mut cipher = [3u8, ..528];
 
-        let aes_enc = aessafe::AesSafe128EncryptorX8::new(key);
-        let mut enc = CtrModeX8::new(aes_enc, ctr);
+        let aes_enc = aessafe::AesSafe128EncryptorX8::new(&key);
+        let mut enc = CtrModeX8::new(aes_enc, &ctr);
 
         bh.iter( || {
-            enc.reset(ctr);
+            enc.reset(&ctr);
 
-            let mut buff_in = RefReadBuffer::new(plain);
-            let mut buff_out = RefWriteBuffer::new(cipher);
+            let mut buff_in = RefReadBuffer::new(&plain);
+            let mut buff_out = RefWriteBuffer::new(&mut cipher);
 
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}

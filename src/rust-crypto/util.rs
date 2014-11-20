@@ -115,13 +115,13 @@ mod test {
         let f = [2, 2, 2];
         let g = [0, 0, 0];
 
-        assert!(fixed_time_eq(a, a));
-        assert!(fixed_time_eq(a, b));
+        assert!(fixed_time_eq(&a, &a));
+        assert!(fixed_time_eq(&a, &b));
 
-        assert!(!fixed_time_eq(a, c));
-        assert!(!fixed_time_eq(a, d));
-        assert!(!fixed_time_eq(a, e));
-        assert!(!fixed_time_eq(a, f));
-        assert!(!fixed_time_eq(a, g));
+        assert!(!fixed_time_eq(&a, &c));
+        assert!(!fixed_time_eq(&a, &d));
+        assert!(!fixed_time_eq(&a, &e));
+        assert!(!fixed_time_eq(&a, &f));
+        assert!(!fixed_time_eq(&a, &g));
     }
 }

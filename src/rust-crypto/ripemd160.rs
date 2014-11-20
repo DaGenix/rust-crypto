@@ -480,7 +480,7 @@ mod tests {
         let mut sh = box Ripemd160::new();
         for t in tests.iter() {
             (*sh).input_str(t.input);
-            sh.result(out);
+            sh.result(&mut out);
             assert_eq!(t.output[], out[]);
 
             let out_str = (*sh).result_str();
@@ -500,7 +500,7 @@ mod tests {
                 (*sh).input_str(t.input.slice(len - left, take + len - left));
                 left = left - take;
             }
-            sh.result(out);
+            sh.result(&mut out);
             assert_eq!(t.output[], out[]);
 
             let out_str = (*sh).result_str();
@@ -532,7 +532,7 @@ mod bench {
         let mut sh = Ripemd160::new();
         let bytes = [1u8, ..10];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -542,7 +542,7 @@ mod bench {
         let mut sh = Ripemd160::new();
         let bytes = [1u8, ..1024];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -552,7 +552,7 @@ mod bench {
         let mut sh = Ripemd160::new();
         let bytes = [1u8, ..65536];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

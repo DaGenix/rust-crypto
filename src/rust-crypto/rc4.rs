@@ -121,7 +121,7 @@ mod bench {
         let input = [1u8, ..10];
         let mut output = [0u8, ..10];
         bh.iter( || {
-            rc4.process(input, output);
+            rc4.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }
@@ -132,7 +132,7 @@ mod bench {
         let input = [1u8, ..1024];
         let mut output = [0u8, ..1024];
         bh.iter( || {
-            rc4.process(input, output);
+            rc4.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }
@@ -143,7 +143,7 @@ mod bench {
         let input = [1u8, ..65536];
         let mut output = [0u8, ..65536];
         bh.iter( || {
-            rc4.process(input, output);
+            rc4.process(&input, &mut output);
         });
         bh.bytes = input.len() as u64;
     }

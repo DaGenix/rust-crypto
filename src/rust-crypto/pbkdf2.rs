@@ -39,8 +39,8 @@ fn calculate_block<M: Mac>(
     // Perform the 1st iteration. The output goes directly into block
     mac.input(salt);
     let mut idx_buf = [0u8, ..4];
-    write_u32_be(idx_buf, idx);
-    mac.input(idx_buf);
+    write_u32_be(&mut idx_buf, idx);
+    mac.input(&idx_buf);
     mac.raw_result(block);
     mac.reset();
 
@@ -138,11 +138,11 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
 
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
-    pbkdf2(&mut mac, salt[], c, dk);
+    pbkdf2(&mut mac, salt[], c, &mut dk);
 
     let mut result = "$rpbkdf2$0$".into_string();
     let mut tmp = [0u8, ..4];
-    write_u32_be(tmp, c);
+    write_u32_be(&mut tmp, c);
     result.push_str(tmp.to_base64(base64::STANDARD)[]);
     result.push('$');
     result.push_str(salt[].to_base64(base64::STANDARD)[]);

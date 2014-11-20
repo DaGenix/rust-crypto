@@ -161,7 +161,7 @@ fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8
 
             let (fill, data) = data.split_at(16 - rest_len);
             copy_memory(rest[mut rest_len..], fill);
-            state.add_and_mul(Gf128::from_bytes(rest), hs);
+            state.add_and_mul(Gf128::from_bytes(&rest), hs);
             data
         }
     };
@@ -175,7 +175,7 @@ fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8
 
     if rest.len() != 0 {
         let mut tmp = [0, ..16];
-        copy_memory(tmp, rest);
+        copy_memory(&mut tmp, rest);
         *srest = Some(tmp);
     }
 }
@@ -309,7 +309,7 @@ impl Mac for Ghash {
             self.finished = true;
         }
 
-        copy_memory(output, self.state.to_bytes());
+        copy_memory(output, &self.state.to_bytes());
     }
 
     fn output_bytes(&self) -> uint { 16 }
@@ -564,8 +564,8 @@ mod bench {
         let key     = [0u8, ..16];
         let bytes   = [1u8, ..10];
         bh.iter( || {
-            let mut ghash = Ghash::new(key);
-            ghash.input(bytes);
+            let mut ghash = Ghash::new(&key);
+            ghash.input(&bytes);
             ghash.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
@@ -577,8 +577,8 @@ mod bench {
         let key     = [0u8, ..16];
         let bytes   = [1u8, ..1024];
         bh.iter( || {
-            let mut ghash = Ghash::new(key);
-            ghash.input(bytes);
+            let mut ghash = Ghash::new(&key);
+            ghash.input(&bytes);
             ghash.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;
@@ -590,8 +590,8 @@ mod bench {
         let key     = [0u8, ..16];
         let bytes   = [1u8, ..65536];
         bh.iter( || {
-            let mut ghash = Ghash::new(key);
-            ghash.input(bytes);
+            let mut ghash = Ghash::new(&key);
+            ghash.input(&bytes);
             ghash.raw_result(mac[mut]);
         });
         bh.bytes = bytes.len() as u64;

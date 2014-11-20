@@ -980,7 +980,7 @@ mod bench {
         let mut sh = Sha256::new();
         let bytes = [1u8, ..10];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -990,7 +990,7 @@ mod bench {
         let mut sh = Sha256::new();
         let bytes = [1u8, ..1024];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -1000,7 +1000,7 @@ mod bench {
         let mut sh = Sha256::new();
         let bytes = [1u8, ..65536];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -1012,7 +1012,7 @@ mod bench {
         let mut sh = Sha512::new();
         let bytes = [1u8, ..10];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -1022,7 +1022,7 @@ mod bench {
         let mut sh = Sha512::new();
         let bytes = [1u8, ..1024];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -1032,7 +1032,7 @@ mod bench {
         let mut sh = Sha512::new();
         let bytes = [1u8, ..65536];
         bh.iter( || {
-            sh.input(bytes);
+            sh.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

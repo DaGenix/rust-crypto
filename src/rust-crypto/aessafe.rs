@@ -167,7 +167,7 @@ macro_rules! define_aes_impl(
                     sk: [Bs8State(0, 0, 0, 0, 0, 0, 0, 0), ..($rounds + 1)]
                 };
                 let mut tmp = [[0u32, ..4], ..($rounds + 1)];
-                create_round_keys(key, $mode, tmp);
+                create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_4x4_with_u32(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
                 }
@@ -186,7 +186,7 @@ macro_rules! define_aes_enc(
             fn block_size(&self) -> uint { 16 }
             fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
                 let mut bs = bit_slice_1x16_with_u32(input);
-                bs = encrypt_core(&bs, self.sk);
+                bs = encrypt_core(&bs, &self.sk);
                 un_bit_slice_1x16_with_u32(&bs, output);
             }
         }
@@ -202,7 +202,7 @@ macro_rules! define_aes_dec(
             fn block_size(&self) -> uint { 16 }
             fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
                 let mut bs = bit_slice_1x16_with_u32(input);
-                bs = decrypt_core(&bs, self.sk);
+                bs = decrypt_core(&bs, &self.sk);
                 un_bit_slice_1x16_with_u32(&bs, output);
             }
         }
@@ -254,7 +254,7 @@ macro_rules! define_aes_impl_x8(
                     sk: [Bs8State(o!(), o!(), o!(), o!(), o!(), o!(), o!(), o!()), ..($rounds + 1)]
                 };
                 let mut tmp = [[0u32, ..4], ..($rounds + 1)];
-                create_round_keys(key, $mode, tmp);
+                create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_fill_4x4_with_u32x4(
                         tmp[i][0],
@@ -277,7 +277,7 @@ macro_rules! define_aes_enc_x8(
             fn block_size(&self) -> uint { 16 }
             fn encrypt_block_x8(&self, input: &[u8], output: &mut [u8]) {
                 let bs = bit_slice_1x128_with_u32x4(input);
-                let bs2 = encrypt_core(&bs, self.sk);
+                let bs2 = encrypt_core(&bs, &self.sk);
                 un_bit_slice_1x128_with_u32x4(&bs2, output);
             }
         }
@@ -293,7 +293,7 @@ macro_rules! define_aes_dec_x8(
             fn block_size(&self) -> uint { 16 }
             fn decrypt_block_x8(&self, input: &[u8], output: &mut [u8]) {
                 let bs = bit_slice_1x128_with_u32x4(input);
-                let bs2 = decrypt_core(&bs, self.sk);
+                let bs2 = decrypt_core(&bs, &self.sk);
                 un_bit_slice_1x128_with_u32x4(&bs2, output);
             }
         }
@@ -387,14 +387,14 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32, ..4]
 
     // Decryption round keys require extra processing
     match key_type {
-        Decryption => {
+        KeyType::Decryption => {
             for j in range(1u, rounds) {
                 for i in range(0u, 4) {
                     round_keys[j][i] = inv_mcol(round_keys[j][i]);
                 }
             }
         },
-        Encryption => { }
+        KeyType::Encryption => { }
     }
 }
 
@@ -552,7 +552,7 @@ fn bit_slice_4x1_with_u32(a: u32) -> Bs8State<u32> {
 // Bit slice a 16 byte array in column major order
 fn bit_slice_1x16_with_u32(data: &[u8]) -> Bs8State<u32> {
     let mut n = [0u32, ..4];
-    read_u32v_le(n, data);
+    read_u32v_le(&mut n, data);
 
     let a = n[0];
     let b = n[1];
@@ -674,7 +674,7 @@ fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32
         write_u32_le(tmp[mut i * 16 + 8..i * 16 + 12], c);
         write_u32_le(tmp[mut i * 16 + 12..i * 16 + 16], d);
     }
-    return bit_slice_1x128_with_u32x4(tmp);
+    return bit_slice_1x128_with_u32x4(&tmp);
 }
 
 // Un bit slice into a 128 byte buffer.

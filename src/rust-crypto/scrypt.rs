@@ -31,7 +31,7 @@ use util::fixed_time_eq;
 fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
     let mut x = [0u32, ..16];
-    read_u32v_le(x, input);
+    read_u32v_le(&mut x, input);
 
     let rounds = 8;
 
@@ -102,10 +102,10 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
 
 
     for (i, chunk) in input.chunks(64).enumerate() {
-        xor(x, chunk, t);
-        salsa20_8(t, x);
+        xor(&x, chunk, &mut t);
+        salsa20_8(&t, &mut x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
-        output[mut pos..pos + 64].clone_from_slice(x);
+        output[mut pos..pos + 64].clone_from_slice(&x);
     }
 }
 
@@ -280,7 +280,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
     // 256-bit derived key
     let mut dk = [0u8, ..32];
 
-    scrypt(password.as_bytes(), salt[], params, dk);
+    scrypt(password.as_bytes(), salt[], params, &mut dk);
 
     let mut result = "$rscrypt$".into_string();
     if params.r < 256 && params.p < 256 {
@@ -360,7 +360,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
                     if pvec.len() != 9 { return Err(ERR_STR); }
                     let log_n = pvec[0];
                     let mut pval = [0u32, ..2];
-                    read_u32v_le(pval, pvec[1..9]);
+                    read_u32v_le(&mut pval, pvec[1..9]);
                     params = ScryptParams::new(log_n, pval[0], pval[1]);
                 }
                 _ => return Err(ERR_STR)

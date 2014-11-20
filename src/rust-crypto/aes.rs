@@ -32,17 +32,17 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send>(
         enc as Box<Encryptor>
     } else {
         match key_size {
-            KeySize128 => {
+            KeySize::KeySize128 => {
                 let aes_enc = aessafe::AesSafe128Encryptor::new(key);
                 let enc = box EcbEncryptor::new(aes_enc, padding);
                 enc as Box<Encryptor>
             }
-            KeySize192 => {
+            KeySize::KeySize192 => {
                 let aes_enc = aessafe::AesSafe192Encryptor::new(key);
                 let enc = box EcbEncryptor::new(aes_enc, padding);
                 enc as Box<Encryptor>
             }
-            KeySize256 => {
+            KeySize::KeySize256 => {
                 let aes_enc = aessafe::AesSafe256Encryptor::new(key);
                 let enc = box EcbEncryptor::new(aes_enc, padding);
                 enc as Box<Encryptor>
@@ -88,17 +88,17 @@ pub fn ecb_decryptor<X: PaddingProcessor + Send>(
         dec as Box<Decryptor>
     } else {
         match key_size {
-            KeySize128 => {
+            KeySize::KeySize128 => {
                 let aes_dec = aessafe::AesSafe128Decryptor::new(key);
                 let dec = box EcbDecryptor::new(aes_dec, padding);
                 dec as Box<Decryptor>
             }
-            KeySize192 => {
+            KeySize::KeySize192 => {
                 let aes_dec = aessafe::AesSafe192Decryptor::new(key);
                 let dec = box EcbDecryptor::new(aes_dec, padding);
                 dec as Box<Decryptor>
             }
-            KeySize256 => {
+            KeySize::KeySize256 => {
                 let aes_dec = aessafe::AesSafe256Decryptor::new(key);
                 let dec = box EcbDecryptor::new(aes_dec, padding);
                 dec as Box<Decryptor>
@@ -145,17 +145,17 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send>(
         enc as Box<Encryptor>
     } else {
         match key_size {
-            KeySize128 => {
+            KeySize::KeySize128 => {
                 let aes_enc = aessafe::AesSafe128Encryptor::new(key);
                 let enc = box CbcEncryptor::new(aes_enc, padding, iv.to_vec());
                 enc as Box<Encryptor>
             }
-            KeySize192 => {
+            KeySize::KeySize192 => {
                 let aes_enc = aessafe::AesSafe192Encryptor::new(key);
                 let enc = box CbcEncryptor::new(aes_enc, padding, iv.to_vec());
                 enc as Box<Encryptor>
             }
-            KeySize256 => {
+            KeySize::KeySize256 => {
                 let aes_enc = aessafe::AesSafe256Encryptor::new(key);
                 let enc = box CbcEncryptor::new(aes_enc, padding, iv.to_vec());
                 enc as Box<Encryptor>
@@ -203,17 +203,17 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send>(
         dec as Box<Decryptor>
     } else {
         match key_size {
-            KeySize128 => {
+            KeySize::KeySize128 => {
                 let aes_dec = aessafe::AesSafe128Decryptor::new(key);
                 let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
                 dec as Box<Decryptor>
             }
-            KeySize192 => {
+            KeySize::KeySize192 => {
                 let aes_dec = aessafe::AesSafe192Decryptor::new(key);
                 let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
                 dec as Box<Decryptor>
             }
-            KeySize256 => {
+            KeySize::KeySize256 => {
                 let aes_dec = aessafe::AesSafe256Decryptor::new(key);
                 let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
                 dec as Box<Decryptor>
@@ -260,17 +260,17 @@ pub fn ctr(
         dec as Box<SynchronousStreamCipher>
     } else {
         match key_size {
-            KeySize128 => {
+            KeySize::KeySize128 => {
                 let aes_dec = aessafe::AesSafe128EncryptorX8::new(key);
                 let dec = box CtrModeX8::new(aes_dec, iv);
                 dec as Box<SynchronousStreamCipher>
             }
-            KeySize192 => {
+            KeySize::KeySize192 => {
                 let aes_dec = aessafe::AesSafe192EncryptorX8::new(key);
                 let dec = box CtrModeX8::new(aes_dec, iv);
                 dec as Box<SynchronousStreamCipher>
             }
-            KeySize256 => {
+            KeySize::KeySize256 => {
                 let aes_dec = aessafe::AesSafe256EncryptorX8::new(key);
                 let dec = box CtrModeX8::new(aes_dec, iv);
                 dec as Box<SynchronousStreamCipher>
@@ -312,7 +312,7 @@ mod test {
     use aessafe;
     use symmetriccipher::{BlockEncryptor, BlockDecryptor, BlockEncryptorX8, BlockDecryptorX8};
     use util;
-    use aes::{KeySize128, KeySize192, KeySize256};
+    use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 
     // Test vectors from:
     // http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
@@ -437,9 +437,9 @@ mod test {
     fn run_test<E: BlockEncryptor, D: BlockDecryptor>(enc: &mut E, dec: &mut D, test: &Test) {
         let mut tmp = [0u8, ..16];
         for data in test.data.iter() {
-            enc.encrypt_block(data.plain[], tmp);
+            enc.encrypt_block(data.plain[], &mut tmp);
             assert!(tmp[] == data.cipher[]);
-            dec.decrypt_block(data.cipher[], tmp);
+            dec.decrypt_block(data.cipher[], &mut tmp);
             assert!(tmp[] == data.plain[]);
         }
     }
@@ -555,12 +555,12 @@ mod test {
             0x7b, 0x0c, 0x78, 0x5e, 0x27, 0xe8, 0xad, 0x3f,
             0x82, 0x23, 0x20, 0x71, 0x04, 0x72, 0x5d, 0xd4 ];
 
-        let enc = aessafe::AesSafe128EncryptorX8::new(key);
-        let dec = aessafe::AesSafe128DecryptorX8::new(key);
+        let enc = aessafe::AesSafe128EncryptorX8::new(&key);
+        let dec = aessafe::AesSafe128DecryptorX8::new(&key);
         let mut tmp = [0u8, ..128];
-        enc.encrypt_block_x8(plain, tmp);
+        enc.encrypt_block_x8(&plain, &mut tmp);
         assert!(tmp[] == cipher[]);
-        dec.decrypt_block_x8(cipher, tmp);
+        dec.decrypt_block_x8(&cipher, &mut tmp);
         assert!(tmp[] == plain[]);
     }
 
@@ -604,12 +604,12 @@ mod test {
             0x9a, 0x4b, 0x41, 0xba, 0x73, 0x8d, 0x6c, 0x72,
             0xfb, 0x16, 0x69, 0x16, 0x03, 0xc1, 0x8e, 0x0e ];
 
-        let enc = aessafe::AesSafe192EncryptorX8::new(key);
-        let dec = aessafe::AesSafe192DecryptorX8::new(key);
+        let enc = aessafe::AesSafe192EncryptorX8::new(&key);
+        let dec = aessafe::AesSafe192DecryptorX8::new(&key);
         let mut tmp = [0u8, ..128];
-        enc.encrypt_block_x8(plain, tmp);
+        enc.encrypt_block_x8(&plain, &mut tmp);
         assert!(tmp[] == cipher[]);
-        dec.decrypt_block_x8(cipher, tmp);
+        dec.decrypt_block_x8(&cipher, &mut tmp);
         assert!(tmp[] == plain[]);
     }
 
@@ -655,12 +655,12 @@ mod test {
             0x23, 0x30, 0x4b, 0x7a, 0x39, 0xf9, 0xf3, 0xff,
             0x06, 0x7d, 0x8d, 0x8f, 0x9e, 0x24, 0xec, 0xc7 ];
 
-        let enc = aessafe::AesSafe256EncryptorX8::new(key);
-        let dec = aessafe::AesSafe256DecryptorX8::new(key);
+        let enc = aessafe::AesSafe256EncryptorX8::new(&key);
+        let dec = aessafe::AesSafe256DecryptorX8::new(&key);
         let mut tmp = [0u8, ..128];
-        enc.encrypt_block_x8(plain, tmp);
+        enc.encrypt_block_x8(&plain, &mut tmp);
         assert!(tmp[] == cipher[]);
-        dec.decrypt_block_x8(cipher, tmp);
+        dec.decrypt_block_x8(&cipher, &mut tmp);
         assert!(tmp[] == plain[]);
     }
 }
@@ -675,7 +675,7 @@ mod bench {
     use aessafe;
     use symmetriccipher::{BlockEncryptor, BlockEncryptorX8};
     use util;
-    use aes::{KeySize, KeySize128, KeySize192, KeySize256};
+    use aes::KeySize::{mod, KeySize128, KeySize192, KeySize256};
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]
@@ -700,12 +700,12 @@ mod bench {
             let key: [u8, ..16] = [1u8, ..16];
             let plain: [u8, ..16] = [2u8, ..16];
 
-            let a = aesni::AesNiEncryptor::new(key_size, key);
+            let a = aesni::AesNiEncryptor::new(key_size, &key);
 
             let mut tmp = [0u8, ..16];
 
             bh.iter( || {
-                a.encrypt_block(plain, tmp);
+                a.encrypt_block(&plain, &mut tmp);
             });
 
             bh.bytes = (plain.len()) as u64;
@@ -717,12 +717,12 @@ mod bench {
         let key: [u8, ..16] = [1u8, ..16];
         let plain: [u8, ..16] = [2u8, ..16];
 
-        let a = aessafe::AesSafe128Encryptor::new(key);
+        let a = aessafe::AesSafe128Encryptor::new(&key);
 
         let mut tmp = [0u8, ..16];
 
         bh.iter( || {
-            a.encrypt_block(plain, tmp);
+            a.encrypt_block(&plain, &mut tmp);
         });
 
         bh.bytes = (plain.len()) as u64;
@@ -733,12 +733,12 @@ mod bench {
         let key: [u8, ..16] = [1u8, ..16];
         let plain: [u8, ..128] = [2u8, ..128];
 
-        let a = aessafe::AesSafe128EncryptorX8::new(key);
+        let a = aessafe::AesSafe128EncryptorX8::new(&key);
 
         let mut tmp = [0u8, ..128];
 
         bh.iter( || {
-            a.encrypt_block_x8(plain, tmp);
+            a.encrypt_block_x8(&plain, &mut tmp);
         });
 
         bh.bytes = (plain.len()) as u64;
