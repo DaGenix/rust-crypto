@@ -130,6 +130,8 @@ use std::iter::range_step;
 use cryptoutil::{read_u32v_le, write_u32_le};
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDecryptorX8};
 
+use self::KeyType::{Encryption, Decryption};
+
 // Using std::unstable::simd::u32x4 results in issues creating static arrays of u32x4 values.
 // Defining the type here avoids that problem. Additionally, we need to implement various trait from
 // libstd which wouldn't be possible if we used that type directly.

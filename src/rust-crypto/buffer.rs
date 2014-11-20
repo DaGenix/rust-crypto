@@ -7,6 +7,8 @@
 use std::cmp;
 use std::slice;
 
+pub use self::BufferResult::{BufferUnderflow, BufferOverflow};
+
 pub enum BufferResult {
     BufferUnderflow,
     BufferOverflow

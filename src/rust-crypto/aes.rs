@@ -13,6 +13,8 @@ use blockmodes::{PaddingProcessor, EcbEncryptor, EcbDecryptor, CbcEncryptor, Cbc
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher};
 use util;
 
+pub use self::KeySize::{KeySize128, KeySize192, KeySize256};
+
 /// AES key size
 pub enum KeySize {
     KeySize128,
