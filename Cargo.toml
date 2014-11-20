@@ -13,5 +13,8 @@ path = "src/rust-crypto-util/tool.rs"
 test = false
 bench = false
 
+[profile.test]
+opt-level = 2
+
 [dependencies.time]
 git = "https://github.com/rust-lang/time"
