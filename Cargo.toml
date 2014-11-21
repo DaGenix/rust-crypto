@@ -1,7 +1,13 @@
 [package]
 name = "rust-crypto"
 version = "0.1.0"
-authors = []
+authors = ["The Rust-Crypto Project Developers"]
+license = "MIT/Apache-2.0"
+homepage = "https://github.com/DaGenix/rust-crypto/"
+repository = "https://github.com/DaGenix/rust-crypto/"
+description = "A (mostly) pure-Rust implementation of various common cryptographic algorithms."
+keywords = [ "Cryptography", "Crypto" ]
+readme = "README.md"
 
 [lib]
 name = "rust-crypto"
@@ -12,6 +18,9 @@ name = "rust-crypto-util"
 path = "src/rust-crypto-util/tool.rs"
 test = false
 bench = false
+
+[profile.test]
+opt-level = 2
 
 [dependencies.time]
 git = "https://github.com/rust-lang/time"
