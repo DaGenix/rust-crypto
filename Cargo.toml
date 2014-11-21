@@ -22,5 +22,5 @@ bench = false
 [profile.test]
 opt-level = 2
 
-[dependencies.time]
-git = "https://github.com/rust-lang/time"
+[dependencies]
+time = "*"
