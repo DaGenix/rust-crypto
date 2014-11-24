@@ -44,7 +44,6 @@
  * say) then you need to EXPLICITLY RESEED THE RNG AFTER FORKING.
  */
 
-use std::num::div_rem;
 use std::rand::{Rng, SeedableRng};
 use time::precise_time_s;
 
@@ -126,7 +125,7 @@ impl FortunaGenerator {
 
     /// Generates `n` bytes of random data (9.4.4)
     fn generate_random_data(&mut self, out: &mut [u8]) {
-        let (n, rem) = div_rem(out.len(), AES_BLOCK_SIZE);
+        let (n, rem) = (out.len() / AES_BLOCK_SIZE, out.len() % AES_BLOCK_SIZE);
         assert!(n <= MAX_GEN_SIZE);
 
         // Generate output
