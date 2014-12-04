@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![license = "MIT/ASL2"]
 #![crate_name = "rust-crypto"]
 
 #![feature(asm)]
