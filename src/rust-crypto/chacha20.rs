@@ -22,15 +22,6 @@ pub struct ChaCha20 {
     offset : uint,
 }
 
-macro_rules! quater_round(
-    ($a:expr, $b:expr, $c:expr, $d:expr) => ({
-        $a += $b; $d ^= $a; $d = $d.rotate_left(16);
-        $c += $d; $b ^= $c; $b = $b.rotate_left(12);
-        $a += $b; $d ^= $a; $d = $d.rotate_left( 8);
-        $c += $d; $b ^= $c; $b = $b.rotate_left( 7);
-    });
-)
-
 impl ChaCha20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> ChaCha20 {
         assert!(key.len() == 16 || key.len() == 32);
