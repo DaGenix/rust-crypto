@@ -24,6 +24,7 @@ use mac::{Mac, MacResult};
 
 // A struct representing an element in GF(2^128)
 // x^0 is the msb, while x^127 is the lsb
+#[deriving(Copy)]
 struct Gf128 { d: simd::u32x4 }
 
 impl Gf128 {

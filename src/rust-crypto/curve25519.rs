@@ -11,6 +11,7 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
+#[deriving(Copy)]
 pub struct Fe([i32, ..10]);
 
 impl fmt::Show for Fe {
@@ -1090,6 +1091,7 @@ pub struct GePrecomp {
     xy2d: Fe,
 }
 
+#[deriving(Copy)]
 pub struct GeCached {
     y_plus_x: Fe,
     y_minus_x: Fe,

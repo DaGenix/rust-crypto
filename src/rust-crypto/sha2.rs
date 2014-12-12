@@ -444,6 +444,7 @@ static H512_TRUNC_224: [u64, ..8] = [
 
 // A structure that represents that state of a digest computation for the SHA-2 512 family of digest
 // functions
+#[deriving(Copy)]
 struct Engine256State {
     h0: u32,
     h1: u32,
@@ -603,6 +604,7 @@ static K32: [u32, ..64] = [
 
 // A structure that keeps track of the state of the Sha-256 operation and contains the logic
 // necessary to perform the final calculations.
+#[deriving(Copy)]
 struct Engine256 {
     length_bits: u64,
     buffer: FixedBuffer64,
@@ -652,6 +654,7 @@ impl Engine256 {
 
 
 /// The SHA-256 hash algorithm
+#[deriving(Copy)]
 pub struct Sha256 {
     engine: Engine256
 }
