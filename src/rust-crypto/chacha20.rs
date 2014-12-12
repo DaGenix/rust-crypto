@@ -10,6 +10,7 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
 
+#[deriving(Copy)]
 pub struct ChaCha20 {
     state  : [u32, ..16],
     output : [u8,  ..64],

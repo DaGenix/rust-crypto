@@ -1063,14 +1063,14 @@ impl Fe {
     }
 }
 
-
+#[deriving(Copy)]
 pub struct GeP2 {
     x: Fe,
     y: Fe,
     z: Fe,
 }
 
-#[deriving(Show)]
+#[deriving(Copy, Show)]
 pub struct GeP3 {
     x: Fe,
     y: Fe,
@@ -1078,6 +1078,7 @@ pub struct GeP3 {
     t: Fe,
 }
 
+#[deriving(Copy)]
 pub struct GeP1P1 {
     x: Fe,
     y: Fe,
@@ -1085,6 +1086,7 @@ pub struct GeP1P1 {
     t: Fe,
 }
 
+#[deriving(Copy)]
 pub struct GePrecomp {
     y_plus_x: Fe,
     y_minus_x: Fe,

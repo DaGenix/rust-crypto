@@ -128,6 +128,7 @@ impl BitXor<Gf128, Gf128> for Gf128 {
 }
 
 /// A structure representing the state of a GHASH computation
+#[deriving(Copy)]
 pub struct Ghash {
     hs: [Gf128, ..128],
     state: Gf128,
@@ -137,6 +138,7 @@ pub struct Ghash {
 }
 
 /// A structure representing the state of a GHASH computation, after input for C was provided
+#[deriving(Copy)]
 pub struct GhashWithC {
     hs: [Gf128, ..128],
     state: Gf128,

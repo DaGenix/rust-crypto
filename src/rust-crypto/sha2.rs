@@ -710,6 +710,7 @@ static H256: [u32, ..8] = [
 
 
 /// The SHA-224 hash algorithm
+#[deriving(Copy)]
 pub struct Sha224 {
     engine: Engine256
 }
