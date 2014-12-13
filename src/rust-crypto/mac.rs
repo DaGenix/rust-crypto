@@ -44,6 +44,29 @@ pub trait Mac {
      * Get the size of the Mac code, in bytes.
      */
     fn output_bytes(&self) -> uint;
+
+    /**
+     * Convenience function that feeds a string into a mac.
+     *
+     * # Arguments
+     *
+     * * `input` The string to feed into the mac
+     */
+    fn input_str(&mut self, input: &str) {
+        self.input(input.as_bytes());
+    }
+
+    /**
+     * Convenience function that retrieves the result of a mac as a
+     * String in hexadecimal format.
+     */
+    fn result_str(&mut self) -> String {
+        use serialize::hex::ToHex;
+
+        let mut buf = Vec::from_elem(self.output_bytes(), 0u8);
+        self.raw_result(buf[mut]);
+        return buf[].to_hex();
+    }
 }
 
 /**
