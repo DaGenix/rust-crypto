@@ -3,28 +3,26 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-
-use std::num::Int;
+use std::simd::u32x4;
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
 
 #[deriving(Copy)]
+struct ChaChaState {
+  a: u32x4,
+  b: u32x4,
+  c: u32x4,
+  d: u32x4
+}
+
+#[deriving(Copy)]
 pub struct ChaCha20 {
-    state  : [u32, ..16],
+    state  : ChaChaState,
     output : [u8,  ..64],
     offset : uint,
 }
-
-macro_rules! quater_round(
-    ($a:expr, $b:expr, $c:expr, $d:expr) => ({
-        $a += $b; $d ^= $a; $d = $d.rotate_left(16);
-        $c += $d; $b ^= $c; $b = $b.rotate_left(12);
-        $a += $b; $d ^= $a; $d = $d.rotate_left( 8);
-        $c += $d; $b ^= $c; $b = $b.rotate_left( 7);
-    });
-)
 
 impl ChaCha20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> ChaCha20 {
@@ -34,63 +32,108 @@ impl ChaCha20 {
         ChaCha20{ state: ChaCha20::expand(key, nonce), output: [0u8, ..64], offset: 64 }
     }
 
-    fn expand(key: &[u8], nonce: &[u8]) -> [u32, ..16] {
-        let mut state = [0u32, ..16];
+    fn expand(key: &[u8], nonce: &[u8]) -> ChaChaState {
+        
         let constant = match key.len() {
             16 => b"expand 16-byte k",
             32 => b"expand 32-byte k",
             _  => unreachable!(),
         };
-
-        state[0] = read_u32_le(constant[0..4]);
-        state[1] = read_u32_le(constant[4..8]);
-        state[2] = read_u32_le(constant[8..12]);
-        state[3] = read_u32_le(constant[12..16]);
-        state[4] = read_u32_le(key[0..4]);
-        state[5] = read_u32_le(key[4..8]);
-        state[6] = read_u32_le(key[8..12]);
-        state[7] = read_u32_le(key[12..16]);
-        if key.len() == 16 {
-            state[ 8] = state[4];
-            state[ 9] = state[5];
-            state[10] = state[6];
-            state[11] = state[7];
-        } else {
-            state[ 8] = read_u32_le(key[16..20]);
-            state[ 9] = read_u32_le(key[20..24]);
-            state[10] = read_u32_le(key[24..28]);
-            state[11] = read_u32_le(key[28..32]);
+        ChaChaState {
+            a: u32x4(
+                read_u32_le(constant[0..4]),
+                read_u32_le(constant[4..8]),
+                read_u32_le(constant[8..12]),
+                read_u32_le(constant[12..16])
+            ),
+            b: u32x4(
+                read_u32_le(key[0..4]),
+                read_u32_le(key[4..8]),
+                read_u32_le(key[8..12]),
+                read_u32_le(key[12..16])
+            ),
+            c: if key.len() == 16 {
+                    u32x4(
+                        read_u32_le(key[0..4]),
+                        read_u32_le(key[4..8]),
+                        read_u32_le(key[8..12]),
+                        read_u32_le(key[12..16])
+                    )
+                } else {
+                    u32x4(
+                        read_u32_le(key[16..20]),
+                        read_u32_le(key[20..24]),
+                        read_u32_le(key[24..28]),
+                        read_u32_le(key[28..32])
+                    )
+                },
+            d: u32x4(
+                0,
+                0,
+                read_u32_le(nonce[0..4]),
+                read_u32_le(nonce[4..8])
+            )
         }
-        state[12] = 0;
-        state[13] = 0;
-        state[14] = read_u32_le(nonce[0..4]);
-        state[15] = read_u32_le(nonce[4..8]);
-
-        state
     }
-
+    fn rotate(v:u32x4, c: u32x4) -> u32x4{
+      let s32 = u32x4(32, 32, 32, 32);
+      let r = s32 - c;
+      let right = v >> r;
+      return (v << c) ^ right;
+    }
+    fn round(state: &mut ChaChaState) -> () {
+          let s16 = u32x4(16, 16, 16, 16);
+          let s12 = u32x4(12, 12, 12, 12);
+          let s8 = u32x4(8, 8, 8, 8);
+          let s7 = u32x4(7, 7, 7, 7);
+          
+          state.a = state.a + state.b;
+          state.d = ChaCha20::rotate(state.d ^ state.a, s16);
+          state.c = state.c + state.d;
+          state.b = ChaCha20::rotate(state.b ^ state.c, s12);
+          state.a = state.a + state.b;
+          state.d = ChaCha20::rotate(state.d ^ state.a, s8);
+          state.c = state.c + state.d;
+          state.b = ChaCha20::rotate(state.b ^ state.c, s7);
+        }
     // put the the next 64 keystream bytes into self.output
     fn update(&mut self) {
-        let mut x = self.state;
+        let mut state = self.state;
 
         for _ in range(0u, 10) {
-            quater_round!(x[0], x[4], x[ 8], x[12]);
-            quater_round!(x[1], x[5], x[ 9], x[13]);
-            quater_round!(x[2], x[6], x[10], x[14]);
-            quater_round!(x[3], x[7], x[11], x[15]);
-            quater_round!(x[0], x[5], x[10], x[15]);
-            quater_round!(x[1], x[6], x[11], x[12]);
-            quater_round!(x[2], x[7], x[ 8], x[13]);
-            quater_round!(x[3], x[4], x[ 9], x[14]);
+            ChaCha20::round(&mut state);
+            let u32x4(b10, b11, b12, b13) = state.b;
+            state.b = u32x4(b11, b12, b13, b10);
+            let u32x4(c10, c11, c12, c13) = state.c;
+            state.c = u32x4(c12, c13,c10, c11);
+            let u32x4(d10, d11, d12, d13) = state.d;
+            state.d = u32x4(d13, d10, d11, d12);
+            ChaCha20::round(&mut state);
+            let u32x4(b20, b21, b22, b23) = state.b;
+            state.b = u32x4(b23, b20, b21, b22);
+            let u32x4(c20, c21, c22, c23) = state.c;
+            state.c = u32x4(c22, c23, c20, c21);
+            let u32x4(d20, d21, d22, d23) = state.d;
+            state.d = u32x4(d21, d22, d23, d20);
+        }
+        let u32x4(a1, a2, a3, a4) = self.state.a + state.a;
+        let u32x4(b1, b2, b3, b4) = self.state.b + state.b;
+        let u32x4(c1, c2, c3, c4) = self.state.c + state.c;
+        let u32x4(d1, d2, d3, d4) = self.state.d + state.d;
+        let lens = [
+            a1,a2,a3,a4,
+            b1,b2,b3,b4,
+            c1,c2,c3,c4,
+            d1,d2,d3,d4
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(self.output[mut i*4..(i+1)*4], lens[i]);
         }
 
-        for i in range(0, self.state.len()) {
-            write_u32_le(self.output[mut i*4..(i+1)*4], self.state[i] + x[i]);
-        }
-
-        self.state[12] += 1;
-        if self.state[12] == 0 {
-            self.state[13] += 1;
+        self.state.d += u32x4(1, 0, 0, 0);
+        let u32x4(c12, _, _, _) = self.state.d;
+        if c12 == 0 {
+            self.state.d += u32x4(0, 1, 0, 0);
         }
 
         self.offset = 0;
