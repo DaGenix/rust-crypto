@@ -70,17 +70,10 @@ pub trait Digest {
      * String in hexadecimal format.
      */
     fn result_str(&mut self) -> String {
+        use serialize::hex::ToHex;
+
         let mut buf = Vec::from_elem((self.output_bits()+7)/8, 0u8);
         self.result(buf[mut]);
-        return to_hex(buf[]);
+        return buf[].to_hex();
     }
-}
-
-fn to_hex(rr: &[u8]) -> String {
-    let mut s = String::new();
-    for b in rr.iter() {
-        let hex = format!("{:02x}", *b);
-        s.push_str(hex[]);
-    }
-    return s;
 }
