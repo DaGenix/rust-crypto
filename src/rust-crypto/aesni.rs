@@ -8,11 +8,13 @@ use aes::KeySize;
 use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
+#[deriving(Copy)]
 pub struct AesNiEncryptor {
     rounds: uint,
     round_keys: [u8, ..240]
 }
 
+#[deriving(Copy)]
 pub struct AesNiDecryptor {
     rounds: uint,
     round_keys: [u8, ..240]

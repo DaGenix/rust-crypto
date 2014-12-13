@@ -42,6 +42,7 @@ const K2: u32 = 0x8F1BBCDCu32;
 const K3: u32 = 0xCA62C1D6u32;
 
 /// Structure representing the state of a Sha1 computation
+#[deriving(Copy)]
 pub struct Sha1 {
     h: [u32, ..DIGEST_BUF_LEN],
     length_bits: u64,

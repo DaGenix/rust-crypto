@@ -134,7 +134,7 @@ use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDec
 // Defining the type here avoids that problem. Additionally, we need to implement various trait from
 // libstd which wouldn't be possible if we used that type directly.
 #[simd]
-#[deriving(Clone, Eq, PartialEq)]
+#[deriving(Clone, Copy, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub struct u32x4(u32, u32, u32, u32);
 
@@ -148,6 +148,7 @@ macro_rules! define_aes_struct(
         $name:ident,
         $rounds:expr
     ) => (
+        #[deriving(Copy)]
         pub struct $name {
             sk: [Bs8State<u32>, ..($rounds + 1)]
         }
@@ -235,6 +236,7 @@ macro_rules! define_aes_struct_x8(
         $name:ident,
         $rounds:expr
     ) => (
+        #[deriving(Copy)]
         pub struct $name {
             sk: [Bs8State<u32x4>, ..($rounds + 1)]
         }
@@ -450,7 +452,7 @@ fn decrypt_core<S: AesOps>(state: &S, sk: &[S]) -> S {
     return tmp;
 }
 
-
+#[deriving(Copy)]
 struct Bs8State<T>(T, T, T, T, T, T, T, T);
 
 impl <T: Clone> Bs8State<T> {

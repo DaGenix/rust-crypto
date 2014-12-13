@@ -24,6 +24,7 @@ use mac::{Mac, MacResult};
 
 // A struct representing an element in GF(2^128)
 // x^0 is the msb, while x^127 is the lsb
+#[deriving(Copy)]
 struct Gf128 { d: simd::u32x4 }
 
 impl Gf128 {
@@ -127,6 +128,7 @@ impl BitXor<Gf128, Gf128> for Gf128 {
 }
 
 /// A structure representing the state of a GHASH computation
+#[deriving(Copy)]
 pub struct Ghash {
     hs: [Gf128, ..128],
     state: Gf128,
@@ -136,6 +138,7 @@ pub struct Ghash {
 }
 
 /// A structure representing the state of a GHASH computation, after input for C was provided
+#[deriving(Copy)]
 pub struct GhashWithC {
     hs: [Gf128, ..128],
     state: Gf128,

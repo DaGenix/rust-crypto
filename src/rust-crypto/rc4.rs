@@ -13,6 +13,7 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::symm_enc_or_dec;
 
+#[deriving(Copy)]
 pub struct Rc4 {
     i: uint,
     j: uint,

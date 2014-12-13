@@ -145,6 +145,7 @@ impl FortunaGenerator {
 
 
 /// A single entropy pool (not public)
+#[deriving(Copy)]
 struct Pool {
     state: Sha256,
     count: uint

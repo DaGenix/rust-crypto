@@ -7,6 +7,7 @@
 use std::cmp;
 use std::slice;
 
+#[deriving(Copy)]
 pub enum BufferResult {
     BufferUnderflow,
     BufferOverflow
