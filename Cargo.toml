@@ -10,7 +10,7 @@ keywords = [ "Crypto", "MD5", "Sha1", "Sha2", "AES" ]
 readme = "README.md"
 
 [lib]
-name = "rust-crypto"
+name = "crypto"
 path = "src/rust-crypto/lib.rs"
 
 [profile.test]
