@@ -1,3 +1,7 @@
+**NOTE**: The crate name used by rust-crypto has recently changed from `rust-crypto` to
+just `crypto`. Please see the Usage section if you are running into issues due to this
+change.
+
 # Rust-Crypto
 
 [![Build Status](https://travis-ci.org/DaGenix/rust-crypto.png?branch=master)](https://travis-ci.org/DaGenix/rust-crypto)
@@ -21,7 +25,7 @@ rust-crypto = "*"
 and the following to your crate root:
 
 ```rust
-extern crate "rust-crypto" as rust_crypto;
+extern crate crypto;
 ```
 
 ## Contributions
