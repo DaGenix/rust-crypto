@@ -67,9 +67,9 @@ impl Add<Fe, Fe> for Fe {
     Postconditions:
        |h| bounded by 1.1*2^26,1.1*2^25,1.1*2^26,1.1*2^25,etc.
     */
-    fn add(&self, _rhs: &Fe) -> Fe {
-        let &Fe(f) = self;
-        let &Fe(g) = _rhs;
+    fn add(self, _rhs: Fe) -> Fe {
+        let Fe(f) = self;
+        let Fe(g) = _rhs;
 
         let f0 = f[0];
         let f1 = f[1];
@@ -117,9 +117,9 @@ impl Sub<Fe, Fe> for Fe {
     Postconditions:
        |h| bounded by 1.1*2^26,1.1*2^25,1.1*2^26,1.1*2^25,etc.
     */
-    fn sub(&self, _rhs: &Fe) -> Fe {
-        let &Fe(f) = self;
-        let &Fe(g) = _rhs;
+    fn sub(self, _rhs: Fe) -> Fe {
+        let Fe(f) = self;
+        let Fe(g) = _rhs;
 
         let f0 = f[0];
         let f1 = f[1];
@@ -188,9 +188,9 @@ impl Mul<Fe, Fe> for Fe {
     With tighter constraints on inputs can squeeze carries into int32.
     */
 
-    fn mul(&self, _rhs: &Fe) -> Fe {
-        let &Fe(f) = self;
-        let &Fe(g) = _rhs;
+    fn mul(self, _rhs: Fe) -> Fe {
+        let Fe(f) = self;
+        let Fe(g) = _rhs;
         let f0 = f[0];
         let f1 = f[1];
         let f2 = f[2];
@@ -1319,7 +1319,7 @@ impl GeP3 {
 }
 
 impl Add<GeCached, GeP1P1> for GeP3 {
-    fn add(&self, _rhs: &GeCached) -> GeP1P1 {
+    fn add(self, _rhs: GeCached) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
         let a = y1_plus_x1 * _rhs.y_plus_x;
@@ -1337,7 +1337,7 @@ impl Add<GeCached, GeP1P1> for GeP3 {
 }
 
 impl Add<GePrecomp, GeP1P1> for GeP3 {
-    fn add(&self, _rhs: &GePrecomp) -> GeP1P1 {
+    fn add(self, _rhs: GePrecomp) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
         let a = y1_plus_x1 * _rhs.y_plus_x;
@@ -1354,7 +1354,7 @@ impl Add<GePrecomp, GeP1P1> for GeP3 {
 }
 
 impl Sub<GeCached, GeP1P1> for GeP3 {
-    fn sub(&self, _rhs: &GeCached) -> GeP1P1 {
+    fn sub(self, _rhs: GeCached) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
         let a = y1_plus_x1 * _rhs.y_minus_x;
@@ -1372,7 +1372,7 @@ impl Sub<GeCached, GeP1P1> for GeP3 {
 }
 
 impl Sub<GePrecomp, GeP1P1> for GeP3 {
-    fn sub(&self, _rhs: &GePrecomp) -> GeP1P1 {
+    fn sub(self, _rhs: GePrecomp) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
         let a = y1_plus_x1 * _rhs.y_minus_x;

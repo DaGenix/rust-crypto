@@ -122,7 +122,7 @@ impl Gf128 {
 }
 
 impl BitXor<Gf128, Gf128> for Gf128 {
-    fn bitxor(&self, rhs: &Gf128) -> Gf128 {
+    fn bitxor(self, rhs: Gf128) -> Gf128 {
         Gf128 { d: self.d ^ rhs.d }
     }
 }
