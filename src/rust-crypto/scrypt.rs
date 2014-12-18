@@ -16,7 +16,6 @@ use std::io::IoResult;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
 use std::rand::{OsRng, Rng};
-use std::slice::CloneSlicePrelude;
 
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
