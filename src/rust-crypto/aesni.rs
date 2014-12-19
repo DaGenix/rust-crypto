@@ -87,7 +87,7 @@ unsafe fn aesimc(round_keys: *mut u8) {
     : "r" (round_keys) // inputs
     : "xmm1", "memory" // clobbers
     : "volatile"
-    )
+    );
 }
 
 #[allow(unused_assignments)]
@@ -144,7 +144,7 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
         : "r" (keyp), "0" (round_keysp)
         : "xmm1", "xmm2", "xmm3", "memory"
         : "volatile"
-        )
+        );
 
         match key_type {
             KeyType::Decryption => {
@@ -247,7 +247,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
         : "r" (keyp), "0" (round_keysp)
         : "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "memory"
         : "volatile"
-        )
+        );
 
         match key_type {
             KeyType::Decryption => {
@@ -358,7 +358,7 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
         : "r" (keyp), "0" (round_keysp)
         : "xmm1", "xmm2", "xmm3", "xmm4", "memory"
         : "volatile"
-        )
+        );
 
         match key_type {
             KeyType::Decryption => {

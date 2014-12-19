@@ -76,7 +76,7 @@ macro_rules! G( ($r:expr, $i:expr, $a:expr, $b:expr, $c:expr, $d:expr, $m:expr) 
     $d = ($d ^ $a).rotate_right(16);
     $c = $c + $d;
     $b = ($b ^ $c).rotate_right(63);
-}))
+}));
 
 macro_rules! round( ($r:expr, $v:expr, $m:expr) => ( {
     G!($r,0,$v[ 0],$v[ 4],$v[ 8],$v[12], $m);
@@ -88,7 +88,7 @@ macro_rules! round( ($r:expr, $v:expr, $m:expr) => ( {
     G!($r,6,$v[ 2],$v[ 7],$v[ 8],$v[13], $m);
     G!($r,7,$v[ 3],$v[ 4],$v[ 9],$v[14], $m);
   }
-))
+));
 
 impl Blake2b {
     fn set_lastnode(&mut self) {

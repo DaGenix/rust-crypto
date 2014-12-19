@@ -161,7 +161,7 @@ mod tests {
 
         for &(index, flip) in [(0, 1), (31, 0x80), (20, 0xff)].iter() {
             actual_signature[index] ^= flip;
-            assert!(!verify(message, public_key.as_slice(), actual_signature.as_slice()))
+            assert!(!verify(message, public_key.as_slice(), actual_signature.as_slice()));
             actual_signature[index] ^= flip;
         }
 
