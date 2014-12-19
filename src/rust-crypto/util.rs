@@ -17,11 +17,11 @@ pub fn supports_aesni() -> bool {
         : "=r" (flags) // output
         : // input
         : "eax", "ebx", "ecx", "edx" // clobbers
-        )
+        );
 		// No idea why, but on 32-bit targets, the compiler complains
 		// about not having enough registers. Adding in this dummy
 		// section, however, seems to fix it.
-        asm!("")
+        asm!("");
     }
 
     (flags & 0x02000000) != 0

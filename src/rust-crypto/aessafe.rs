@@ -140,8 +140,8 @@ pub struct u32x4(u32, u32, u32, u32);
 
 // There are a variety of places where we need to use u32x4 types with either all bits set or not
 // bits set. These macros make that more succinct.
-macro_rules! o( () => ( u32x4(0, 0, 0, 0) ) )
-macro_rules! x( () => ( u32x4(-1, -1, -1, -1) ) )
+macro_rules! o( () => ( u32x4(0, 0, 0, 0) ) );
+macro_rules! x( () => ( u32x4(-1, -1, -1, -1) ) );
 
 macro_rules! define_aes_struct(
     (
@@ -153,7 +153,7 @@ macro_rules! define_aes_struct(
             sk: [Bs8State<u32>, ..($rounds + 1)]
         }
     )
-)
+);
 
 macro_rules! define_aes_impl(
     (
@@ -176,7 +176,7 @@ macro_rules! define_aes_impl(
             }
         }
     )
-)
+);
 
 macro_rules! define_aes_enc(
     (
@@ -192,7 +192,7 @@ macro_rules! define_aes_enc(
             }
         }
     )
-)
+);
 
 macro_rules! define_aes_dec(
     (
@@ -208,28 +208,28 @@ macro_rules! define_aes_dec(
             }
         }
     )
-)
+);
 
-define_aes_struct!(AesSafe128Encryptor, 10)
-define_aes_struct!(AesSafe128Decryptor, 10)
-define_aes_impl!(AesSafe128Encryptor, Encryption, 10, 16)
-define_aes_impl!(AesSafe128Decryptor, Decryption, 10, 16)
-define_aes_enc!(AesSafe128Encryptor, 10)
-define_aes_dec!(AesSafe128Decryptor, 10)
+define_aes_struct!(AesSafe128Encryptor, 10);
+define_aes_struct!(AesSafe128Decryptor, 10);
+define_aes_impl!(AesSafe128Encryptor, Encryption, 10, 16);
+define_aes_impl!(AesSafe128Decryptor, Decryption, 10, 16);
+define_aes_enc!(AesSafe128Encryptor, 10);
+define_aes_dec!(AesSafe128Decryptor, 10);
 
-define_aes_struct!(AesSafe192Encryptor, 12)
-define_aes_struct!(AesSafe192Decryptor, 12)
-define_aes_impl!(AesSafe192Encryptor, Encryption, 12, 24)
-define_aes_impl!(AesSafe192Decryptor, Decryption, 12, 24)
-define_aes_enc!(AesSafe192Encryptor, 12)
-define_aes_dec!(AesSafe192Decryptor, 12)
+define_aes_struct!(AesSafe192Encryptor, 12);
+define_aes_struct!(AesSafe192Decryptor, 12);
+define_aes_impl!(AesSafe192Encryptor, Encryption, 12, 24);
+define_aes_impl!(AesSafe192Decryptor, Decryption, 12, 24);
+define_aes_enc!(AesSafe192Encryptor, 12);
+define_aes_dec!(AesSafe192Decryptor, 12);
 
-define_aes_struct!(AesSafe256Encryptor, 14)
-define_aes_struct!(AesSafe256Decryptor, 14)
-define_aes_impl!(AesSafe256Encryptor, Encryption, 14, 32)
-define_aes_impl!(AesSafe256Decryptor, Decryption, 14, 32)
-define_aes_enc!(AesSafe256Encryptor, 14)
-define_aes_dec!(AesSafe256Decryptor, 14)
+define_aes_struct!(AesSafe256Encryptor, 14);
+define_aes_struct!(AesSafe256Decryptor, 14);
+define_aes_impl!(AesSafe256Encryptor, Encryption, 14, 32);
+define_aes_impl!(AesSafe256Decryptor, Decryption, 14, 32);
+define_aes_enc!(AesSafe256Encryptor, 14);
+define_aes_dec!(AesSafe256Decryptor, 14);
 
 macro_rules! define_aes_struct_x8(
     (
@@ -241,7 +241,7 @@ macro_rules! define_aes_struct_x8(
             sk: [Bs8State<u32x4>, ..($rounds + 1)]
         }
     )
-)
+);
 
 macro_rules! define_aes_impl_x8(
     (
@@ -268,7 +268,7 @@ macro_rules! define_aes_impl_x8(
             }
         }
     )
-)
+);
 
 macro_rules! define_aes_enc_x8(
     (
@@ -284,7 +284,7 @@ macro_rules! define_aes_enc_x8(
             }
         }
     )
-)
+);
 
 macro_rules! define_aes_dec_x8(
     (
@@ -300,28 +300,28 @@ macro_rules! define_aes_dec_x8(
             }
         }
     )
-)
+);
 
-define_aes_struct_x8!(AesSafe128EncryptorX8, 10)
-define_aes_struct_x8!(AesSafe128DecryptorX8, 10)
-define_aes_impl_x8!(AesSafe128EncryptorX8, Encryption, 10, 16)
-define_aes_impl_x8!(AesSafe128DecryptorX8, Decryption, 10, 16)
-define_aes_enc_x8!(AesSafe128EncryptorX8, 10)
-define_aes_dec_x8!(AesSafe128DecryptorX8, 10)
+define_aes_struct_x8!(AesSafe128EncryptorX8, 10);
+define_aes_struct_x8!(AesSafe128DecryptorX8, 10);
+define_aes_impl_x8!(AesSafe128EncryptorX8, Encryption, 10, 16);
+define_aes_impl_x8!(AesSafe128DecryptorX8, Decryption, 10, 16);
+define_aes_enc_x8!(AesSafe128EncryptorX8, 10);
+define_aes_dec_x8!(AesSafe128DecryptorX8, 10);
 
-define_aes_struct_x8!(AesSafe192EncryptorX8, 12)
-define_aes_struct_x8!(AesSafe192DecryptorX8, 12)
-define_aes_impl_x8!(AesSafe192EncryptorX8, Encryption, 12, 24)
-define_aes_impl_x8!(AesSafe192DecryptorX8, Decryption, 12, 24)
-define_aes_enc_x8!(AesSafe192EncryptorX8, 12)
-define_aes_dec_x8!(AesSafe192DecryptorX8, 12)
+define_aes_struct_x8!(AesSafe192EncryptorX8, 12);
+define_aes_struct_x8!(AesSafe192DecryptorX8, 12);
+define_aes_impl_x8!(AesSafe192EncryptorX8, Encryption, 12, 24);
+define_aes_impl_x8!(AesSafe192DecryptorX8, Decryption, 12, 24);
+define_aes_enc_x8!(AesSafe192EncryptorX8, 12);
+define_aes_dec_x8!(AesSafe192DecryptorX8, 12);
 
-define_aes_struct_x8!(AesSafe256EncryptorX8, 14)
-define_aes_struct_x8!(AesSafe256DecryptorX8, 14)
-define_aes_impl_x8!(AesSafe256EncryptorX8, Encryption, 14, 32)
-define_aes_impl_x8!(AesSafe256DecryptorX8, Decryption, 14, 32)
-define_aes_enc_x8!(AesSafe256EncryptorX8, 14)
-define_aes_dec_x8!(AesSafe256DecryptorX8, 14)
+define_aes_struct_x8!(AesSafe256EncryptorX8, 14);
+define_aes_struct_x8!(AesSafe256DecryptorX8, 14);
+define_aes_impl_x8!(AesSafe256EncryptorX8, Encryption, 14, 32);
+define_aes_impl_x8!(AesSafe256DecryptorX8, Decryption, 14, 32);
+define_aes_enc_x8!(AesSafe256EncryptorX8, 14);
+define_aes_dec_x8!(AesSafe256DecryptorX8, 14);
 
 fn ffmulx(x: u32) -> u32 {
     let m1: u32 = 0x80808080;
