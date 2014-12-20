@@ -87,7 +87,7 @@ unsafe fn aesimc(round_keys: *mut u8) {
     : "r" (round_keys) // inputs
     : "xmm1", "memory" // clobbers
     : "volatile"
-    )
+    );
 }
 
 #[allow(unused_assignments)]
