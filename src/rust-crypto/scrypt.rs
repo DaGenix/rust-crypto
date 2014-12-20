@@ -38,7 +38,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         ($($set_idx:expr, $idx_a:expr, $idx_b:expr, $rot:expr);*) => { {
             $( x[$set_idx] ^= (x[$idx_a] + x[$idx_b]).rotate_left($rot); )*
         } }
-    )
+    );
 
     for _ in range(0u, rounds / 2) {
         run_round!(
