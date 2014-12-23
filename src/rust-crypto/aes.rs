@@ -311,8 +311,10 @@ mod test {
     use aesni;
 
     use aessafe;
-    use symmetriccipher::{BlockEncryptor, BlockDecryptor, BlockEncryptorX8, BlockDecryptorX8};
+    use symmetriccipher::{BlockEncryptor, BlockDecryptor, BlockEncryptorX8, BlockDecryptorX8,
+            SynchronousStreamCipher};
     use util;
+    use aes;
     use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 
     // Test vectors from:
@@ -433,6 +435,29 @@ mod test {
                 ]
             }
         ];
+    }
+
+    struct CtrTest {
+        key: Vec<u8>,
+        ctr: Vec<u8>,
+        plain: Vec<u8>,
+        cipher: Vec<u8>
+    }
+
+    fn aes_ctr_tests() -> Vec<CtrTest> {
+        vec![
+            CtrTest {
+                key: Vec::from_elem(16, 1u8),
+                ctr: Vec::from_elem(16, 3u8),
+                plain: Vec::from_elem(33, 2u8),
+                cipher: vec![
+                    0x64, 0x3e, 0x05, 0x19, 0x79, 0x78, 0xd7, 0x45,
+                    0xa9, 0x10, 0x5f, 0xd8, 0x4c, 0xd7, 0xe6, 0xb1,
+                    0x5f, 0x66, 0xc6, 0x17, 0x4b, 0x25, 0xea, 0x24,
+                    0xe6, 0xf9, 0x19, 0x09, 0xb7, 0xdd, 0x84, 0xfb,
+                    0x86 ]
+            }
+        ]
     }
 
     fn run_test<E: BlockEncryptor, D: BlockDecryptor>(enc: &mut E, dec: &mut D, test: &Test) {
@@ -663,6 +688,17 @@ mod test {
         assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(&cipher, &mut tmp);
         assert!(tmp[] == plain[]);
+    }
+
+    #[test]
+    fn aes_ctr_box() {
+        let tests = aes_ctr_tests();
+        for test in tests.iter() {
+            let mut aes_enc = aes::ctr(aes::KeySize::KeySize128, test.key[], test.ctr[]);
+            let mut result: Vec<u8> = Vec::from_elem(test.plain.len(), 0);
+            aes_enc.process(test.plain[], result[mut]);
+            assert!(result.as_slice() == test.cipher);
+        }
     }
 }
 

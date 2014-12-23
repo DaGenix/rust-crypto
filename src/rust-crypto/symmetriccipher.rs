@@ -50,7 +50,8 @@ pub trait SynchronousStreamCipher {
 // TODO - Its a bit unclear to me why this is necessary
 impl SynchronousStreamCipher for Box<SynchronousStreamCipher + 'static> {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
-        self.process(input, output);
+        let me = &mut **self;
+        me.process(input, output);
     }
 }
 
