@@ -20,9 +20,12 @@ pub struct AesNiDecryptor {
     round_keys: [u8, ..240]
 }
 
+/// The number of rounds as well as a function to setup an appropriately sized key.
+type RoundSetupInfo = (uint, fn(&[u8], KeyType, &mut [u8]));
+
 impl AesNiEncryptor {
     pub fn new(key_size: KeySize, key: &[u8]) -> AesNiEncryptor {
-        let (rounds, setup_function) = match key_size {
+        let (rounds, setup_function): RoundSetupInfo = match key_size {
             KeySize128 => (10, setup_working_key_aesni_128),
             KeySize192 => (12, setup_working_key_aesni_192),
             KeySize256 => (14, setup_working_key_aesni_256)
@@ -38,7 +41,7 @@ impl AesNiEncryptor {
 
 impl AesNiDecryptor {
     pub fn new(key_size: KeySize, key: &[u8]) -> AesNiDecryptor {
-        let (rounds, setup_function) = match key_size {
+        let (rounds, setup_function): RoundSetupInfo = match key_size {
             KeySize128 => (10, setup_working_key_aesni_128),
             KeySize192 => (12, setup_working_key_aesni_192),
             KeySize256 => (14, setup_working_key_aesni_256)
