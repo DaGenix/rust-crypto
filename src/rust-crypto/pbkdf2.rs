@@ -140,7 +140,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
 
     pbkdf2(&mut mac, salt[], c, &mut dk);
 
-    let mut result = "$rpbkdf2$0$".into_string();
+    let mut result = String::from_str("$rpbkdf2$0$");
     let mut tmp = [0u8, ..4];
     write_u32_be(&mut tmp, c);
     result.push_str(tmp.to_base64(base64::STANDARD)[]);
