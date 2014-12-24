@@ -18,3 +18,4 @@ opt-level = 2
 
 [dependencies]
 time = "*"
+rustc-serialize = "*"

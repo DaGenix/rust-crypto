@@ -9,7 +9,7 @@
 #![feature(simd)]
 #![feature(slicing_syntax)]
 
-extern crate serialize;
+extern crate "rustc-serialize" as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;
 
