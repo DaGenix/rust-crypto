@@ -150,7 +150,7 @@ macro_rules! define_aes_struct(
     ) => (
         #[deriving(Copy)]
         pub struct $name {
-            sk: [Bs8State<u32>, ..($rounds + 1)]
+            sk: [Bs8State<u16>, ..($rounds + 1)]
         }
     )
 );
@@ -170,7 +170,7 @@ macro_rules! define_aes_impl(
                 let mut tmp = [[0u32, ..4], ..($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
-                    a.sk[i] = bit_slice_4x4_with_u32(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
+                    a.sk[i] = bit_slice_4x4_with_u16(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
                 }
                 a
             }
@@ -186,9 +186,9 @@ macro_rules! define_aes_enc(
         impl BlockEncryptor for $name {
             fn block_size(&self) -> uint { 16 }
             fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-                let mut bs = bit_slice_1x16_with_u32(input);
+                let mut bs = bit_slice_1x16_with_u16(input);
                 bs = encrypt_core(&bs, &self.sk);
-                un_bit_slice_1x16_with_u32(&bs, output);
+                un_bit_slice_1x16_with_u16(&bs, output);
             }
         }
     )
@@ -202,9 +202,9 @@ macro_rules! define_aes_dec(
         impl BlockDecryptor for $name {
             fn block_size(&self) -> uint { 16 }
             fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-                let mut bs = bit_slice_1x16_with_u32(input);
+                let mut bs = bit_slice_1x16_with_u16(input);
                 bs = decrypt_core(&bs, &self.sk);
-                un_bit_slice_1x16_with_u32(&bs, output);
+                un_bit_slice_1x16_with_u16(&bs, output);
             }
         }
     )
@@ -340,8 +340,8 @@ fn inv_mcol(x: u32) -> u32 {
 }
 
 fn sub_word(x: u32) -> u32 {
-    let bs = bit_slice_4x1_with_u32(x).sub_bytes();
-    un_bit_slice_4x1_with_u32(&bs)
+    let bs = bit_slice_4x1_with_u16(x).sub_bytes();
+    un_bit_slice_4x1_with_u16(&bs)
 }
 
 enum KeyType {
@@ -518,14 +518,13 @@ impl <T: BitXor<T, T> + Copy> Bs2State<T> {
     }
 }
 
-// Pick the specified bit from the value x and shift it left by the specified amount.
-fn pb(x: u32, bit: uint, shift: uint) -> u32 {
-    ((x >> bit) & 1) << shift
-}
-
 // Bit Slice data in the form of 4 u32s in column-major order
-fn bit_slice_4x4_with_u32(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32> {
-    fn construct(a: u32, b: u32, c: u32, d: u32, bit: uint) -> u32 {
+fn bit_slice_4x4_with_u16(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u16> {
+    fn pb(x: u32, bit: uint, shift: uint) -> u16 {
+        (((x >> bit) & 1) as u16) << shift
+    }
+
+    fn construct(a: u32, b: u32, c: u32, d: u32, bit: uint) -> u16 {
         pb(a, bit, 0)       | pb(b, bit, 1)       | pb(c, bit, 2)       | pb(d, bit, 3)       |
         pb(a, bit + 8, 4)   | pb(b, bit + 8, 5)   | pb(c, bit + 8, 6)   | pb(d, bit + 8, 7)   |
         pb(a, bit + 16, 8)  | pb(b, bit + 16, 9)  | pb(c, bit + 16, 10) | pb(d, bit + 16, 11) |
@@ -546,12 +545,12 @@ fn bit_slice_4x4_with_u32(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32> {
 
 // Bit slice a single u32 value - this is used to calculate the SubBytes step when creating the
 // round keys.
-fn bit_slice_4x1_with_u32(a: u32) -> Bs8State<u32> {
-    bit_slice_4x4_with_u32(a, 0, 0, 0)
+fn bit_slice_4x1_with_u16(a: u32) -> Bs8State<u16> {
+    bit_slice_4x4_with_u16(a, 0, 0, 0)
 }
 
 // Bit slice a 16 byte array in column major order
-fn bit_slice_1x16_with_u32(data: &[u8]) -> Bs8State<u32> {
+fn bit_slice_1x16_with_u16(data: &[u8]) -> Bs8State<u16> {
     let mut n = [0u32, ..4];
     read_u32v_le(&mut n, data);
 
@@ -560,12 +559,16 @@ fn bit_slice_1x16_with_u32(data: &[u8]) -> Bs8State<u32> {
     let c = n[2];
     let d = n[3];
 
-    bit_slice_4x4_with_u32(a, b, c, d)
+    bit_slice_4x4_with_u16(a, b, c, d)
 }
 
 // Un Bit Slice into a set of 4 u32s
-fn un_bit_slice_4x4_with_u32(bs: &Bs8State<u32>) -> (u32, u32, u32, u32) {
-    fn deconstruct(bs: &Bs8State<u32>, bit: uint) -> u32 {
+fn un_bit_slice_4x4_with_u16(bs: &Bs8State<u16>) -> (u32, u32, u32, u32) {
+    fn pb(x: u16, bit: uint, shift: uint) -> u32 {
+        (((x >> bit) & 1) as u32) << shift
+    }
+
+    fn deconstruct(bs: &Bs8State<u16>, bit: uint) -> u32 {
         let Bs8State(x0, x1, x2, x3, x4, x5, x6, x7) = *bs;
 
         pb(x0, bit, 0) | pb(x1, bit, 1) | pb(x2, bit, 2) | pb(x3, bit, 3) |
@@ -590,14 +593,14 @@ fn un_bit_slice_4x4_with_u32(bs: &Bs8State<u32>) -> (u32, u32, u32, u32) {
 }
 
 // Un Bit Slice into a single u32. This is used when creating the round keys.
-fn un_bit_slice_4x1_with_u32(bs: &Bs8State<u32>) -> u32 {
-    let (a, _, _, _) = un_bit_slice_4x4_with_u32(bs);
+fn un_bit_slice_4x1_with_u16(bs: &Bs8State<u16>) -> u32 {
+    let (a, _, _, _) = un_bit_slice_4x4_with_u16(bs);
     a
 }
 
 // Un Bit Slice into a 16 byte array
-fn un_bit_slice_1x16_with_u32(bs: &Bs8State<u32>, output: &mut [u8]) {
-    let (a, b, c, d) = un_bit_slice_4x4_with_u32(bs);
+fn un_bit_slice_1x16_with_u16(bs: &Bs8State<u16>, output: &mut [u8]) {
+    let (a, b, c, d) = un_bit_slice_4x4_with_u16(bs);
 
     write_u32_le(output.slice_mut(0,4), a);
     write_u32_le(output.slice_mut(4,8), b);
@@ -1093,7 +1096,7 @@ trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Default {
 
 // Arrays to convert to and from a polynomial basis and a normal basis. The affine transformation
 // step is included in these matrices as well, so that doesn't have to be done seperately.
-static A2X_U32: [[u32, ..8], ..8] = [
+static A2X_U16: [[u16, ..8], ..8] = [
     [ 0,  0,  0, -1, -1,  0,  0, -1],
     [-1, -1,  0,  0, -1, -1, -1, -1],
     [ 0, -1,  0,  0, -1, -1, -1, -1],
@@ -1104,7 +1107,7 @@ static A2X_U32: [[u32, ..8], ..8] = [
     [-1, -1, -1, -1, -1, -1, -1, -1]
 ];
 
-static X2A_U32: [[u32, ..8], ..8] = [
+static X2A_U16: [[u16, ..8], ..8] = [
     [ 0,  0, -1,  0,  0, -1, -1,  0],
     [ 0,  0,  0, -1, -1, -1, -1,  0],
     [ 0, -1, -1, -1,  0, -1, -1,  0],
@@ -1115,7 +1118,7 @@ static X2A_U32: [[u32, ..8], ..8] = [
     [ 0,  0,  0,  0,  0, -1, -1,  0],
 ];
 
-static X2S_U32: [[u32, ..8], ..8] = [
+static X2S_U16: [[u16, ..8], ..8] = [
     [ 0,  0,  0, -1, -1,  0, -1,  0],
     [-1,  0, -1, -1,  0, -1,  0,  0],
     [ 0, -1, -1, -1, -1,  0,  0, -1],
@@ -1126,7 +1129,7 @@ static X2S_U32: [[u32, ..8], ..8] = [
     [ 0,  0, -1,  0,  0, -1,  0,  0],
 ];
 
-static S2X_U32: [[u32, ..8], ..8] = [
+static S2X_U16: [[u16, ..8], ..8] = [
     [0, 0 ,  -1, -1,  0,  0,  0, -1],
     [-1,  0,  0, -1, -1, -1, -1,  0],
     [-1,  0, -1,  0,  0,  0,  0,  0],
@@ -1137,14 +1140,14 @@ static S2X_U32: [[u32, ..8], ..8] = [
     [-1, -1,  0,  0, -1,  0, -1,  0],
 ];
 
-impl AesBitValueOps for u32 {
-    fn a2x() -> &'static [[u32, ..8], ..8] { &A2X_U32 }
-    fn x2s() -> &'static [[u32, ..8], ..8] { &X2S_U32 }
-    fn s2x() -> &'static [[u32, ..8], ..8] { &S2X_U32 }
-    fn x2a() -> &'static [[u32, ..8], ..8] { &X2A_U32 }
-    fn x63() -> Bs8State<u32> { Bs8State(-1, -1, 0, 0, 0, -1, -1, 0) }
+impl AesBitValueOps for u16 {
+    fn a2x() -> &'static [[u16, ..8], ..8] { &A2X_U16 }
+    fn x2s() -> &'static [[u16, ..8], ..8] { &X2S_U16 }
+    fn s2x() -> &'static [[u16, ..8], ..8] { &S2X_U16 }
+    fn x2a() -> &'static [[u16, ..8], ..8] { &X2A_U16 }
+    fn x63() -> Bs8State<u16> { Bs8State(-1, -1, 0, 0, 0, -1, -1, 0) }
 
-    fn shift_row(self) -> u32 {
+    fn shift_row(self) -> u16 {
         // first 4 bits represent first row - don't shift
         (self & 0x000f) |
         // next 4 bits represent 2nd row - left rotate 1 bit
@@ -1155,7 +1158,7 @@ impl AesBitValueOps for u32 {
         ((self & 0x8000) >> 3) | ((self & 0x7000) << 1)
     }
 
-    fn inv_shift_row(self) -> u32 {
+    fn inv_shift_row(self) -> u16 {
         // first 4 bits represent first row - don't shift
         (self & 0x000f) |
         // next 4 bits represent 2nd row - right rotate 1 bit
@@ -1166,15 +1169,15 @@ impl AesBitValueOps for u32 {
         ((self & 0xe000) >> 1) | ((self & 0x1000) << 3)
     }
 
-    fn ror1(self) -> u32 {
+    fn ror1(self) -> u16 {
         ((self >> 4) & 0x0fff) | (self << 12)
     }
 
-    fn ror2(self) -> u32 {
+    fn ror2(self) -> u16 {
         ((self >> 8) & 0x00ff) | (self << 8)
     }
 
-    fn ror3(self) -> u32 {
+    fn ror3(self) -> u16 {
         ((self >> 12) & 0x000f) | (self << 4)
     }
 }
