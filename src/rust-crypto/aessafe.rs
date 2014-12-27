@@ -468,6 +468,149 @@ impl <T: BitXor<T, T> + Copy> Bs8State<T> {
         let Bs8State(b0, b1, b2, b3, b4, b5, b6, b7) = rhs;
         Bs8State(a0 ^ b0, a1 ^ b1, a2 ^ b2, a3 ^ b3, a4 ^ b4, a5 ^ b5, a6 ^ b6, a7 ^ b7)
     }
+
+    // We need to be able to convert a Bs8State to and from a polynomial basis and a normal
+    // basis. That transformation could be done via pseudocode that roughly looks like the
+    // following:
+    //
+    // for x in range(0, 8) {
+    //     for y in range(0, 8) {
+    //         result.x ^= input.y & MATRIX[7 - y][x]
+    //     }
+    // }
+    //
+    // Where the MATRIX is one of the following depending on the conversion being done.
+    // (The affine transformation step is included in all of these matrices):
+    //
+    // A2X = [
+    //     [ 0,  0,  0, -1, -1,  0,  0, -1],
+    //     [-1, -1,  0,  0, -1, -1, -1, -1],
+    //     [ 0, -1,  0,  0, -1, -1, -1, -1],
+    //     [ 0,  0,  0, -1,  0,  0, -1,  0],
+    //     [-1,  0,  0, -1,  0,  0,  0,  0],
+    //     [-1,  0,  0,  0,  0,  0,  0, -1],
+    //     [-1,  0,  0, -1,  0, -1,  0, -1],
+    //     [-1, -1, -1, -1, -1, -1, -1, -1]
+    // ];
+    //
+    // X2A = [
+    //     [ 0,  0, -1,  0,  0, -1, -1,  0],
+    //     [ 0,  0,  0, -1, -1, -1, -1,  0],
+    //     [ 0, -1, -1, -1,  0, -1, -1,  0],
+    //     [ 0,  0, -1, -1,  0,  0,  0, -1],
+    //     [ 0,  0,  0, -1,  0, -1, -1,  0],
+    //     [-1,  0,  0, -1,  0, -1,  0,  0],
+    //     [ 0, -1, -1, -1, -1,  0, -1, -1],
+    //     [ 0,  0,  0,  0,  0, -1, -1,  0],
+    // ];
+    //
+    // X2S = [
+    //     [ 0,  0,  0, -1, -1,  0, -1,  0],
+    //     [-1,  0, -1, -1,  0, -1,  0,  0],
+    //     [ 0, -1, -1, -1, -1,  0,  0, -1],
+    //     [-1, -1,  0, -1,  0,  0,  0,  0],
+    //     [ 0,  0, -1, -1, -1,  0, -1, -1],
+    //     [ 0,  0, -1,  0,  0,  0,  0,  0],
+    //     [-1, -1,  0,  0,  0,  0,  0,  0],
+    //     [ 0,  0, -1,  0,  0, -1,  0,  0],
+    // ];
+    //
+    // S2X = [
+    //     [ 0,  0, -1, -1,  0,  0,  0, -1],
+    //     [-1,  0,  0, -1, -1, -1, -1,  0],
+    //     [-1,  0, -1,  0,  0,  0,  0,  0],
+    //     [-1, -1,  0, -1,  0, -1, -1, -1],
+    //     [ 0, -1,  0,  0, -1,  0,  0,  0],
+    //     [ 0,  0, -1,  0,  0,  0,  0,  0],
+    //     [-1,  0,  0,  0, -1,  0, -1,  0],
+    //     [-1, -1,  0,  0, -1,  0, -1,  0],
+    // ];
+    //
+    // Looking at the pseudocode implementation, we see that there is no point
+    // in processing any of the elements in those matrices that have zero values
+    // since a logical AND with 0 will produce 0 which will have no effect when it
+    // is XORed into the result.
+    //
+    // LLVM doesn't appear to be able to fully unroll the loops in the pseudocode
+    // above and to eliminate processing of the 0 elements. So, each transformation is
+    // implemented independently directly in fully unrolled form with the 0 elements
+    // removed.
+    //
+    // As an optimization, elements that are XORed together multiple times are
+    // XORed just once and then used multiple times. I wrote a simple program that
+    // greedily looked for terms to combine to create the implementations below.
+    // It is likely that this could be optimized more.
+
+    fn change_basis_a2x(&self) -> Bs8State<T> {
+        let t06 = self.6 ^ self.0;
+        let t056 = self.5 ^ t06;
+        let t0156 = t056 ^ self.1;
+        let t13 = self.1 ^ self.3;
+
+        let x0 = self.2 ^ t06 ^ t13;
+        let x1 = t056;
+        let x2 = self.0;
+        let x3 = self.0 ^ self.4 ^ self.7 ^ t13;
+        let x4 = self.7 ^ t056;
+        let x5 = t0156;
+        let x6 = self.4 ^ t056;
+        let x7 = self.2 ^ self.7 ^ t0156;
+
+        Bs8State(x0, x1, x2, x3, x4, x5, x6, x7)
+    }
+
+    fn change_basis_x2s(&self) -> Bs8State<T> {
+        let t46 = self.4 ^ self.6;
+        let t35 = self.3 ^ self.5;
+        let t06 = self.0 ^ self.6;
+        let t357 = t35 ^ self.7;
+
+        let x0 = self.1 ^ t46;
+        let x1 = self.1 ^ self.4 ^ self.5;
+        let x2 = self.2 ^ t35 ^ t06;
+        let x3 = t46 ^ t357;
+        let x4 = t357;
+        let x5 = t06;
+        let x6 = self.3 ^ self.7;
+        let x7 = t35;
+
+        Bs8State(x0, x1, x2, x3, x4, x5, x6, x7)
+    }
+
+    fn change_basis_x2a(&self) -> Bs8State<T> {
+        let t15 = self.1 ^ self.5;
+        let t36 = self.3 ^ self.6;
+        let t1356 = t15 ^ t36;
+        let t07 = self.0 ^ self.7;
+
+        let x0 = self.2;
+        let x1 = t15;
+        let x2 = self.4 ^ self.7 ^ t15;
+        let x3 = self.2 ^ self.4 ^ t1356;
+        let x4 = self.1 ^ self.6;
+        let x5 = self.2 ^ self.5 ^ t36 ^ t07;
+        let x6 = t1356 ^ t07;
+        let x7 = self.1 ^ self.4;
+
+        Bs8State(x0, x1, x2, x3, x4, x5, x6, x7)
+    }
+
+    fn change_basis_s2x(&self) -> Bs8State<T> {
+        let t46 = self.4 ^ self.6;
+        let t01 = self.0 ^ self.1;
+        let t0146 = t01 ^ t46;
+
+        let x0 = self.5 ^ t0146;
+        let x1 = self.0 ^ self.3 ^ self.4;
+        let x2 = self.2 ^ self.5 ^ self.7;
+        let x3 = self.7 ^ t46;
+        let x4 = self.3 ^ self.6 ^ t01;
+        let x5 = t46;
+        let x6 = t0146;
+        let x7 = self.4 ^ self.7;
+
+        Bs8State(x0, x1, x2, x3, x4, x5, x6, x7)
+    }
 }
 
 #[deriving(Copy)]
@@ -845,9 +988,6 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Copy> Gf4Ops for Bs4State<T> {
 trait Gf8Ops<T> {
     // inverse
     fn inv(&self) -> Self;
-
-    // change the basis using the provided array
-    fn change_basis(&self, arr: &[[T, ..8], ..8]) -> Self;
 }
 
 impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Default> Gf8Ops<T> for Bs8State<T> {
@@ -860,127 +1000,13 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Default> Gf8Ops<T> for Bs8State<T>
         let q = e.mul(a);
         q.join(p)
     }
-
-    fn change_basis(&self, arr: &[[T, ..8], ..8]) -> Bs8State<T> {
-        let Bs8State(x0, x1, x2, x3, x4, x5, x6, x7) = *self;
-
-        let mut x0_out: T = Default::default();
-        let mut x1_out: T = Default::default();
-        let mut x2_out: T = Default::default();
-        let mut x3_out: T = Default::default();
-        let mut x4_out: T = Default::default();
-        let mut x5_out: T = Default::default();
-        let mut x6_out: T = Default::default();
-        let mut x7_out: T = Default::default();
-
-        /*
-        // FIXME - #XXXX: This is prettier, but ICEs
-
-        macro_rules! helper( ($x:ident, $idx:expr) => (
-                {
-                    x0_out = x0_out ^ (*($x) & arr[7 - $idx][0]);
-                    x1_out = x1_out ^ (*($x) & arr[7 - $idx][1]);
-                    x2_out = x2_out ^ (*($x) & arr[7 - $idx][2]);
-                    x3_out = x3_out ^ (*($x) & arr[7 - $idx][3]);
-                    x4_out = x4_out ^ (*($x) & arr[7 - $idx][4]);
-                    x5_out = x5_out ^ (*($x) & arr[7 - $idx][5]);
-                    x6_out = x6_out ^ (*($x) & arr[7 - $idx][6]);
-                    x7_out = x7_out ^ (*($x) & arr[7 - $idx][7]);
-                }
-            )
-        )
-
-        helper!(x0, 0);
-        helper!(x1, 1);
-        helper!(x2, 2);
-        helper!(x3, 3);
-        helper!(x4, 4);
-        helper!(x5, 5);
-        helper!(x6, 6);
-        helper!(x7, 7);
-        */
-
-        x0_out = x0_out ^ (x0 & arr[7][0]);
-        x1_out = x1_out ^ (x0 & arr[7][1]);
-        x2_out = x2_out ^ (x0 & arr[7][2]);
-        x3_out = x3_out ^ (x0 & arr[7][3]);
-        x4_out = x4_out ^ (x0 & arr[7][4]);
-        x5_out = x5_out ^ (x0 & arr[7][5]);
-        x6_out = x6_out ^ (x0 & arr[7][6]);
-        x7_out = x7_out ^ (x0 & arr[7][7]);
-
-        x0_out = x0_out ^ (x1 & arr[6][0]);
-        x1_out = x1_out ^ (x1 & arr[6][1]);
-        x2_out = x2_out ^ (x1 & arr[6][2]);
-        x3_out = x3_out ^ (x1 & arr[6][3]);
-        x4_out = x4_out ^ (x1 & arr[6][4]);
-        x5_out = x5_out ^ (x1 & arr[6][5]);
-        x6_out = x6_out ^ (x1 & arr[6][6]);
-        x7_out = x7_out ^ (x1 & arr[6][7]);
-
-        x0_out = x0_out ^ (x2 & arr[5][0]);
-        x1_out = x1_out ^ (x2 & arr[5][1]);
-        x2_out = x2_out ^ (x2 & arr[5][2]);
-        x3_out = x3_out ^ (x2 & arr[5][3]);
-        x4_out = x4_out ^ (x2 & arr[5][4]);
-        x5_out = x5_out ^ (x2 & arr[5][5]);
-        x6_out = x6_out ^ (x2 & arr[5][6]);
-        x7_out = x7_out ^ (x2 & arr[5][7]);
-
-        x0_out = x0_out ^ (x3 & arr[4][0]);
-        x1_out = x1_out ^ (x3 & arr[4][1]);
-        x2_out = x2_out ^ (x3 & arr[4][2]);
-        x3_out = x3_out ^ (x3 & arr[4][3]);
-        x4_out = x4_out ^ (x3 & arr[4][4]);
-        x5_out = x5_out ^ (x3 & arr[4][5]);
-        x6_out = x6_out ^ (x3 & arr[4][6]);
-        x7_out = x7_out ^ (x3 & arr[4][7]);
-
-        x0_out = x0_out ^ (x4 & arr[3][0]);
-        x1_out = x1_out ^ (x4 & arr[3][1]);
-        x2_out = x2_out ^ (x4 & arr[3][2]);
-        x3_out = x3_out ^ (x4 & arr[3][3]);
-        x4_out = x4_out ^ (x4 & arr[3][4]);
-        x5_out = x5_out ^ (x4 & arr[3][5]);
-        x6_out = x6_out ^ (x4 & arr[3][6]);
-        x7_out = x7_out ^ (x4 & arr[3][7]);
-
-        x0_out = x0_out ^ (x5 & arr[2][0]);
-        x1_out = x1_out ^ (x5 & arr[2][1]);
-        x2_out = x2_out ^ (x5 & arr[2][2]);
-        x3_out = x3_out ^ (x5 & arr[2][3]);
-        x4_out = x4_out ^ (x5 & arr[2][4]);
-        x5_out = x5_out ^ (x5 & arr[2][5]);
-        x6_out = x6_out ^ (x5 & arr[2][6]);
-        x7_out = x7_out ^ (x5 & arr[2][7]);
-
-        x0_out = x0_out ^ (x6 & arr[1][0]);
-        x1_out = x1_out ^ (x6 & arr[1][1]);
-        x2_out = x2_out ^ (x6 & arr[1][2]);
-        x3_out = x3_out ^ (x6 & arr[1][3]);
-        x4_out = x4_out ^ (x6 & arr[1][4]);
-        x5_out = x5_out ^ (x6 & arr[1][5]);
-        x6_out = x6_out ^ (x6 & arr[1][6]);
-        x7_out = x7_out ^ (x6 & arr[1][7]);
-
-        x0_out = x0_out ^ (x7 & arr[0][0]);
-        x1_out = x1_out ^ (x7 & arr[0][1]);
-        x2_out = x2_out ^ (x7 & arr[0][2]);
-        x3_out = x3_out ^ (x7 & arr[0][3]);
-        x4_out = x4_out ^ (x7 & arr[0][4]);
-        x5_out = x5_out ^ (x7 & arr[0][5]);
-        x6_out = x6_out ^ (x7 & arr[0][6]);
-        x7_out = x7_out ^ (x7 & arr[0][7]);
-
-        Bs8State(x0_out, x1_out, x2_out, x3_out, x4_out, x5_out, x6_out, x7_out)
-    }
 }
 
 impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
     fn sub_bytes(self) -> Bs8State<T> {
-        let nb: Bs8State<T> = self.change_basis(AesBitValueOps::a2x());
+        let nb: Bs8State<T> = self.change_basis_a2x();
         let inv = nb.inv();
-        let nb2: Bs8State<T> = inv.change_basis(AesBitValueOps::x2s());
+        let nb2: Bs8State<T> = inv.change_basis_x2s();
         let x63: Bs8State<T> = AesBitValueOps::x63();
         nb2.xor(x63)
     }
@@ -988,9 +1014,9 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
     fn inv_sub_bytes(self) -> Bs8State<T> {
         let x63: Bs8State<T> = AesBitValueOps::x63();
         let t = self.xor(x63);
-        let nb: Bs8State<T> = t.change_basis(AesBitValueOps::s2x());
+        let nb: Bs8State<T> = t.change_basis_s2x();
         let inv = nb.inv();
-        inv.change_basis(AesBitValueOps::x2a())
+        inv.change_basis_x2a()
     }
 
     fn shift_rows(self) -> Bs8State<T> {
@@ -1081,10 +1107,6 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
 }
 
 trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Default {
-    fn a2x() -> &'static [[Self, ..8], ..8];
-    fn x2s() -> &'static [[Self, ..8], ..8];
-    fn s2x() -> &'static [[Self, ..8], ..8];
-    fn x2a() -> &'static [[Self, ..8], ..8];
     fn x63() -> Bs8State<Self>;
 
     fn shift_row(self) -> Self;
@@ -1094,58 +1116,10 @@ trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Default {
     fn ror3(self) -> Self;
 }
 
-// Arrays to convert to and from a polynomial basis and a normal basis. The affine transformation
-// step is included in these matrices as well, so that doesn't have to be done seperately.
-static A2X_U16: [[u16, ..8], ..8] = [
-    [ 0,  0,  0, -1, -1,  0,  0, -1],
-    [-1, -1,  0,  0, -1, -1, -1, -1],
-    [ 0, -1,  0,  0, -1, -1, -1, -1],
-    [ 0,  0,  0, -1,  0,  0, -1,  0],
-    [-1,  0,  0, -1,  0,  0,  0,  0],
-    [-1,  0,  0,  0,  0,  0,  0, -1],
-    [-1,  0,  0, -1,  0, -1,  0, -1],
-    [-1, -1, -1, -1, -1, -1, -1, -1]
-];
-
-static X2A_U16: [[u16, ..8], ..8] = [
-    [ 0,  0, -1,  0,  0, -1, -1,  0],
-    [ 0,  0,  0, -1, -1, -1, -1,  0],
-    [ 0, -1, -1, -1,  0, -1, -1,  0],
-    [ 0,  0, -1, -1,  0,  0,  0, -1],
-    [ 0,  0,  0, -1,  0, -1, -1,  0],
-    [-1,  0,  0, -1,  0, -1,  0,  0],
-    [ 0, -1, -1, -1, -1,  0, -1, -1],
-    [ 0,  0,  0,  0,  0, -1, -1,  0],
-];
-
-static X2S_U16: [[u16, ..8], ..8] = [
-    [ 0,  0,  0, -1, -1,  0, -1,  0],
-    [-1,  0, -1, -1,  0, -1,  0,  0],
-    [ 0, -1, -1, -1, -1,  0,  0, -1],
-    [-1, -1,  0, -1,  0,  0,  0,  0],
-    [ 0,  0, -1, -1, -1,  0, -1, -1],
-    [ 0,  0, -1,  0,  0,  0,  0,  0],
-    [-1, -1,  0,  0,  0,  0,  0,  0],
-    [ 0,  0, -1,  0,  0, -1,  0,  0],
-];
-
-static S2X_U16: [[u16, ..8], ..8] = [
-    [0, 0 ,  -1, -1,  0,  0,  0, -1],
-    [-1,  0,  0, -1, -1, -1, -1,  0],
-    [-1,  0, -1,  0,  0,  0,  0,  0],
-    [-1, -1,  0, -1,  0, -1, -1, -1],
-    [0,  -1,  0,  0, -1,  0,  0,  0],
-    [0,   0, -1,  0,  0,  0,  0,  0],
-    [-1,  0,  0,  0, -1,  0, -1,  0],
-    [-1, -1,  0,  0, -1,  0, -1,  0],
-];
-
 impl AesBitValueOps for u16 {
-    fn a2x() -> &'static [[u16, ..8], ..8] { &A2X_U16 }
-    fn x2s() -> &'static [[u16, ..8], ..8] { &X2S_U16 }
-    fn s2x() -> &'static [[u16, ..8], ..8] { &S2X_U16 }
-    fn x2a() -> &'static [[u16, ..8], ..8] { &X2A_U16 }
-    fn x63() -> Bs8State<u16> { Bs8State(-1, -1, 0, 0, 0, -1, -1, 0) }
+    fn x63() -> Bs8State<u16> {
+        Bs8State(-1, -1, 0, 0, 0, -1, -1, 0)
+    }
 
     fn shift_row(self) -> u16 {
         // first 4 bits represent first row - don't shift
@@ -1220,57 +1194,7 @@ impl Default for u32x4 {
     }
 }
 
-// Arrays to convert to and from a polynomial basis and a normal basis. The affine transformation
-// step is included in these matrices as well, so that doesn't have to be done seperately.
-static A2X_U32X4: [[u32x4, ..8], ..8] = [
-    [o!(), o!(), o!(), x!(), x!(), o!(), o!(), x!()],
-    [x!(), x!(), o!(), o!(), x!(), x!(), x!(), x!()],
-    [o!(), x!(), o!(), o!(), x!(), x!(), x!(), x!()],
-    [o!(), o!(), o!(), x!(), o!(), o!(), x!(), o!()],
-    [x!(), o!(), o!(), x!(), o!(), o!(), o!(), o!()],
-    [x!(), o!(), o!(), o!(), o!(), o!(), o!(), x!()],
-    [x!(), o!(), o!(), x!(), o!(), x!(), o!(), x!()],
-    [x!(), x!(), x!(), x!(), x!(), x!(), x!(), x!()]
-];
-
-static X2A_U32X4: [[u32x4, ..8], ..8] = [
-    [o!(), o!(), x!(), o!(), o!(), x!(), x!(), o!()],
-    [o!(), o!(), o!(), x!(), x!(), x!(), x!(), o!()],
-    [o!(), x!(), x!(), x!(), o!(), x!(), x!(), o!()],
-    [o!(), o!(), x!(), x!(), o!(), o!(), o!(), x!()],
-    [o!(), o!(), o!(), x!(), o!(), x!(), x!(), o!()],
-    [x!(), o!(), o!(), x!(), o!(), x!(), o!(), o!()],
-    [o!(), x!(), x!(), x!(), x!(), o!(), x!(), x!()],
-    [o!(), o!(), o!(), o!(), o!(), x!(), x!(), o!()],
-];
-
-static X2S_U32X4: [[u32x4, ..8], ..8] = [
-    [o!(), o!(), o!(), x!(), x!(), o!(), x!(), o!()],
-    [x!(), o!(), x!(), x!(), o!(), x!(), o!(), o!()],
-    [o!(), x!(), x!(), x!(), x!(), o!(), o!(), x!()],
-    [x!(), x!(), o!(), x!(), o!(), o!(), o!(), o!()],
-    [o!(), o!(), x!(), x!(), x!(), o!(), x!(), x!()],
-    [o!(), o!(), x!(), o!(), o!(), o!(), o!(), o!()],
-    [x!(), x!(), o!(), o!(), o!(), o!(), o!(), o!()],
-    [o!(), o!(), x!(), o!(), o!(), x!(), o!(), o!()],
-];
-
-static S2X_U32X4: [[u32x4, ..8], ..8] = [
-    [o!(), o!(), x!(), x!(), o!(), o!(), o!(), x!()],
-    [x!(), o!(), o!(), x!(), x!(), x!(), x!(), o!()],
-    [x!(), o!(), x!(), o!(), o!(), o!(), o!(), o!()],
-    [x!(), x!(), o!(), x!(), o!(), x!(), x!(), x!()],
-    [o!(), x!(), o!(), o!(), x!(), o!(), o!(), o!()],
-    [o!(), o!(), x!(), o!(), o!(), o!(), o!(), o!()],
-    [x!(), o!(), o!(), o!(), x!(), o!(), x!(), o!()],
-    [x!(), x!(), o!(), o!(), x!(), o!(), x!(), o!()],
-];
-
 impl AesBitValueOps for u32x4 {
-    fn a2x() -> &'static [[u32x4, ..8], ..8] { &A2X_U32X4 }
-    fn x2s() -> &'static [[u32x4, ..8], ..8] { &X2S_U32X4 }
-    fn s2x() -> &'static [[u32x4, ..8], ..8] { &S2X_U32X4 }
-    fn x2a() -> &'static [[u32x4, ..8], ..8] { &X2A_U32X4 }
     fn x63() -> Bs8State<u32x4> { Bs8State(x!(), x!(), o!(), o!(), o!(), x!(), x!(), o!()) }
 
     fn shift_row(self) -> u32x4 {
