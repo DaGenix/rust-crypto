@@ -31,7 +31,7 @@ impl Blowfish {
         assert!(4 <= key.len() && key.len() <= 56);
         let mut blowfish = Blowfish::init_state();
         blowfish.expand_key(key);
-        return blowfish;
+        blowfish
     }
 
     // For bcrypt. Use Blowfish::new instead.
@@ -288,7 +288,7 @@ impl Blowfish {
         }
         l ^= self.p[16];
         r ^= self.p[17];
-        return (r, l);
+        (r, l)
     }
 
     fn decrypt(&self, mut l: u32, mut r: u32) -> (u32, u32) {
@@ -302,7 +302,7 @@ impl Blowfish {
         }
         l ^= self.p[1];
         r ^= self.p[0];
-        return (r, l);
+        (r, l)
     }
 }
 

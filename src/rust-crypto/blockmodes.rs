@@ -205,9 +205,9 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 last_out);
         }
         if input.is_empty() {
-            return BlockEngineState::FastMode;
+            BlockEngineState::FastMode
         } else {
-            return BlockEngineState::NeedInput;
+            BlockEngineState::NeedInput
         }
     }
 

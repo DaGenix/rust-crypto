@@ -58,18 +58,18 @@ impl MacResult {
      * Create a new MacResult.
      */
     pub fn new(code: &[u8]) -> MacResult {
-        return MacResult {
+        MacResult {
             code: code.to_vec()
-        };
+        }
     }
 
     /**
      * Create a new MacResult taking ownership of the specified code value.
      */
     pub fn new_from_owned(code: Vec<u8>) -> MacResult {
-        return MacResult {
+        MacResult {
             code: code
-        };
+        }
     }
 
     /**
@@ -77,7 +77,7 @@ impl MacResult {
      * may permit timing attacks which defeat the security provided by the Mac function.
      */
     pub fn code<'s>(&'s self) -> &'s [u8] {
-        return self.code[];
+        self.code[]
     }
 }
 
@@ -85,7 +85,7 @@ impl PartialEq for MacResult {
     fn eq(&self, x: &MacResult) -> bool {
         let lhs = self.code();
         let rhs = x.code();
-        return fixed_time_eq(lhs, rhs);
+        fixed_time_eq(lhs, rhs)
     }
 }
 

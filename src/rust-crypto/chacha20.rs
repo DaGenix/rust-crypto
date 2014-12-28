@@ -75,12 +75,14 @@ impl ChaCha20 {
             )
         }
     }
+
     fn rotate(v:u32x4, c: u32x4) -> u32x4{
       let s32 = u32x4(32, 32, 32, 32);
       let r = s32 - c;
       let right = v >> r;
-      return (v << c) ^ right;
+      (v << c) ^ right
     }
+
     fn round(state: &mut ChaChaState) -> () {
           let s16 = u32x4(16, 16, 16, 16);
           let s12 = u32x4(12, 12, 12, 12);
@@ -95,7 +97,8 @@ impl ChaCha20 {
           state.d = ChaCha20::rotate(state.d ^ state.a, s8);
           state.c = state.c + state.d;
           state.b = ChaCha20::rotate(state.b ^ state.c, s7);
-        }
+    }
+
     // put the the next 64 keystream bytes into self.output
     fn update(&mut self) {
         let mut state = self.state;

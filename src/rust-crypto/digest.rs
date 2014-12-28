@@ -46,7 +46,7 @@ pub trait Digest {
      * Get the output size in bytes.
      */
     fn output_bytes(&self) -> uint {
-        return (self.output_bits() + 7) / 8;
+        (self.output_bits() + 7) / 8
     }
 
     /**
@@ -74,6 +74,6 @@ pub trait Digest {
 
         let mut buf = Vec::from_elem((self.output_bits()+7)/8, 0u8);
         self.result(buf[mut]);
-        return buf[].to_hex();
+        buf[].to_hex()
     }
 }

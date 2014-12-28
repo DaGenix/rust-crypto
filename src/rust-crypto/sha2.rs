@@ -29,7 +29,7 @@ struct Engine512State {
 
 impl Engine512State {
     fn new(h: &[u64, ..8]) -> Engine512State {
-        return Engine512State {
+        Engine512State {
             h0: h[0],
             h1: h[1],
             h2: h[2],
@@ -38,7 +38,7 @@ impl Engine512State {
             h5: h[5],
             h6: h[6],
             h7: h[7]
-        };
+        }
     }
 
     fn reset(&mut self, h: &[u64, ..8]) {
@@ -189,7 +189,7 @@ struct Engine512 {
 
 impl Engine512 {
     fn new(h: &[u64, ..8]) -> Engine512 {
-        return Engine512 {
+        Engine512 {
             length_bits: (0, 0),
             buffer: FixedBuffer128::new(),
             state: Engine512State::new(h),
@@ -242,9 +242,9 @@ impl Sha512 {
      * Construct an new instance of a SHA-512 digest.
      */
     pub fn new() -> Sha512 {
-        return Sha512 {
+        Sha512 {
             engine: Engine512::new(&H512)
-        };
+        }
     }
 }
 
@@ -458,7 +458,7 @@ struct Engine256State {
 
 impl Engine256State {
     fn new(h: &[u32, ..8]) -> Engine256State {
-        return Engine256State {
+        Engine256State {
             h0: h[0],
             h1: h[1],
             h2: h[2],
@@ -467,7 +467,7 @@ impl Engine256State {
             h5: h[5],
             h6: h[6],
             h7: h[7]
-        };
+        }
     }
 
     fn reset(&mut self, h: &[u32, ..8]) {
@@ -614,7 +614,7 @@ struct Engine256 {
 
 impl Engine256 {
     fn new(h: &[u32, ..8]) -> Engine256 {
-        return Engine256 {
+        Engine256 {
             length_bits: 0,
             buffer: FixedBuffer64::new(),
             state: Engine256State::new(h),

@@ -35,7 +35,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
     }
 }
 
-pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8])  {
+pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8]) {
     let mut hpass = [0u8, ..64];
 
     assert!(password.len() > 0);

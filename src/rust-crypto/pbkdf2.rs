@@ -150,7 +150,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
     result.push_str(dk.to_base64(base64::STANDARD)[]);
     result.push('$');
 
-    return Ok(result);
+    Ok(result)
 }
 
 /**
@@ -242,7 +242,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output[], hash[]));
+    Ok(fixed_time_eq(output[], hash[]))
 }
 
 #[cfg(test)]
@@ -262,7 +262,7 @@ mod test {
     // it takes too long to run.
 
     fn tests() -> Vec<Test> {
-        return vec![
+        vec![
             Test {
                 password: b"password".to_vec(),
                 salt: b"salt".to_vec(),
@@ -307,7 +307,7 @@ mod test {
                     0x56, 0xfa, 0x6a, 0xa7, 0x55, 0x48, 0x09, 0x9d,
                     0xcc, 0x37, 0xd7, 0xf0, 0x34, 0x25, 0xe0, 0xc3 ]
             }
-        ];
+        ]
     }
 
     #[test]

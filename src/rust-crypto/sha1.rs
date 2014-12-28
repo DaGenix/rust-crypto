@@ -126,7 +126,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
 }
 
 fn circular_shift(bits: u32, word: u32) -> u32 {
-    return word << bits as uint | word >> (32u32 - bits) as uint;
+    word << bits as uint | word >> (32u32 - bits) as uint
 }
 
 fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
@@ -157,7 +157,7 @@ impl Sha1 {
             computed: false,
         };
         st.reset();
-        return st;
+        st
     }
 }
 
@@ -173,7 +173,7 @@ impl Digest for Sha1 {
         self.computed = false;
     }
     fn input(&mut self, msg: &[u8]) { add_input(self, msg); }
-    fn result(&mut self, out: &mut [u8]) { return mk_result(self, out); }
+    fn result(&mut self, out: &mut [u8]) { mk_result(self, out) }
     fn output_bits(&self) -> uint { 160 }
     fn block_size(&self) -> uint { 64 }
 }

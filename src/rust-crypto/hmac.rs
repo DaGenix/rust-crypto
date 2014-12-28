@@ -35,6 +35,7 @@ fn derive_key(key: &mut [u8], mask: u8) {
 fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let bs = digest.block_size();
     let mut expanded_key = Vec::from_elem(bs, 0u8);
+
     if key.len() <= bs {
         slice::bytes::copy_memory(expanded_key[mut], key);
     } else {
@@ -43,7 +44,7 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
         digest.result(expanded_key[mut ..output_size]);
         digest.reset();
     }
-    return expanded_key;
+    expanded_key
 }
 
 // Hmac uses two keys derived from the provided key - one by xoring every byte with 0x36 and another
@@ -53,7 +54,7 @@ fn create_keys<D: Digest>(digest: &mut D, key: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let mut o_key = i_key.clone();
     derive_key(i_key[mut], 0x36);
     derive_key(o_key[mut], 0x5c);
-    return (i_key, o_key);
+    (i_key, o_key)
 }
 
 impl <D: Digest> Hmac<D> {
@@ -68,7 +69,7 @@ impl <D: Digest> Hmac<D> {
     pub fn new(mut digest: D, key: &[u8]) -> Hmac<D> {
         let (i_key, o_key) = create_keys(&mut digest, key);
         digest.input(i_key[]);
-        return Hmac {
+        Hmac {
             digest: digest,
             i_key: i_key,
             o_key: o_key,
@@ -95,7 +96,7 @@ impl <D: Digest> Mac for Hmac<D> {
 
         self.raw_result(code[mut]);
 
-        return MacResult::new_from_owned(code);
+        MacResult::new_from_owned(code)
     }
 
     fn raw_result(&mut self, output: &mut [u8]) {
@@ -131,7 +132,7 @@ mod test {
     // Test vectors from: http://tools.ietf.org/html/rfc2104
 
     fn tests() -> Vec<Test> {
-        return vec![
+        vec![
             Test {
                 key: Vec::from_elem(16, 0x0bu8),
                 data: b"Hi There".to_vec(),
@@ -153,7 +154,7 @@ mod test {
                     0x56, 0xbe, 0x34, 0x52, 0x1d, 0x14, 0x4c, 0x88,
                     0xdb, 0xb8, 0xc7, 0x33, 0xf0, 0xe8, 0xb3, 0xf6 ]
             }
-        ];
+        ]
     }
 
     #[test]

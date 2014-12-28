@@ -35,7 +35,7 @@ impl AesNiEncryptor {
             round_keys: [0u8, ..240]
         };
         setup_function(key, KeyType::Encryption, e.round_keys.slice_mut(0, size(e.rounds)));
-        return e;
+        e
     }
 }
 
@@ -51,7 +51,7 @@ impl AesNiDecryptor {
             round_keys: [0u8, ..240]
         };
         setup_function(key, KeyType::Decryption, d.round_keys.slice_mut(0, size(d.rounds)));
-        return d;
+        d
     }
 
 }

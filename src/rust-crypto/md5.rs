@@ -25,12 +25,12 @@ struct Md5State {
 
 impl Md5State {
     fn new() -> Md5State {
-        return Md5State {
+        Md5State {
             s0: 0x67452301,
             s1: 0xefcdab89,
             s2: 0x98badcfe,
             s3: 0x10325476
-        };
+        }
     }
 
     fn reset(&mut self) {
@@ -42,35 +42,35 @@ impl Md5State {
 
     fn process_block(&mut self, input: &[u8]) {
         fn f(u: u32, v: u32, w: u32) -> u32 {
-            return (u & v) | (!u & w);
+            (u & v) | (!u & w)
         }
 
         fn g(u: u32, v: u32, w: u32) -> u32 {
-            return (u & w) | (v & !w);
+            (u & w) | (v & !w)
         }
 
         fn h(u: u32, v: u32, w: u32) -> u32 {
-            return u ^ v ^ w;
+            u ^ v ^ w
         }
 
         fn i(u: u32, v: u32, w: u32) -> u32 {
-            return v ^ (u | !w);
+            v ^ (u | !w)
         }
 
         fn op_f(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            return (w + f(x, y, z) + m).rotate_left(s as uint) + x;
+            (w + f(x, y, z) + m).rotate_left(s as uint) + x
         }
 
         fn op_g(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            return (w + g(x, y, z) + m).rotate_left(s as uint) + x;
+            (w + g(x, y, z) + m).rotate_left(s as uint) + x
         }
 
         fn op_h(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            return (w + h(x, y, z) + m).rotate_left(s as uint) + x;
+            (w + h(x, y, z) + m).rotate_left(s as uint) + x
         }
 
         fn op_i(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            return (w + i(x, y, z) + m).rotate_left(s as uint) + x;
+            (w + i(x, y, z) + m).rotate_left(s as uint) + x
         }
 
         let mut a = self.s0;
@@ -163,7 +163,7 @@ pub struct Md5 {
 impl Md5 {
     /// Construct a new instance of the MD5 Digest.
     pub fn new() -> Md5 {
-        return Md5 {
+        Md5 {
             length_bytes: 0,
             buffer: FixedBuffer64::new(),
             state: Md5State::new(),
