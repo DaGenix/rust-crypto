@@ -621,6 +621,26 @@ impl <T: BitXor<T, T> + Copy> Bs8State<T> {
     }
 }
 
+impl <T: Not<T> + Copy> Bs8State<T> {
+    // The special value "x63" is used as part of the sub_bytes and inv_sub_bytes
+    // steps. It is conceptually a Bs8State value where the 0th, 1st, 5th, and 6th
+    // elements are all 1s and the other elements are all 0s. The only thing that
+    // we do with the "x63" value is to XOR a Bs8State with it. We optimize that XOR
+    // below into just inverting 4 of the elements and leaving the other 4 elements
+    // untouched.
+    fn xor_x63(self) -> Bs8State<T> {
+        Bs8State (
+            !self.0,
+            !self.1,
+            self.2,
+            self.3,
+            self.4,
+            !self.5,
+            !self.6,
+            self.7)
+    }
+}
+
 #[deriving(Copy)]
 struct Bs4State<T>(T, T, T, T);
 
@@ -1015,13 +1035,11 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
         let nb: Bs8State<T> = self.change_basis_a2x();
         let inv = nb.inv();
         let nb2: Bs8State<T> = inv.change_basis_x2s();
-        let x63: Bs8State<T> = AesBitValueOps::x63();
-        nb2.xor(x63)
+        nb2.xor_x63()
     }
 
     fn inv_sub_bytes(self) -> Bs8State<T> {
-        let x63: Bs8State<T> = AesBitValueOps::x63();
-        let t = self.xor(x63);
+        let t = self.xor_x63();
         let nb: Bs8State<T> = t.change_basis_s2x();
         let inv = nb.inv();
         inv.change_basis_x2a()
@@ -1114,9 +1132,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
     }
 }
 
-trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Default {
-    fn x63() -> Bs8State<Self>;
-
+trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Not<Self> + Default {
     fn shift_row(self) -> Self;
     fn inv_shift_row(self) -> Self;
     fn ror1(self) -> Self;
@@ -1125,10 +1141,6 @@ trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Default {
 }
 
 impl AesBitValueOps for u16 {
-    fn x63() -> Bs8State<u16> {
-        Bs8State(-1, -1, 0, 0, 0, -1, -1, 0)
-    }
-
     fn shift_row(self) -> u16 {
         // first 4 bits represent first row - don't shift
         (self & 0x000f) |
@@ -1196,6 +1208,12 @@ impl BitAnd<u32x4, u32x4> for u32x4 {
     }
 }
 
+impl Not<u32x4> for u32x4 {
+    fn not(self) -> u32x4 {
+        self ^ U32X4_1
+    }
+}
+
 impl Default for u32x4 {
     fn default() -> u32x4 {
         u32x4(0, 0, 0, 0)
@@ -1203,18 +1221,6 @@ impl Default for u32x4 {
 }
 
 impl AesBitValueOps for u32x4 {
-    fn x63() -> Bs8State<u32x4> {
-        Bs8State(
-            U32X4_1,
-            U32X4_1,
-            U32X4_0,
-            U32X4_0,
-            U32X4_0,
-            U32X4_1,
-            U32X4_1,
-            U32X4_0)
-    }
-
     fn shift_row(self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = self;
         u32x4(a0, a1 >> 8 | a1 << 24, a2 >> 16 | a2 << 16, a3 >> 24 | a3 << 8)
