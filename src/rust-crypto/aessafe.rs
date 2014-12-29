@@ -138,10 +138,8 @@ use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDec
 #[allow(non_camel_case_types)]
 pub struct u32x4(u32, u32, u32, u32);
 
-// There are a variety of places where we need to use u32x4 types with either all bits set or not
-// bits set. These macros make that more succinct.
-macro_rules! o( () => ( u32x4(0, 0, 0, 0) ) );
-macro_rules! x( () => ( u32x4(-1, -1, -1, -1) ) );
+const U32X4_0: u32x4 = u32x4(0, 0, 0, 0);
+const U32X4_1: u32x4 = u32x4(-1, -1, -1, -1);
 
 macro_rules! define_aes_struct(
     (
@@ -253,7 +251,17 @@ macro_rules! define_aes_impl_x8(
         impl $name {
             pub fn new(key: &[u8]) -> $name {
                 let mut a =  $name {
-                    sk: [Bs8State(o!(), o!(), o!(), o!(), o!(), o!(), o!(), o!()), ..($rounds + 1)]
+                    sk: [
+                        Bs8State(
+                            U32X4_0,
+                            U32X4_0,
+                            U32X4_0,
+                            U32X4_0,
+                            U32X4_0,
+                            U32X4_0,
+                            U32X4_0,
+                            U32X4_0),
+                        ..($rounds + 1)]
                 };
                 let mut tmp = [[0u32, ..4], ..($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
@@ -1195,7 +1203,17 @@ impl Default for u32x4 {
 }
 
 impl AesBitValueOps for u32x4 {
-    fn x63() -> Bs8State<u32x4> { Bs8State(x!(), x!(), o!(), o!(), o!(), x!(), x!(), o!()) }
+    fn x63() -> Bs8State<u32x4> {
+        Bs8State(
+            U32X4_1,
+            U32X4_1,
+            U32X4_0,
+            U32X4_0,
+            U32X4_0,
+            U32X4_1,
+            U32X4_1,
+            U32X4_0)
+    }
 
     fn shift_row(self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = self;
