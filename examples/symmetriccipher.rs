@@ -28,10 +28,6 @@ fn encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symmetricciphe
     // must be instances of RefReaderBuffer and RefWriteBuffer
     // (respectively) which keep track of how much data has been
     // read from or written to them.
-    //
-    // In a program requiring maximum performance, it is
-    // possible to encrypt directly into the output Vec. Doing
-    // so would needlessly complicate this example, however.
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(data);
     let mut buffer = [0, ..4096];
@@ -78,7 +74,7 @@ fn encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symmetricciphe
 // Decrypts a buffer with the given key and iv using
 // AES-256/CBC/Pkcs encryption.
 //
-// This function is very similar to encrypt(), so, please refernjce
+// This function is very similar to encrypt(), so, please reference
 // comments in that function. In non-example code, if desired, it is possible to
 // share much of the implementation using closures to hide the operation
 // being performed. However, such code would make this example less clear.
