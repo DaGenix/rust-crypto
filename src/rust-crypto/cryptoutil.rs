@@ -292,14 +292,14 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                 let buffer_remaining = size - self.buffer_idx;
                 if input.len() >= buffer_remaining {
                         copy_memory(
-                            self.buffer[mut self.buffer_idx..size],
+                            self.buffer.slice_mut(self.buffer_idx,size),
                             input[..buffer_remaining]);
                     self.buffer_idx = 0;
                     func(&self.buffer);
                     i += buffer_remaining;
                 } else {
                     copy_memory(
-                        self.buffer[mut self.buffer_idx..self.buffer_idx + input.len()],
+                        self.buffer.slice_mut(self.buffer_idx,self.buffer_idx + input.len()),
                         input);
                     self.buffer_idx += input.len();
                     return;
@@ -318,7 +318,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             // be empty.
             let input_remaining = input.len() - i;
             copy_memory(
-                self.buffer[mut 0..input_remaining],
+                self.buffer.slice_mut(0,input_remaining),
                 input[i..]);
             self.buffer_idx += input_remaining;
         }
@@ -329,13 +329,13 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
 
         fn zero_until(&mut self, idx: uint) {
             assert!(idx >= self.buffer_idx);
-            self.buffer[mut self.buffer_idx..idx].set_memory(0);
+            self.buffer.slice_mut(self.buffer_idx,idx).set_memory(0);
             self.buffer_idx = idx;
         }
 
         fn next<'s>(&'s mut self, len: uint) -> &'s mut [u8] {
             self.buffer_idx += len;
-            return self.buffer[mut self.buffer_idx - len..self.buffer_idx];
+            return self.buffer.slice_mut(self.buffer_idx - len,self.buffer_idx);
         }
 
         fn full_buffer<'s>(&'s mut self) -> &'s [u8] {

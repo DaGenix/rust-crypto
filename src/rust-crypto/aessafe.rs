@@ -600,10 +600,10 @@ fn un_bit_slice_4x1_with_u32(bs: &Bs8State<u32>) -> u32 {
 fn un_bit_slice_1x16_with_u32(bs: &Bs8State<u32>, output: &mut [u8]) {
     let (a, b, c, d) = un_bit_slice_4x4_with_u32(bs);
 
-    write_u32_le(output[mut 0..4], a);
-    write_u32_le(output[mut 4..8], b);
-    write_u32_le(output[mut 8..12], c);
-    write_u32_le(output[mut 12..16], d);
+    write_u32_le(output.slice_mut(0,4), a);
+    write_u32_le(output.slice_mut(4,8), b);
+    write_u32_le(output.slice_mut(8,12), c);
+    write_u32_le(output.slice_mut(12,16), d);
 }
 
 // Bit Slice a 128 byte array of eight 16 byte blocks. Each block is in column major order.
@@ -671,10 +671,10 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
 fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32x4> {
     let mut tmp = [0u8, ..128];
     for i in range(0u, 8) {
-        write_u32_le(tmp[mut i * 16..i * 16 + 4], a);
-        write_u32_le(tmp[mut i * 16 + 4..i * 16 + 8], b);
-        write_u32_le(tmp[mut i * 16 + 8..i * 16 + 12], c);
-        write_u32_le(tmp[mut i * 16 + 12..i * 16 + 16], d);
+        write_u32_le(tmp.slice_mut(i * 16,i * 16 + 4), a);
+        write_u32_le(tmp.slice_mut(i * 16 + 4,i * 16 + 8), b);
+        write_u32_le(tmp.slice_mut(i * 16 + 8,i * 16 + 12), c);
+        write_u32_le(tmp.slice_mut(i * 16 + 12,i * 16 + 16), d);
     }
     return bit_slice_1x128_with_u32x4(&tmp);
 }
@@ -731,14 +731,14 @@ fn un_bit_slice_1x128_with_u32x4(bs: &Bs8State<u32x4>, output: &mut [u8]) {
         output[15] = (a3 >> 24) as u8;
     }
 
-    write_row_major(&x0, output[mut 0..16]);
-    write_row_major(&x1, output[mut 16..32]);
-    write_row_major(&x2, output[mut 32..48]);
-    write_row_major(&x3, output[mut 48..64]);
-    write_row_major(&x4, output[mut 64..80]);
-    write_row_major(&x5, output[mut 80..96]);
-    write_row_major(&x6, output[mut 96..112]);
-    write_row_major(&x7, output[mut 112..128])
+    write_row_major(&x0, output.slice_mut(0,16));
+    write_row_major(&x1, output.slice_mut(16,32));
+    write_row_major(&x2, output.slice_mut(32,48));
+    write_row_major(&x3, output.slice_mut(48,64));
+    write_row_major(&x4, output.slice_mut(64,80));
+    write_row_major(&x5, output.slice_mut(80,96));
+    write_row_major(&x6, output.slice_mut(96,112));
+    write_row_major(&x7, output.slice_mut(112,128))
 }
 
 // The Gf2Ops, Gf4Ops, and Gf8Ops traits specify the functions needed to calculate the AES S-Box

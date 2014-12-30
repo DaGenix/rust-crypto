@@ -253,7 +253,7 @@ impl Blake2b {
             let fill = 2 * BLAKE2B_BLOCKBYTES - left;
 
             if input.len() > fill {
-                copy_memory( self.buf[mut left..], input[0..fill] ); // Fill buffer
+                copy_memory( self.buf.slice_from_mut(left), input[0..fill] ); // Fill buffer
                 self.buflen += fill;
                 self.increment_counter( BLAKE2B_BLOCKBYTES as u64);
                 self.compress();
@@ -266,7 +266,7 @@ impl Blake2b {
                 self.buflen -= BLAKE2B_BLOCKBYTES;
                 input = input[fill..input.len()];
             } else { // inlen <= fill
-                copy_memory(self.buf[mut left..], input);
+                copy_memory(self.buf.slice_from_mut(left), input);
                 self.buflen += input.len();
                 break;
             }
@@ -291,12 +291,12 @@ impl Blake2b {
             self.increment_counter(incby);
             self.set_lastblock();
 
-            for b in self.buf[mut self.buflen..].iter_mut() {
+            for b in self.buf.slice_from_mut(self.buflen).iter_mut() {
                 *b = 0;
             }
             self.compress();
 
-            write_u64v_le(self.buf[mut 0..64], &self.h);
+            write_u64v_le(self.buf.slice_mut(0,64), &self.h);
             self.computed = true;
         }
         let outlen = out.len();
@@ -379,7 +379,7 @@ impl Mac for Blake2b {
      */
     fn result(&mut self) -> MacResult {
         let mut mac : Vec<u8> = Vec::from_fn(self.digest_length as uint, |_| 0);
-        self.raw_result(mac[mut]);
+        self.raw_result(mac.as_mut_slice());
         MacResult::new_from_owned(mac)
     }
 
