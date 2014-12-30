@@ -45,10 +45,10 @@ impl Gf128 {
         let simd::u32x4(a, b, c, d) = self.d;
         let mut result: [u8, ..16] = unsafe { mem::uninitialized() };
 
-        write_u32_be(result[mut 0..4], d);
-        write_u32_be(result[mut 4..8], c);
-        write_u32_be(result[mut 8..12], b);
-        write_u32_be(result[mut 12..16], a);
+        write_u32_be(result.slice_mut(0,4), d);
+        write_u32_be(result.slice_mut(4,8), c);
+        write_u32_be(result.slice_mut(8,12), b);
+        write_u32_be(result.slice_mut(12,16), a);
 
         result
     }
@@ -157,13 +157,13 @@ fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8
         None => data,
         Some(mut rest) => {
             if 16 - rest_len > data_len {
-                copy_memory(rest[mut rest_len..], data);
+                copy_memory(rest.slice_from_mut(rest_len), data);
                 *srest = Some(rest);
                 return;
             }
 
             let (fill, data) = data.split_at(16 - rest_len);
-            copy_memory(rest[mut rest_len..], fill);
+            copy_memory(rest.slice_from_mut(rest_len), fill);
             state.add_and_mul(Gf128::from_bytes(&rest), hs);
             data
         }
@@ -296,7 +296,7 @@ impl Mac for Ghash {
 
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8, ..16];
-        self.raw_result(mac[mut]);
+        self.raw_result(mac.as_mut_slice());
         return MacResult::new(mac[]);
     }
 
@@ -569,7 +569,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
-            ghash.raw_result(mac[mut]);
+            ghash.raw_result(mac.as_mut_slice());
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -582,7 +582,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
-            ghash.raw_result(mac[mut]);
+            ghash.raw_result(mac.as_mut_slice());
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -595,7 +595,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
-            ghash.raw_result(mac[mut]);
+            ghash.raw_result(mac.as_mut_slice());
         });
         bh.bytes = bytes.len() as u64;
     }

@@ -79,7 +79,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
     for i in range(0u, 16) {
         write_u32_le(
-            output[mut i * 4..(i + 1) * 4],
+            output.slice_mut(i * 4, (i + 1) * 4),
             x[i] + read_u32_le(input[i * 4..(i + 1) * 4]));
     }
 }
@@ -104,7 +104,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
         xor(&x, chunk, &mut t);
         salsa20_8(&t, &mut x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
-        output[mut pos..pos + 64].clone_from_slice(&x);
+        output.slice_mut(pos,pos + 64).clone_from_slice(&x);
     }
 }
 
@@ -236,16 +236,16 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     let mut mac = Hmac::new(Sha256::new(), password);
 
     let mut b = Vec::from_elem(p * r * 128, 0u8);
-    pbkdf2(&mut mac, salt, 1, b[mut]);
+    pbkdf2(&mut mac, salt, 1, b.as_mut_slice());
 
     let mut v = Vec::from_elem(n * r * 128, 0u8);
     let mut t = Vec::from_elem(r * 128, 0u8);
 
-    for chunk in b[mut].chunks_mut(r * 128) {
-        scrypt_ro_mix(chunk, v[mut], t[mut], n);
+    for chunk in b.as_mut_slice().chunks_mut(r * 128) {
+        scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
     }
 
-    pbkdf2(&mut mac, b[], 1, output[mut]);
+    pbkdf2(&mut mac, b[], 1, output.as_mut_slice());
 }
 
 /**
@@ -293,8 +293,8 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
         result.push_str("1$");
         let mut tmp = [0u8, ..9];
         tmp[0] = params.log_n;
-        write_u32_le(tmp[mut 1..5], params.r);
-        write_u32_le(tmp[mut 5..9], params.p);
+        write_u32_le(tmp.slice_mut(1,5), params.r);
+        write_u32_le(tmp.slice_mut(5,9), params.p);
         result.push_str(tmp.to_base64(base64::STANDARD)[]);
     }
     result.push('$');
@@ -399,7 +399,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     }
 
     let mut output = Vec::from_elem(hash.len(), 0u8);
-    scrypt(password.as_bytes(), salt[], &params, output[mut]);
+    scrypt(password.as_bytes(), salt[], &params, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
@@ -482,7 +482,7 @@ mod test {
         for t in tests.iter() {
             let mut result = Vec::from_elem(t.expected.len(), 0u8);
             let params = ScryptParams::new(t.log_n, t.r, t.p);
-            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result[mut]);
+            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result.as_mut_slice());
             assert!(result == t.expected);
         }
     }

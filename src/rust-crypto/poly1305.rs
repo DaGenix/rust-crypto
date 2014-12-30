@@ -203,7 +203,7 @@ impl Mac for Poly1305 {
 
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8, ..16];
-        self.raw_result(mac[mut]);
+        self.raw_result(mac.as_mut_slice());
         return MacResult::new(mac[]);
     }
 
@@ -212,10 +212,10 @@ impl Mac for Poly1305 {
         if !self.finalized{
             self.finish();
         }
-        write_u32_le(output[mut 0..4], self.h[0]);
-        write_u32_le(output[mut 4..8], self.h[1]);
-        write_u32_le(output[mut 8..12], self.h[2]);
-        write_u32_le(output[mut 12..16], self.h[3]);
+        write_u32_le(output.slice_mut(0,4), self.h[0]);
+        write_u32_le(output.slice_mut(4,8), self.h[1]);
+        write_u32_le(output.slice_mut(8,12), self.h[2]);
+        write_u32_le(output.slice_mut(12,16), self.h[3]);
     }
 
     fn output_bytes(&self) -> uint { 16 }
@@ -267,7 +267,7 @@ mod test {
         ];
 
         let mut mac = [0u8, ..16];
-        poly1305(&key, &msg, mac[mut]);
+        poly1305(&key, &msg, mac.as_mut_slice());
         assert_eq!(mac[], expected[]);
 
         let mut poly = Poly1305::new(&key);
@@ -282,7 +282,7 @@ mod test {
         poly.input(msg[128..129]);
         poly.input(msg[129..130]);
         poly.input(msg[130..131]);
-        poly.raw_result(mac[mut]);
+        poly.raw_result(mac.as_mut_slice());
         assert_eq!(mac[], expected[]);
     }
 
@@ -306,7 +306,7 @@ mod test {
         ];
 
         let mut mac = [0u8, ..16];
-        poly1305(&wrap_key, &wrap_msg, mac[mut]);
+        poly1305(&wrap_key, &wrap_msg, mac.as_mut_slice());
         assert_eq!(mac[], wrap_mac[]);
 
         let total_key = [
@@ -343,7 +343,7 @@ mod test {
             0xc2, 0x6b, 0x33, 0xb9, 0x1c, 0xcc, 0x03, 0x07,
         ];
         let mut mac = [0u8, ..16];
-        poly1305(key, &msg, mac[mut]);
+        poly1305(key, &msg, mac.as_mut_slice());
         assert_eq!(mac[], expected[]);
 
         let msg = b"Hello world!";
@@ -351,7 +351,7 @@ mod test {
             0xa6, 0xf7, 0x45, 0x00, 0x8f, 0x81, 0xc9, 0x16,
             0xa2, 0x0d, 0xcc, 0x74, 0xee, 0xf2, 0xb2, 0xf0,
         ];
-        poly1305(key, msg, mac[mut]);
+        poly1305(key, msg, mac.as_mut_slice());
         assert_eq!(mac[], expected[]);
     }
 }
@@ -370,7 +370,7 @@ mod bench {
         bh.iter( || {
             let mut poly = Poly1305::new(&key);
             poly.input(&bytes);
-            poly.raw_result(mac[mut]);
+            poly.raw_result(mac.as_mut_slice());
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -383,7 +383,7 @@ mod bench {
         bh.iter( || {
             let mut poly = Poly1305::new(&key);
             poly.input(&bytes);
-            poly.raw_result(mac[mut]);
+            poly.raw_result(mac.as_mut_slice());
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -396,7 +396,7 @@ mod bench {
         bh.iter( || {
             let mut poly = Poly1305::new(&key);
             poly.input(&bytes);
-            poly.raw_result(mac[mut]);
+            poly.raw_result(mac.as_mut_slice());
         });
         bh.bytes = bytes.len() as u64;
     }

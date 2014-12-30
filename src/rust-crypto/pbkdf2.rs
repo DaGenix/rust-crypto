@@ -98,10 +98,10 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         idx = idx.checked_add(1).expect("PBKDF2 size limit exceeded.");
 
         if chunk.len() == os {
-            calculate_block(mac, salt, c, idx, scratch[mut], chunk);
+            calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), chunk);
         } else {
             let mut tmp = Vec::from_elem(os, 0u8);
-            calculate_block(mac, salt, c, idx, scratch[mut], tmp[mut]);
+            calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), tmp.as_mut_slice());
             chunk.clone_from_slice(tmp[]);
         }
     }
@@ -236,7 +236,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
     let mut output = Vec::from_elem(hash.len(), 0u8);
-    pbkdf2(&mut mac, salt[], c, output[mut]);
+    pbkdf2(&mut mac, salt[], c, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
@@ -316,7 +316,7 @@ mod test {
         for t in tests.iter() {
             let mut mac = Hmac::new(Sha1::new(), t.password[]);
             let mut result = Vec::from_elem(t.expected.len(), 0u8);
-            pbkdf2(&mut mac, t.salt[], t.c, result[mut]);
+            pbkdf2(&mut mac, t.salt[], t.c, result.as_mut_slice());
             assert!(result == t.expected);
         }
     }

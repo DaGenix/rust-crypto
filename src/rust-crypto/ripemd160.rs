@@ -146,7 +146,7 @@ macro_rules! process_block(
 
 fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
     let mut w = [0u32, ..WORK_BUF_LEN];
-    read_u32v_le(w[mut 0..16], data);
+    read_u32v_le(w.slice_mut(0,16), data);
     process_block!(h, w[],
         // Round 1
         round1: h_ordering 0, 1, 2, 3, 4 data_index  0 roll_shift 11
@@ -391,11 +391,11 @@ impl Digest for Ripemd160 {
             self.computed = true;
         }
         
-        write_u32_le(out[mut 0..4], self.h[0]);
-        write_u32_le(out[mut 4..8], self.h[1]);
-        write_u32_le(out[mut 8..12], self.h[2]);
-        write_u32_le(out[mut 12..16], self.h[3]);
-        write_u32_le(out[mut 16..20], self.h[4]);
+        write_u32_le(out.slice_mut(0,4), self.h[0]);
+        write_u32_le(out.slice_mut(4,8), self.h[1]);
+        write_u32_le(out.slice_mut(8,12), self.h[2]);
+        write_u32_le(out.slice_mut(12,16), self.h[3]);
+        write_u32_le(out.slice_mut(16,20), self.h[4]);
     }
 
     /**

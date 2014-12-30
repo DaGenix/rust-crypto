@@ -199,8 +199,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             output.rewind(self.out_hist.len());
             let last_out = output.take_next(self.out_hist.len());
             update_history(
-                self.in_hist[mut],
-                self.out_hist[mut],
+                self.in_hist.as_mut_slice(),
+                self.out_hist.as_mut_slice(),
                 last_in,
                 last_out);
         }
@@ -232,8 +232,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                     next_in,
                     next_out);
                 update_history(
-                    me.in_hist[mut],
-                    me.out_hist[mut],
+                    me.in_hist.as_mut_slice(),
+                    me.out_hist.as_mut_slice(),
                     next_in,
                     next_out);
             }
@@ -411,8 +411,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
     }
     fn reset_with_history(&mut self, in_hist: &[u8], out_hist: &[u8]) {
         self.reset();
-        slice::bytes::copy_memory(self.in_hist[mut], in_hist);
-        slice::bytes::copy_memory(self.out_hist[mut], out_hist);
+        slice::bytes::copy_memory(self.in_hist.as_mut_slice(), in_hist);
+        slice::bytes::copy_memory(self.out_hist.as_mut_slice(), out_hist);
     }
 }
 
@@ -574,7 +574,7 @@ impl <T: BlockEncryptor> BlockProcessor for CbcEncryptorProcessor<T> {
         for ((&x, &y), o) in input.iter().zip(out_hist.iter()).zip(self.temp.iter_mut()) {
             *o = x ^ y;
         }
-        self.algo.encrypt_block(self.temp[], output[mut]);
+        self.algo.encrypt_block(self.temp[], output.as_mut_slice());
     }
 }
 
@@ -619,7 +619,7 @@ struct CbcDecryptorProcessor<T> {
 
 impl <T: BlockDecryptor> BlockProcessor for CbcDecryptorProcessor<T> {
     fn process_block(&mut self, in_hist: &[u8], _: &[u8], input: &[u8], output: &mut [u8]) {
-        self.algo.decrypt_block(input, self.temp[mut]);
+        self.algo.decrypt_block(input, self.temp.as_mut_slice());
         for ((&x, &y), o) in self.temp.iter().zip(in_hist.iter()).zip(output.iter_mut()) {
             *o = x ^ y;
         }
@@ -689,7 +689,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
-        slice::bytes::copy_memory(self.ctr[mut], ctr);
+        slice::bytes::copy_memory(self.ctr.as_mut_slice(), ctr);
         self.bytes.reset();
     }
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
@@ -700,12 +700,12 @@ impl <A: BlockEncryptor> CtrMode<A> {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
                 self.algo.encrypt_block(self.ctr[], wb.take_remaining());
-                add_ctr(self.ctr[mut], 1);
+                add_ctr(self.ctr.as_mut_slice(), 1);
             }
             let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input[i..].iter();
-            let out_it = output[mut i..].iter_mut();
+            let out_it = output.slice_from_mut(i).iter_mut();
             for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
                 *o = x ^ y;
             }
@@ -753,7 +753,7 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
     pub fn new(algo: A, ctr: &[u8]) -> CtrModeX8<A> {
         let block_size = algo.block_size();
         let mut ctr_x8 = Vec::from_elem(block_size * 8, 0u8);
-        construct_ctr_x8(ctr, ctr_x8[mut]);
+        construct_ctr_x8(ctr, ctr_x8.as_mut_slice());
         CtrModeX8 {
             algo: algo,
             ctr_x8: ctr_x8,
@@ -761,7 +761,7 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
-        construct_ctr_x8(ctr, self.ctr_x8[mut]);
+        construct_ctr_x8(ctr, self.ctr_x8.as_mut_slice());
         self.bytes.reset();
     }
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
@@ -773,14 +773,14 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
                 self.algo.encrypt_block_x8(self.ctr_x8[], wb.take_remaining());
-                for ctr_i in self.ctr_x8[mut].chunks_mut(self.algo.block_size()) {
+                for ctr_i in self.ctr_x8.as_mut_slice().chunks_mut(self.algo.block_size()) {
                     add_ctr(ctr_i, 8);
                 }
             }
             let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input[i..].iter();
-            let out_it = output[mut i..].iter_mut();
+            let out_it = output.slice_from_mut(i).iter_mut();
             for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
                 *o = x ^ y;
             }
@@ -983,7 +983,7 @@ mod test {
         let mut cipher_out = Vec::from_elem(test.get_cipher().len(), 0u8);
         {
             let mut buff_in = RefReadBuffer::new(test.get_plain());
-            let mut buff_out = RefWriteBuffer::new(cipher_out[mut]);
+            let mut buff_out = RefWriteBuffer::new(cipher_out.as_mut_slice());
             match enc.encrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
                 Ok(BufferOverflow) => panic!("Encryption not completed"),
@@ -995,7 +995,7 @@ mod test {
         let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
         {
             let mut buff_in = RefReadBuffer::new(test.get_cipher());
-            let mut buff_out = RefWriteBuffer::new(plain_out[mut]);
+            let mut buff_out = RefWriteBuffer::new(plain_out.as_mut_slice());
             match dec.decrypt(&mut buff_in, &mut buff_out, true) {
                 Ok(BufferUnderflow) => {}
                 Ok(BufferOverflow) => panic!("Decryption not completed"),
@@ -1062,7 +1062,7 @@ mod test {
                     }
                     let mut tmp_in = RefReadBuffer::new(input[in_pos..in_end(in_pos, true)]);
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output[mut out_pos..out_end]);
+                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferUnderflow) => assert!(tmp_in.is_empty()),
@@ -1074,7 +1074,7 @@ mod test {
                 Ok(BufferOverflow) => {
                     let mut tmp_in = RefReadBuffer::new(input[in_pos..in_end(in_pos, false)]);
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output[mut out_pos..out_end]);
+                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferOverflow) => assert!(tmp_out.is_full()),
@@ -1090,7 +1090,7 @@ mod test {
 
         if !eof.get() {
             eof.set(true);
-            let mut tmp_out = RefWriteBuffer::new(output[mut out_pos..out_end(out_pos)]);
+            let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end(out_pos)));
             state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
             out_pos += tmp_out.position();
         }
@@ -1102,7 +1102,7 @@ mod test {
                 }
                 Ok(BufferOverflow) => {
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output[mut out_pos..out_end]);
+                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
                     state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
                     assert!(tmp_out.is_full());
                     out_pos += tmp_out.position();
@@ -1120,7 +1120,7 @@ mod test {
         let mut cipher_out = Vec::from_elem(test.get_cipher().len(), 0u8);
         run_inc(
             test.get_plain(),
-            cipher_out[mut],
+            cipher_out.as_mut_slice(),
             |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                 enc.encrypt(in_buff, out_buff, eof)
             },
@@ -1132,7 +1132,7 @@ mod test {
         let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
         run_inc(
             test.get_cipher(),
-            plain_out[mut],
+            plain_out.as_mut_slice(),
             |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                 dec.decrypt(in_buff, out_buff, eof)
             },
@@ -1169,7 +1169,7 @@ mod test {
             let mut cipher_out = Vec::from_elem(test.get_cipher().len(), 0u8);
             run_inc(
                 test.get_plain(),
-                cipher_out[mut],
+                cipher_out.as_mut_slice(),
                 |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     enc.encrypt(in_buff, out_buff, eof)
                 },
@@ -1181,7 +1181,7 @@ mod test {
             let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
             run_inc(
                 test.get_cipher(),
-                plain_out[mut],
+                plain_out.as_mut_slice(),
                 |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     dec.decrypt(in_buff, out_buff, eof)
                 },

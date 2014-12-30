@@ -48,13 +48,13 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8
 
     let mut h = Sha512::new();
     h.input(password);
-    h.result(hpass[mut]);
+    h.result(hpass.as_mut_slice());
 
     for block in range(1u, (nblocks+1)) {
         let mut count = [0u8, ..4];
         let mut hsalt = [0u8, ..64];
         let mut out   = [0u8, ..32];
-        write_u32_be(count[mut], block as u32);
+        write_u32_be(count.as_mut_slice(), block as u32);
 
         h.reset();
         h.input(salt);
@@ -257,7 +257,7 @@ mod test {
 
         for t in tests.iter() {
             let mut out = Vec::from_elem(t.out.len(), 0u8);
-            bcrypt_pbkdf(t.password[], t.salt[], t.rounds, out[mut]);
+            bcrypt_pbkdf(t.password[], t.salt[], t.rounds, out.as_mut_slice());
             assert_eq!(out, t.out);
         }
     }
@@ -275,7 +275,7 @@ mod bench {
         let mut out  = [0u8, ..32];
 
         b.iter(|| {
-            bcrypt_pbkdf(&pass, &salt, 5, out[mut]);
+            bcrypt_pbkdf(&pass, &salt, 5, out.as_mut_slice());
         });
     }
 }

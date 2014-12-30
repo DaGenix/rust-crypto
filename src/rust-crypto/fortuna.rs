@@ -100,10 +100,10 @@ impl FortunaGenerator {
         let mut hasher = Sha256::new();
         hasher.input(self.key[]);
         hasher.input(s);
-        hasher.result(self.key[mut]);
+        hasher.result(self.key.as_mut_slice());
         hasher = Sha256::new();
         hasher.input(self.key[]);
-        hasher.result(self.key[mut]);
+        hasher.result(self.key.as_mut_slice());
         // Increment the counter
         self.increment_counter();
     }
@@ -118,7 +118,7 @@ impl FortunaGenerator {
         // Concatenate all the blocks
         for j in range(0, k) {
             block_encryptor.encrypt_block(self.ctr[],
-                                          out[mut AES_BLOCK_SIZE * j..AES_BLOCK_SIZE * (j + 1)]);
+                                          out.slice_mut(AES_BLOCK_SIZE * j,AES_BLOCK_SIZE * (j + 1)));
             self.increment_counter();
         }
     }
@@ -129,16 +129,16 @@ impl FortunaGenerator {
         assert!(n <= MAX_GEN_SIZE);
 
         // Generate output
-        self.generate_blocks(n, out[mut ..n * AES_BLOCK_SIZE]);
+        self.generate_blocks(n, out.slice_to_mut(n * AES_BLOCK_SIZE));
         if rem > 0 {
             let mut buf = [0, ..AES_BLOCK_SIZE];
-            self.generate_blocks(1, buf[mut]);
-            out[mut n * AES_BLOCK_SIZE..].clone_from_slice(buf[..rem]);
+            self.generate_blocks(1, buf.as_mut_slice());
+            out.slice_from_mut(n * AES_BLOCK_SIZE).clone_from_slice(buf[..rem]);
         }
 
         // Rekey
         let mut new_key = [0, ..KEY_LEN];
-        self.generate_blocks(KEY_LEN / AES_BLOCK_SIZE, new_key[mut]);
+        self.generate_blocks(KEY_LEN / AES_BLOCK_SIZE, new_key.as_mut_slice());
         self.key = new_key;
     }
 }
@@ -223,7 +223,7 @@ impl Rng for Fortuna {
             let mut hash = [0, ..(32 * NUM_POOLS)];
             let mut n_pools = 0;
             while self.reseed_count % (1 << n_pools) == 0 {
-                (&mut self.pool[n_pools]).result(hash[mut n_pools * 32..(n_pools + 1) * 32]);
+                (&mut self.pool[n_pools]).result(hash.slice_mut(n_pools * 32,(n_pools + 1) * 32));
                 n_pools += 1;
                 assert!(n_pools < NUM_POOLS);
                 assert!(n_pools < 32); // width of counter
@@ -242,7 +242,7 @@ impl Rng for Fortuna {
 
     fn next_u32(&mut self) -> u32 {
         let mut ret = [0, ..4];
-        self.fill_bytes(ret[mut]);
+        self.fill_bytes(ret.as_mut_slice());
         read_u32_le(ret[])
     }
 }
@@ -352,11 +352,11 @@ mod tests {
                          59, 228,  23, 215,  58, 107, 248, 248, 103,  57,
                         127,  31, 241,  91, 230,  33,   0, 164,  77, 46];
         let mut f: Fortuna = SeedableRng::from_seed([1, 2, 3, 4][]);
-        f.fill_bytes(output[mut]);
+        f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
 
         let mut scratch = [0, ..(1 << 20)];
-        f.generator.generate_random_data(scratch[mut]);
+        f.generator.generate_random_data(scratch.as_mut_slice());
 
         let expected = [122, 164,  26,  67, 102,  65,  30, 217, 219, 113,
                          14,  86, 214, 146, 185,  17, 107, 135, 183,   7,
@@ -368,7 +368,7 @@ mod tests {
                         171, 115, 157, 109, 248, 198, 227,  18, 204, 211,
                          42, 184,  92,  42, 171, 222, 198, 117, 162, 134,
                         116, 109,  77, 195, 187, 139,  37,  78, 224,  63];
-        f.fill_bytes(output[mut]);
+        f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
 
         f.reseed(&[5]);
@@ -384,7 +384,7 @@ mod tests {
                         101,  10,  29,  33, 133,  87, 189,  36, 229,  56,
                          17, 100, 138,  49,  79, 239, 210, 189, 141,  46];
 
-        f.fill_bytes(output[mut]);
+        f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
     }
 
@@ -421,7 +421,7 @@ mod tests {
                         226, 168, 179, 246,  82,  42, 223, 239, 201,  23,
                          28,  30, 195, 195,   9, 154,  31, 172, 209, 232,
                         238, 111,  75, 251, 196,  43, 217, 241,  93, 237];
-        f.fill_bytes(output[mut]);
+        f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
 
         // Immediately (less than 100ms)
@@ -441,7 +441,7 @@ mod tests {
                          19, 167,  56, 192, 140,  93, 132,  78,  22,  16,
                         114,  68, 123, 200,  37, 183, 163, 224, 201, 155,
                         233,  71, 111,  26,   8, 114, 232, 181,  13,  51];
-        f.fill_bytes(output[mut]);
+        f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
 
         // After more than 100 ms
@@ -458,7 +458,7 @@ mod tests {
                          67, 148, 192,  52, 147, 216,  79, 204, 106, 112,
                         238,   0, 239,  99, 159,  96, 184,  90,  54, 122,
                         184, 241, 221, 151, 169,  29, 197,  45,  80,   6];
-        f.fill_bytes(output[mut]);
+        f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
     }
 }

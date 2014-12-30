@@ -696,7 +696,7 @@ mod test {
         for test in tests.iter() {
             let mut aes_enc = aes::ctr(aes::KeySize::KeySize128, test.key[], test.ctr[]);
             let mut result: Vec<u8> = Vec::from_elem(test.plain.len(), 0);
-            aes_enc.process(test.plain[], result[mut]);
+            aes_enc.process(test.plain[], result.as_mut_slice());
             assert!(result.as_slice() == test.cipher);
         }
     }
