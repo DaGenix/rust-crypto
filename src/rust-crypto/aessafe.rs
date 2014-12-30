@@ -1164,15 +1164,15 @@ impl AesBitValueOps for u16 {
     }
 
     fn ror1(self) -> u16 {
-        ((self >> 4) & 0x0fff) | (self << 12)
+        self >> 4 | self << 12
     }
 
     fn ror2(self) -> u16 {
-        ((self >> 8) & 0x00ff) | (self << 8)
+        self >> 8 | self << 8
     }
 
     fn ror3(self) -> u16 {
-        ((self >> 12) & 0x000f) | (self << 4)
+        self >> 12 | self << 4
     }
 }
 
