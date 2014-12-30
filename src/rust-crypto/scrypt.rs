@@ -121,7 +121,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
         // This cast is safe since we're going to get the value mod n (which is a power of 2), so we
         // don't have to care about truncating any of the high bits off
         let result = (read_u32_le(x[x.len() - 64..x.len() - 60]) as uint) & mask;
-        return result;
+        result
     }
 
     let len = b.len();
@@ -203,11 +203,11 @@ impl ScryptParams {
         // the same.
         assert!(rp < 0x40000000);
 
-        return ScryptParams {
+        ScryptParams {
             log_n: log_n,
             r: r,
             p: p
-        };
+        }
     }
 }
 
@@ -303,7 +303,7 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
     result.push_str(dk.to_base64(base64::STANDARD)[]);
     result.push('$');
 
-    return Ok(result);
+    Ok(result)
 }
 
 /**
@@ -405,7 +405,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
     // hashed value which would allow them to mount an offline brute force attack against the
     // hashed password.
-    return Ok(fixed_time_eq(output[], hash[]));
+    Ok(fixed_time_eq(output[], hash[]))
 }
 
 #[cfg(test)]
@@ -424,7 +424,7 @@ mod test {
     // Test vectors from [1]. The last test vector is omitted because it takes too long to run.
 
     fn tests() -> Vec<Test> {
-        return vec![
+        vec![
             Test {
                 password: "",
                 salt: "",
@@ -473,7 +473,7 @@ mod test {
                     0xe6, 0x1e, 0x85, 0xdc, 0x0d, 0x65, 0x1e, 0x40,
                     0xdf, 0xcf, 0x01, 0x7b, 0x45, 0x57, 0x58, 0x87 ]
             },
-        ];
+        ]
     }
 
     #[test]

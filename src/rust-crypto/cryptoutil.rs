@@ -136,7 +136,7 @@ pub fn read_u32_le(input: &[u8]) -> u32 {
     unsafe {
         let mut tmp: u32 = mem::uninitialized();
         ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, input.unsafe_get(0), 4);
-        return Int::from_le(tmp);
+        Int::from_le(tmp)
     }
 }
 
@@ -146,7 +146,7 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
     unsafe {
         let mut tmp: u32 = mem::uninitialized();
         ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, input.unsafe_get(0), 4);
-        return Int::from_be(tmp);
+        Int::from_be(tmp)
     }
 }
 
@@ -161,9 +161,9 @@ pub fn symm_enc_or_dec<S: SynchronousStreamCipher, R: ReadBuffer, W: WriteBuffer
     let count = std::cmp::min(input.remaining(), output.remaining());
     c.process(input.take_next(count), output.take_next(count));
     if input.is_empty() {
-        return Ok(BufferUnderflow);
+        Ok(BufferUnderflow)
     } else {
-        return Ok(BufferOverflow);
+        Ok(BufferOverflow)
     }
 }
 
@@ -176,7 +176,7 @@ trait ToBits {
 
 impl ToBits for u64 {
     fn to_bits(self) -> (u64, u64) {
-        return (self >> 61, self << 3);
+        (self >> 61, self << 3)
     }
 }
 
@@ -335,19 +335,19 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
 
         fn next<'s>(&'s mut self, len: uint) -> &'s mut [u8] {
             self.buffer_idx += len;
-            return self.buffer.slice_mut(self.buffer_idx - len,self.buffer_idx);
+            self.buffer.slice_mut(self.buffer_idx - len,self.buffer_idx)
         }
 
         fn full_buffer<'s>(&'s mut self) -> &'s [u8] {
             assert!(self.buffer_idx == $size);
             self.buffer_idx = 0;
-            return self.buffer[..$size];
+            self.buffer[..$size]
         }
 
         fn current_buffer<'s>(&'s mut self) -> &'s [u8] {
             let tmp = self.buffer_idx;
             self.buffer_idx = 0;
-            return self.buffer[..tmp];
+            self.buffer[..tmp]
         }
 
         fn position(&self) -> uint { self.buffer_idx }
@@ -368,10 +368,10 @@ pub struct FixedBuffer64 {
 impl FixedBuffer64 {
     /// Create a new buffer
     pub fn new() -> FixedBuffer64 {
-        return FixedBuffer64 {
+        FixedBuffer64 {
             buffer: [0u8, ..64],
             buffer_idx: 0
-        };
+        }
     }
 }
 
@@ -386,10 +386,10 @@ pub struct FixedBuffer128 {
 impl FixedBuffer128 {
     /// Create a new buffer
     pub fn new() -> FixedBuffer128 {
-        return FixedBuffer128 {
+        FixedBuffer128 {
             buffer: [0u8, ..128],
             buffer_idx: 0
-        };
+        }
     }
 }
 

@@ -87,7 +87,7 @@ fn check_s_lt_l(s: &[u8]) -> bool
         n &= (((((s[i] ^ l[i]) as i32)) - 1) >> 8) as u8;
     }
 
-    return c == 0;
+    c == 0
 }
 
 pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
@@ -118,7 +118,7 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
     let r = GeP2::double_scalarmult_vartime(hash.as_slice(), a, signature.slice(32, 64));
     let rcheck = r.to_bytes();
 
-    return fixed_time_eq(rcheck.as_slice(), signature.slice(0, 32));
+    fixed_time_eq(rcheck.as_slice(), signature.slice(0, 32))
 }
 
 #[cfg(test)]

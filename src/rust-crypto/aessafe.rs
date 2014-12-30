@@ -172,7 +172,7 @@ macro_rules! define_aes_impl(
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_4x4_with_u32(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
                 }
-                return a;
+                a
             }
         }
     )
@@ -264,7 +264,7 @@ macro_rules! define_aes_impl_x8(
                         tmp[i][2],
                         tmp[i][3]);
                 }
-                return a;
+                a
             }
         }
     )
@@ -327,7 +327,7 @@ fn ffmulx(x: u32) -> u32 {
     let m1: u32 = 0x80808080;
     let m2: u32 = 0x7f7f7f7f;
     let m3: u32 = 0x0000001b;
-    return ((x & m2) << 1) ^ (((x & m1) >> 7) * m3);
+    ((x & m2) << 1) ^ (((x & m1) >> 7) * m3)
 }
 
 fn inv_mcol(x: u32) -> u32 {
@@ -336,12 +336,12 @@ fn inv_mcol(x: u32) -> u32 {
     let f8 = ffmulx(f4);
     let f9 = x ^ f8;
 
-    return f2 ^ f4 ^ f8 ^ (f2 ^ f9).rotate_right(8) ^ (f4 ^ f9).rotate_right(16) ^ f9.rotate_right(24);
+    f2 ^ f4 ^ f8 ^ (f2 ^ f9).rotate_right(8) ^ (f4 ^ f9).rotate_right(16) ^ f9.rotate_right(24)
 }
 
 fn sub_word(x: u32) -> u32 {
     let bs = bit_slice_4x1_with_u32(x).sub_bytes();
-    return un_bit_slice_4x1_with_u32(&bs);
+    un_bit_slice_4x1_with_u32(&bs)
 }
 
 enum KeyType {
@@ -429,7 +429,7 @@ fn encrypt_core<S: AesOps>(state: &S, sk: &[S]) -> S {
     tmp = tmp.shift_rows();
     tmp = tmp.add_round_key(&sk[sk.len() - 1]);
 
-    return tmp;
+    tmp
 }
 
 fn decrypt_core<S: AesOps>(state: &S, sk: &[S]) -> S {
@@ -449,7 +449,7 @@ fn decrypt_core<S: AesOps>(state: &S, sk: &[S]) -> S {
     tmp = tmp.inv_shift_rows();
     tmp = tmp.add_round_key(&sk[0]);
 
-    return tmp;
+    tmp
 }
 
 #[deriving(Copy)]
@@ -458,8 +458,8 @@ struct Bs8State<T>(T, T, T, T, T, T, T, T);
 impl <T: Clone> Bs8State<T> {
     fn split(&self) -> (Bs4State<T>, Bs4State<T>) {
         let Bs8State(ref x0, ref x1, ref x2, ref x3, ref x4, ref x5, ref x6, ref x7) = *self;
-        return (Bs4State(x0.clone(), x1.clone(), x2.clone(), x3.clone()),
-            Bs4State(x4.clone(), x5.clone(), x6.clone(), x7.clone()));
+        (Bs4State(x0.clone(), x1.clone(), x2.clone(), x3.clone()),
+            Bs4State(x4.clone(), x5.clone(), x6.clone(), x7.clone()))
     }
 }
 
@@ -467,8 +467,8 @@ impl <T: BitXor<T, T> + Copy> Bs8State<T> {
     fn xor(&self, rhs: &Bs8State<T>) -> Bs8State<T> {
         let Bs8State(ref a0, ref a1, ref a2, ref a3, ref a4, ref a5, ref a6, ref a7) = *self;
         let Bs8State(ref b0, ref b1, ref b2, ref b3, ref b4, ref b5, ref b6, ref b7) = *rhs;
-        return Bs8State(*a0 ^ *b0, *a1 ^ *b1, *a2 ^ *b2, *a3 ^ *b3,
-            *a4 ^ *b4, *a5 ^ *b5, *a6 ^ *b6, *a7 ^ *b7);
+        Bs8State(*a0 ^ *b0, *a1 ^ *b1, *a2 ^ *b2, *a3 ^ *b3,
+            *a4 ^ *b4, *a5 ^ *b5, *a6 ^ *b6, *a7 ^ *b7)
     }
 }
 
@@ -477,14 +477,14 @@ struct Bs4State<T>(T, T, T, T);
 impl <T: Clone> Bs4State<T> {
     fn split(&self) -> (Bs2State<T>, Bs2State<T>) {
         let Bs4State(ref x0, ref x1, ref x2, ref x3) = *self;
-        return (Bs2State(x0.clone(), x1.clone()), Bs2State(x2.clone(), x3.clone()));
+        (Bs2State(x0.clone(), x1.clone()), Bs2State(x2.clone(), x3.clone()))
     }
 
     fn join(&self, rhs: &Bs4State<T>) -> Bs8State<T> {
         let Bs4State(ref a0, ref a1, ref a2, ref a3) = *self;
         let Bs4State(ref b0, ref b1, ref b2, ref b3) = *rhs;
-        return Bs8State(a0.clone(), a1.clone(), a2.clone(), a3.clone(),
-            b0.clone(), b1.clone(), b2.clone(), b3.clone());
+        Bs8State(a0.clone(), a1.clone(), a2.clone(), a3.clone(),
+            b0.clone(), b1.clone(), b2.clone(), b3.clone())
     }
 }
 
@@ -492,7 +492,7 @@ impl <T: BitXor<T, T> + Copy> Bs4State<T> {
     fn xor(&self, rhs: &Bs4State<T>) -> Bs4State<T> {
         let Bs4State(ref a0, ref a1, ref a2, ref a3) = *self;
         let Bs4State(ref b0, ref b1, ref b2, ref b3) = *rhs;
-        return Bs4State(*a0 ^ *b0, *a1 ^ *b1, *a2 ^ *b2, *a3 ^ *b3);
+        Bs4State(*a0 ^ *b0, *a1 ^ *b1, *a2 ^ *b2, *a3 ^ *b3)
     }
 }
 
@@ -501,13 +501,13 @@ struct Bs2State<T>(T, T);
 impl <T: Clone> Bs2State<T> {
     fn split(&self) -> (T, T) {
         let Bs2State(ref x0, ref x1) = *self;
-        return (x0.clone(), x1.clone());
+        (x0.clone(), x1.clone())
     }
 
     fn join(&self, rhs: &Bs2State<T>) -> Bs4State<T> {
         let Bs2State(ref a0, ref a1) = *self;
         let Bs2State(ref b0, ref b1) = *rhs;
-        return Bs4State(a0.clone(), a1.clone(), b0.clone(), b1.clone());
+        Bs4State(a0.clone(), a1.clone(), b0.clone(), b1.clone())
     }
 }
 
@@ -515,7 +515,7 @@ impl <T: BitXor<T, T> + Copy> Bs2State<T> {
     fn xor(&self, rhs: &Bs2State<T>) -> Bs2State<T> {
         let Bs2State(ref a0, ref a1) = *self;
         let Bs2State(ref b0, ref b1) = *rhs;
-        return Bs2State(*a0 ^ *b0, *a1 ^ *b1);
+        Bs2State(*a0 ^ *b0, *a1 ^ *b1)
     }
 }
 
@@ -542,13 +542,13 @@ fn bit_slice_4x4_with_u32(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32> {
     let x6 = construct(a, b, c, d, 6);
     let x7 = construct(a, b, c, d, 7);
 
-    return Bs8State(x0, x1, x2, x3, x4, x5, x6, x7);
+    Bs8State(x0, x1, x2, x3, x4, x5, x6, x7)
 }
 
 // Bit slice a single u32 value - this is used to calculate the SubBytes step when creating the
 // round keys.
 fn bit_slice_4x1_with_u32(a: u32) -> Bs8State<u32> {
-    return bit_slice_4x4_with_u32(a, 0, 0, 0);
+    bit_slice_4x4_with_u32(a, 0, 0, 0)
 }
 
 // Bit slice a 16 byte array in column major order
@@ -561,7 +561,7 @@ fn bit_slice_1x16_with_u32(data: &[u8]) -> Bs8State<u32> {
     let c = n[2];
     let d = n[3];
 
-    return bit_slice_4x4_with_u32(a, b, c, d);
+    bit_slice_4x4_with_u32(a, b, c, d)
 }
 
 // Un Bit Slice into a set of 4 u32s
@@ -587,13 +587,13 @@ fn un_bit_slice_4x4_with_u32(bs: &Bs8State<u32>) -> (u32, u32, u32, u32) {
     let c = deconstruct(bs, 2);
     let d = deconstruct(bs, 3);
 
-    return (a, b, c, d);
+    (a, b, c, d)
 }
 
 // Un Bit Slice into a single u32. This is used when creating the round keys.
 fn un_bit_slice_4x1_with_u32(bs: &Bs8State<u32>) -> u32 {
     let (a, _, _, _) = un_bit_slice_4x4_with_u32(bs);
-    return a;
+    a
 }
 
 // Un Bit Slice into a 16 byte array
@@ -618,7 +618,7 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
     let bit7 = u32x4(0x80808080, 0x80808080, 0x80808080, 0x80808080);
 
     fn read_row_major(data: &[u8]) -> u32x4 {
-        return u32x4(
+        u32x4(
             (data[0] as u32) |
             ((data[4] as u32) << 8) |
             ((data[8] as u32) << 16) |
@@ -634,7 +634,7 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
             (data[3] as u32) |
             ((data[7] as u32) << 8) |
             ((data[11] as u32) << 16) |
-            ((data[15] as u32) << 24));
+            ((data[15] as u32) << 24))
     }
 
     let t0 = read_row_major(data[0..16]);
@@ -663,7 +663,7 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
     let x7 = (t0.rsh(7) & bit0) | (t1.rsh(6) & bit1) | (t2.rsh(5) & bit2) | (t3.rsh(4) & bit3) |
         (t4.rsh(3) & bit4) | (t5.rsh(2) & bit5) | (t6.rsh(1) & bit6) | (t7 & bit7);
 
-    return Bs8State(x0, x1, x2, x3, x4, x5, x6, x7);
+    Bs8State(x0, x1, x2, x3, x4, x5, x6, x7)
 }
 
 // Bit slice a set of 4 u32s by filling a full 128 byte data block with those repeated values. This
@@ -676,7 +676,7 @@ fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32
         write_u32_le(tmp.slice_mut(i * 16 + 8,i * 16 + 12), c);
         write_u32_le(tmp.slice_mut(i * 16 + 12,i * 16 + 16), d);
     }
-    return bit_slice_1x128_with_u32x4(&tmp);
+    bit_slice_1x128_with_u32x4(&tmp)
 }
 
 // Un bit slice into a 128 byte buffer.
@@ -771,29 +771,29 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Clone + Copy> Gf2Ops for Bs2State<T> {
         let e = (a ^ b) & (c ^ d);
         let p = (a & c) ^ e;
         let q = (b & d) ^ e;
-        return Bs2State(q, p);
+        Bs2State(q, p)
     }
 
     fn scl_n(&self) -> Bs2State<T> {
         let (b, a) = self.split();
         let q = a ^ b;
-        return Bs2State(q, b);
+        Bs2State(q, b)
     }
 
     fn scl_n2(&self) -> Bs2State<T> {
         let (b, a) = self.split();
         let p = a ^ b;
         let q = a;
-        return Bs2State(q, p);
+        Bs2State(q, p)
     }
 
     fn sq(&self) -> Bs2State<T> {
         let (b, a) = self.split();
-        return Bs2State(a, b);
+        Bs2State(a, b)
     }
 
     fn inv(&self) -> Bs2State<T> {
-        return self.sq();
+        self.sq()
     }
 }
 
@@ -818,14 +818,14 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Clone> Gf4Ops for Bs4State<T> {
         let e = a.xor(&b).mul(&f).scl_n();
         let p = a.mul(&c).xor(&e);
         let q = b.mul(&d).xor(&e);
-        return q.join(&p);
+        q.join(&p)
     }
 
     fn sq_scl(&self) -> Bs4State<T> {
         let (b, a) = self.split();
         let p = a.xor(&b).sq();
         let q = b.sq().scl_n2();
-        return q.join(&p);
+        q.join(&p)
     }
 
     fn inv(&self) -> Bs4State<T> {
@@ -835,7 +835,7 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Clone> Gf4Ops for Bs4State<T> {
         let e = c.xor(&d).inv();
         let p = e.mul(&b);
         let q = e.mul(&a);
-        return q.join(&p);
+        q.join(&p)
     }
 }
 
@@ -856,7 +856,7 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Clone + Default> Gf8Ops<T> for Bs8
         let e = c.xor(&d).inv();
         let p = e.mul(&b);
         let q = e.mul(&a);
-        return q.join(&p);
+        q.join(&p)
     }
 
     fn change_basis(&self, arr: &[[T, ..8], ..8]) -> Bs8State<T> {
@@ -970,7 +970,7 @@ impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Clone + Default> Gf8Ops<T> for Bs8
         x6_out = x6_out ^ (*x7 & arr[0][6]);
         x7_out = x7_out ^ (*x7 & arr[0][7]);
 
-        return Bs8State(x0_out, x1_out, x2_out, x3_out, x4_out, x5_out, x6_out, x7_out);
+        Bs8State(x0_out, x1_out, x2_out, x3_out, x4_out, x5_out, x6_out, x7_out)
     }
 }
 
@@ -980,7 +980,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
         let inv = nb.inv();
         let nb2: Bs8State<T> = inv.change_basis(AesBitValueOps::x2s());
         let x63: Bs8State<T> = AesBitValueOps::x63();
-        return nb2.xor(&x63);
+        nb2.xor(&x63)
     }
 
     fn inv_sub_bytes(&self) -> Bs8State<T> {
@@ -988,12 +988,12 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
         let t = self.xor(&x63);
         let nb: Bs8State<T> = t.change_basis(AesBitValueOps::s2x());
 	let inv = nb.inv();
-        return inv.change_basis(AesBitValueOps::x2a());
+        inv.change_basis(AesBitValueOps::x2a())
     }
 
     fn shift_rows(&self) -> Bs8State<T> {
         let Bs8State(ref x0, ref x1, ref x2, ref x3, ref x4, ref x5, ref x6, ref x7) = *self;
-        return Bs8State(
+        Bs8State(
             x0.shift_row(),
             x1.shift_row(),
             x2.shift_row(),
@@ -1001,12 +1001,12 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
             x4.shift_row(),
             x5.shift_row(),
             x6.shift_row(),
-            x7.shift_row());
+            x7.shift_row())
     }
 
     fn inv_shift_rows(&self) -> Bs8State<T> {
         let Bs8State(ref x0, ref x1, ref x2, ref x3, ref x4, ref x5, ref x6, ref x7) = *self;
-        return Bs8State(
+        Bs8State(
             x0.inv_shift_row(),
             x1.inv_shift_row(),
             x2.inv_shift_row(),
@@ -1014,7 +1014,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
             x4.inv_shift_row(),
             x5.inv_shift_row(),
             x6.inv_shift_row(),
-            x7.inv_shift_row());
+            x7.inv_shift_row())
     }
 
     // Formula from [5]
@@ -1030,7 +1030,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
         let x6out = *x5 ^ x5.ror1() ^ x6.ror1() ^ (*x6 ^ x6.ror1()).ror2();
         let x7out = *x6 ^ x6.ror1() ^ x7.ror1() ^ (*x7 ^ x7.ror1()).ror2();
 
-        return Bs8State(x0out, x1out, x2out, x3out, x4out, x5out, x6out, x7out);
+        Bs8State(x0out, x1out, x2out, x3out, x4out, x5out, x6out, x7out)
     }
 
     // Formula from [6]
@@ -1074,7 +1074,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
     }
 
     fn add_round_key(&self, rk: &Bs8State<T>) -> Bs8State<T> {
-        return self.xor(rk);
+        self.xor(rk)
     }
 }
 
@@ -1183,38 +1183,38 @@ impl AesBitValueOps for u32 {
 impl u32x4 {
     fn lsh(&self, s: uint) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(
+        u32x4(
             a0 << s,
             (a1 << s) | (a0 >> (32 - s)),
             (a2 << s) | (a1 >> (32 - s)),
-            (a3 << s) | (a2 >> (32 - s)));
+            (a3 << s) | (a2 >> (32 - s)))
     }
 
     fn rsh(&self, s: uint) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(
+        u32x4(
             (a0 >> s) | (a1 << (32 - s)),
             (a1 >> s) | (a2 << (32 - s)),
             (a2 >> s) | (a3 << (32 - s)),
-            a3 >> s);
+            a3 >> s)
     }
 }
 
 impl BitXor<u32x4, u32x4> for u32x4 {
     fn bitxor(self, rhs: u32x4) -> u32x4 {
-        return self ^ rhs;
+        self ^ rhs
     }
 }
 
 impl BitAnd<u32x4, u32x4> for u32x4 {
     fn bitand(self, rhs: u32x4) -> u32x4 {
-        return self & rhs;
+        self & rhs
     }
 }
 
 impl Default for u32x4 {
     fn default() -> u32x4 {
-        return u32x4(0, 0, 0, 0);
+        u32x4(0, 0, 0, 0)
     }
 }
 
@@ -1273,26 +1273,26 @@ impl AesBitValueOps for u32x4 {
 
     fn shift_row(&self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(a0, a1 >> 8 | a1 << 24, a2 >> 16 | a2 << 16, a3 >> 24 | a3 << 8);
+        u32x4(a0, a1 >> 8 | a1 << 24, a2 >> 16 | a2 << 16, a3 >> 24 | a3 << 8)
     }
 
     fn inv_shift_row(&self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(a0, a1 >> 24 | a1 << 8, a2 >> 16 | a2 << 16, a3 >> 8 | a3 << 24);
+        u32x4(a0, a1 >> 24 | a1 << 8, a2 >> 16 | a2 << 16, a3 >> 8 | a3 << 24)
     }
 
     fn ror1(&self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(a1, a2, a3, a0);
+        u32x4(a1, a2, a3, a0)
     }
 
     fn ror2(&self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(a2, a3, a0, a1);
+        u32x4(a2, a3, a0, a1)
     }
 
     fn ror3(&self) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = *self;
-        return u32x4(a3, a0, a1, a2);
+        u32x4(a3, a0, a1, a2)
     }
 }

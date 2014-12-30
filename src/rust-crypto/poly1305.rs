@@ -204,7 +204,7 @@ impl Mac for Poly1305 {
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8, ..16];
         self.raw_result(mac.as_mut_slice());
-        return MacResult::new(mac[]);
+        MacResult::new(mac[])
     }
 
     fn raw_result(&mut self, output: &mut [u8]) {

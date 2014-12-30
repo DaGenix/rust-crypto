@@ -74,7 +74,7 @@ impl Salsa20 {
             salsa20.expand32(key, nonce);
         }
 
-        return salsa20;
+        salsa20
     }
 
     pub fn new_xsalsa20(key: &[u8], nonce: &[u8]) -> Salsa20 {
@@ -94,7 +94,7 @@ impl Salsa20 {
 
         xsalsa20.expand32(&new_key, nonce[16..24]);
 
-        return xsalsa20;
+        xsalsa20
     }
 
     fn expand16(&mut self, key: &[u8], nonce: &[u8]) {
@@ -163,7 +163,7 @@ impl Salsa20 {
         }
         let ret = self.output[self.offset];
         self.offset += 1;
-        return ret;
+        ret
     }
 }
 

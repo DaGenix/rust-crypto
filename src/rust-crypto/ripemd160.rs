@@ -41,7 +41,7 @@ pub struct Ripemd160 {
 }
 
 fn circular_shift(bits: u32, word: u32) -> u32 {
-    return word << bits as uint | word >> (32u32 - bits) as uint;
+    word << bits as uint | word >> (32u32 - bits) as uint
 }
 
 macro_rules! round(
@@ -340,7 +340,7 @@ impl Ripemd160 {
             computed: false,
         };
         st.reset();
-        return st;
+        st
     }
 }
 

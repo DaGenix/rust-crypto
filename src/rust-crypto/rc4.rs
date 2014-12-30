@@ -39,7 +39,7 @@ impl Rc4 {
         self.j = (self.j + self.state[self.i] as uint) % 256;
         self.state.swap(self.i, self.j);
         let k = self.state[(self.state[self.i] + self.state[self.j]) as uint];
-        return k;
+        k
     }
 }
 

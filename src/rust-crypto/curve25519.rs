@@ -38,21 +38,21 @@ static FE_D2 : Fe = Fe([-21827239,-5839606,-30745221,13898782,229458,15978800,-1
 
 
 fn load_4u(s: &[u8]) -> u64 {
-    return (s[0] as u64)
+    (s[0] as u64)
         | ((s[1] as u64)<<8)
         | ((s[2] as u64)<<16)
-        | ((s[3] as u64)<<24);
+        | ((s[3] as u64)<<24)
 }
 fn load_4i(s: &[u8]) -> i64 {
-    return load_4u(s) as i64;
+    load_4u(s) as i64
 }
 fn load_3u(s: &[u8]) -> u64 {
-    return (s[0] as u64)
+    (s[0] as u64)
         | ((s[1] as u64)<<8)
-        | ((s[2] as u64)<<16);
+        | ((s[2] as u64)<<16)
 }
 fn load_3i(s: &[u8]) -> i64 {
-    return load_3u(s) as i64;
+    load_3u(s) as i64
 }
 
 impl Add<Fe, Fe> for Fe {

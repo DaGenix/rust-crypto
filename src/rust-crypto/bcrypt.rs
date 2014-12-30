@@ -17,7 +17,7 @@ fn setup(cost: uint, salt: &[u8], key: &[u8]) -> Blowfish {
         state.expand_key(salt);
     }
 
-    return state;
+    state
 }
 
 pub fn bcrypt(cost: uint, salt: &[u8], password: &[u8], output: &mut [u8]) {
