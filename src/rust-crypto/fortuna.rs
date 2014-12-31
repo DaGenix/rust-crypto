@@ -401,7 +401,7 @@ mod tests {
         f.add_random_event(0, 0, &[0, ..32]);
         f.add_random_event(0, 0, &[0, ..32]);
         for i in range(0, 32) {
-	    f.add_random_event(1, i, &[1, 2]);
+            f.add_random_event(1, i, &[1, 2]);
         }
 
         // from Crypto.Random.Fortuna import FortunaAccumulator

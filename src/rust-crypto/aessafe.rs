@@ -987,7 +987,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
         let x63: Bs8State<T> = AesBitValueOps::x63();
         let t = self.xor(&x63);
         let nb: Bs8State<T> = t.change_basis(AesBitValueOps::s2x());
-	let inv = nb.inv();
+        let inv = nb.inv();
         inv.change_basis(AesBitValueOps::x2a())
     }
 
