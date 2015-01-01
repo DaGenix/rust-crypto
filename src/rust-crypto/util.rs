@@ -6,21 +6,21 @@
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub fn supports_aesni() -> bool {
-	let mut flags: u32;
+    let mut flags: u32;
     unsafe {
         asm!(
         "
         mov $$1, %eax;
         cpuid;
-		mov %ecx, $0;
+        mov %ecx, $0;
         "
         : "=r" (flags) // output
         : // input
         : "eax", "ebx", "ecx", "edx" // clobbers
         );
-		// No idea why, but on 32-bit targets, the compiler complains
-		// about not having enough registers. Adding in this dummy
-		// section, however, seems to fix it.
+        // No idea why, but on 32-bit targets, the compiler complains
+        // about not having enough registers. Adding in this dummy
+        // section, however, seems to fix it.
         asm!("");
     }
 
