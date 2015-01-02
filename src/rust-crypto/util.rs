@@ -94,8 +94,8 @@ pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
         let count = lhs.len();
 
         unsafe {
-            let lhsp = lhs.unsafe_get(0);
-            let rhsp = rhs.unsafe_get(0);
+            let lhsp = lhs.get_unchecked(0);
+            let rhsp = rhs.get_unchecked(0);
             fixed_time_eq_asm(lhsp, rhsp, count)
         }
     }
