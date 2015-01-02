@@ -178,6 +178,8 @@ impl Decryptor for ChaCha20 {
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use chacha20::ChaCha20;
     use symmetriccipher::SynchronousStreamCipher;
 
@@ -309,8 +311,8 @@ mod test {
 
         for tv in test_vectors.iter() {
             let mut c = ChaCha20::new(&tv.key, &tv.nonce);
-            let input = Vec::from_elem(tv.keystream.len(), 0u8);
-            let mut output = Vec::from_elem(input.len(), 0u8);
+            let input: Vec<u8> = repeat(0).take(tv.keystream.len()).collect();
+            let mut output: Vec<u8> = repeat(0).take(input.len()).collect();
             c.process(input[], output.as_mut_slice());
             assert_eq!(output, tv.keystream);
         }

@@ -86,6 +86,8 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use bcrypt_pbkdf::{bcrypt_pbkdf, bcrypt_hash};
 
     #[test]
@@ -256,7 +258,7 @@ mod test {
         );
 
         for t in tests.iter() {
-            let mut out = Vec::from_elem(t.out.len(), 0u8);
+            let mut out: Vec<u8> = repeat(0).take(t.out.len()).collect();
             bcrypt_pbkdf(t.password[], t.salt[], t.rounds, out.as_mut_slice());
             assert_eq!(out, t.out);
         }

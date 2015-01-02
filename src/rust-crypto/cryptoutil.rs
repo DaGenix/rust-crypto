@@ -424,6 +424,7 @@ impl <T: FixedBuffer> StandardPadding for T {
 
 #[cfg(test)]
 pub mod test {
+    use std::iter::repeat;
     use std::num::Int;
 
     use std::rand::IsaacRng;
@@ -436,7 +437,7 @@ pub mod test {
     /// correct.
     pub fn test_digest_1million_random<D: Digest>(digest: &mut D, blocksize: uint, expected: &str) {
         let total_size = 1000000;
-        let buffer = Vec::from_elem(blocksize * 2, 'a' as u8);
+        let buffer: Vec<u8> = repeat('a' as u8).take(blocksize * 2).collect();
         let mut rng = IsaacRng::new_unseeded();
         let range = Range::new(0, 2 * blocksize + 1);
         let mut count = 0;

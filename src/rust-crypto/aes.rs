@@ -307,6 +307,8 @@ pub fn ctr(
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     use aesni;
 
@@ -447,9 +449,9 @@ mod test {
     fn aes_ctr_tests() -> Vec<CtrTest> {
         vec![
             CtrTest {
-                key: Vec::from_elem(16, 1u8),
-                ctr: Vec::from_elem(16, 3u8),
-                plain: Vec::from_elem(33, 2u8),
+                key: repeat(1).take(16).collect(),
+                ctr: repeat(3).take(16).collect(),
+                plain: repeat(2).take(33).collect(),
                 cipher: vec![
                     0x64, 0x3e, 0x05, 0x19, 0x79, 0x78, 0xd7, 0x45,
                     0xa9, 0x10, 0x5f, 0xd8, 0x4c, 0xd7, 0xe6, 0xb1,
@@ -695,7 +697,7 @@ mod test {
         let tests = aes_ctr_tests();
         for test in tests.iter() {
             let mut aes_enc = aes::ctr(aes::KeySize::KeySize128, test.key[], test.ctr[]);
-            let mut result: Vec<u8> = Vec::from_elem(test.plain.len(), 0);
+            let mut result: Vec<u8> = repeat(0).take(test.plain.len()).collect();
             aes_enc.process(test.plain[], result.as_mut_slice());
             assert!(result.as_slice() == test.cipher);
         }

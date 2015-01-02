@@ -9,6 +9,7 @@
  * http://tools.ietf.org/html/rfc2898.
  */
 
+use std::iter::repeat;
 use std::io::IoResult;
 use std::rand::{OsRng, Rng};
 use std::num::Int;
@@ -89,7 +90,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
     // Most users of pbkdf2 should use a value much larger than 1, so, this allocation should almost
     // always be necessary. A big exception is Scrypt. However, this allocation is unlikely to be
     // the bottleneck in Scrypt performance.
-    let mut scratch = Vec::from_elem(os, 0u8);
+    let mut scratch: Vec<u8> = repeat(0).take(os).collect();
 
     let mut idx: u32 = 0;
 
@@ -100,7 +101,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         if chunk.len() == os {
             calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), chunk);
         } else {
-            let mut tmp = Vec::from_elem(os, 0u8);
+            let mut tmp: Vec<u8> = repeat(0).take(os).collect();
             calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), tmp.as_mut_slice());
             chunk.clone_from_slice(tmp[]);
         }
@@ -235,7 +236,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
-    let mut output = Vec::from_elem(hash.len(), 0u8);
+    let mut output: Vec<u8> = repeat(0).take(hash.len()).collect();
     pbkdf2(&mut mac, salt[], c, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
@@ -247,6 +248,8 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use pbkdf2::{pbkdf2, pbkdf2_simple, pbkdf2_check};
     use hmac::Hmac;
     use sha1::Sha1;
@@ -315,7 +318,7 @@ mod test {
         let tests = tests();
         for t in tests.iter() {
             let mut mac = Hmac::new(Sha1::new(), t.password[]);
-            let mut result = Vec::from_elem(t.expected.len(), 0u8);
+            let mut result: Vec<u8> = repeat(0).take(t.expected.len()).collect();
             pbkdf2(&mut mac, t.salt[], t.c, result.as_mut_slice());
             assert!(result == t.expected);
         }

@@ -12,6 +12,7 @@
  *       http://www.tarsnap.com/scrypt/scrypt.pdf
  */
 
+use std::iter::repeat;
 use std::io::IoResult;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
@@ -235,11 +236,11 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
 
     let mut mac = Hmac::new(Sha256::new(), password);
 
-    let mut b = Vec::from_elem(p * r * 128, 0u8);
+    let mut b: Vec<u8> = repeat(0).take(p * r * 128).collect();
     pbkdf2(&mut mac, salt, 1, b.as_mut_slice());
 
-    let mut v = Vec::from_elem(n * r * 128, 0u8);
-    let mut t = Vec::from_elem(r * 128, 0u8);
+    let mut v: Vec<u8> = repeat(0).take(n * r * 128).collect();
+    let mut t: Vec<u8> = repeat(0).take(r * 128).collect();
 
     for chunk in b.as_mut_slice().chunks_mut(r * 128) {
         scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
@@ -398,7 +399,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         None => { }
     }
 
-    let mut output = Vec::from_elem(hash.len(), 0u8);
+    let mut output: Vec<u8> = repeat(0).take(hash.len()).collect();
     scrypt(password.as_bytes(), salt[], &params, output.as_mut_slice());
 
     // Be careful here - its important that the comparison be done using a fixed time equality
@@ -410,6 +411,8 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use scrypt::{scrypt, scrypt_simple, scrypt_check, ScryptParams};
 
     struct Test {
@@ -480,7 +483,7 @@ mod test {
     fn test_scrypt() {
         let tests = tests();
         for t in tests.iter() {
-            let mut result = Vec::from_elem(t.expected.len(), 0u8);
+            let mut result: Vec<u8> = repeat(0).take(t.expected.len()).collect();
             let params = ScryptParams::new(t.log_n, t.r, t.p);
             scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result.as_mut_slice());
             assert!(result == t.expected);
