@@ -8,6 +8,7 @@
  * This module implements the Hmac function - a Message Authentication Code using a Digest.
  */
 
+use std::iter::repeat;
 use std::slice;
 
 use digest::Digest;
@@ -34,7 +35,7 @@ fn derive_key(key: &mut [u8], mask: u8) {
 // pad it with zeros.
 fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let bs = digest.block_size();
-    let mut expanded_key = Vec::from_elem(bs, 0u8);
+    let mut expanded_key: Vec<u8> = repeat(0).take(bs).collect();
 
     if key.len() <= bs {
         slice::bytes::copy_memory(expanded_key.as_mut_slice(), key);
@@ -92,7 +93,7 @@ impl <D: Digest> Mac for Hmac<D> {
 
     fn result(&mut self) -> MacResult {
         let output_size = self.digest.output_bytes();
-        let mut code = Vec::from_elem(output_size, 0u8);
+        let mut code: Vec<u8> = repeat(0).take(output_size).collect();
 
         self.raw_result(code.as_mut_slice());
 
@@ -118,6 +119,8 @@ impl <D: Digest> Mac for Hmac<D> {
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use mac::{Mac, MacResult};
     use hmac::Hmac;
     use digest::Digest;
@@ -134,7 +137,7 @@ mod test {
     fn tests() -> Vec<Test> {
         vec![
             Test {
-                key: Vec::from_elem(16, 0x0bu8),
+                key: repeat(0x0bu8).take(16).collect(),
                 data: b"Hi There".to_vec(),
                 expected: vec![
                     0x92, 0x94, 0x72, 0x7a, 0x36, 0x38, 0xbb, 0x1c,
@@ -148,8 +151,8 @@ mod test {
                     0xea, 0xa8, 0x6e, 0x31, 0x0a, 0x5d, 0xb7, 0x38 ]
             },
             Test {
-                key: Vec::from_elem(16, 0xaau8),
-                data: Vec::from_elem(50, 0xddu8),
+                key: repeat(0xaau8).take(16).collect(),
+                data: repeat(0xddu8).take(50).collect(),
                 expected: vec![
                     0x56, 0xbe, 0x34, 0x52, 0x1d, 0x14, 0x4c, 0x88,
                     0xdb, 0xb8, 0xc7, 0x33, 0xf0, 0xe8, 0xb3, 0xf6 ]

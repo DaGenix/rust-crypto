@@ -2163,7 +2163,7 @@ mod tests {
     #[test]
     fn from_to_bytes_preserves() {
         for i in range(0u, 50) {
-            let mut e = Vec::from_fn(32, |idx| (idx*(1289+i*761)) as u8);
+            let mut e: Vec<u8> = range(0, 32).map(|idx| (idx*(1289+i*761)) as u8).collect();
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;
@@ -2198,7 +2198,7 @@ mod tests {
     }
     impl Iterator<Fe> for CurveGen {
         fn next(&mut self) -> Option<Fe> {
-            let mut e = Vec::from_fn(32, |idx| (idx*(1289+self.which*761)) as u8);
+            let mut e: Vec<u8> = range(0, 32).map(|idx| (idx*(1289+self.which*761)) as u8).collect();
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;

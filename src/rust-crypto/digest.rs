@@ -8,6 +8,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::iter::repeat;
+
 /**
  * The Digest trait specifies an interface common to digest functions, such as SHA-1 and the SHA-2
  * family of digest functions.
@@ -72,7 +74,7 @@ pub trait Digest {
     fn result_str(&mut self) -> String {
         use serialize::hex::ToHex;
 
-        let mut buf = Vec::from_elem((self.output_bits()+7)/8, 0u8);
+        let mut buf: Vec<u8> = repeat(0).take((self.output_bits()+7)/8).collect();
         self.result(buf.as_mut_slice());
         buf[].to_hex()
     }

@@ -9,6 +9,7 @@
 // TODO - I think padding could be done better. Maybe macros for BlockEngine would help this too.
 
 use std::cmp;
+use std::iter::repeat;
 use std::slice;
 
 use buffer::{ReadBuffer, WriteBuffer, OwnedReadBuffer, OwnedWriteBuffer, BufferResult,
@@ -112,8 +113,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             block_size: block_size,
             in_hist: Vec::new(),
             out_hist: Vec::new(),
-            in_scratch: OwnedWriteBuffer::new(Vec::from_elem(block_size, 0u8)),
-            out_write_scratch: Some(OwnedWriteBuffer::new(Vec::from_elem(block_size, 0u8))),
+            in_scratch: OwnedWriteBuffer::new(repeat(0).take(block_size).collect()),
+            out_write_scratch: Some(OwnedWriteBuffer::new(repeat(0).take(block_size).collect())),
             out_read_scratch: None,
             processor: processor,
             padding: padding,
@@ -589,7 +590,7 @@ impl <T: BlockEncryptor, X: PaddingProcessor> CbcEncryptor<T, X> {
         let block_size = algo.block_size();
         let processor = CbcEncryptorProcessor {
             algo: algo,
-            temp: Vec::from_elem(block_size, 0u8)
+            temp: repeat(0).take(block_size).collect()
         };
         CbcEncryptor {
             block_engine: BlockEngine::new_with_history(
@@ -637,7 +638,7 @@ impl <T: BlockDecryptor, X: PaddingProcessor> CbcDecryptor<T, X> {
         let block_size = algo.block_size();
         let processor = CbcDecryptorProcessor {
             algo: algo,
-            temp: Vec::from_elem(block_size, 0u8)
+            temp: repeat(0).take(block_size).collect()
         };
         CbcDecryptor {
             block_engine: BlockEngine::new_with_history(
@@ -685,7 +686,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
         CtrMode {
             algo: algo,
             ctr: ctr,
-            bytes: OwnedReadBuffer::new_with_len(Vec::from_elem(block_size, 0u8), 0)
+            bytes: OwnedReadBuffer::new_with_len(repeat(0).take(block_size).collect(), 0)
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
@@ -752,12 +753,12 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
     /// Create a new CTR object that operates on 8 blocks at a time
     pub fn new(algo: A, ctr: &[u8]) -> CtrModeX8<A> {
         let block_size = algo.block_size();
-        let mut ctr_x8 = Vec::from_elem(block_size * 8, 0u8);
+        let mut ctr_x8: Vec<u8> = repeat(0).take(block_size * 8).collect();
         construct_ctr_x8(ctr, ctr_x8.as_mut_slice());
         CtrModeX8 {
             algo: algo,
             ctr_x8: ctr_x8,
-            bytes: OwnedReadBuffer::new_with_len(Vec::from_elem(block_size * 8, 0u8), 0)
+            bytes: OwnedReadBuffer::new_with_len(repeat(0).take(block_size * 8).collect(), 0)
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
@@ -811,6 +812,8 @@ impl <A: BlockEncryptorX8> Decryptor for CtrModeX8<A> {
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use aessafe;
     use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8,
         NoPadding, PkcsPadding};
@@ -877,8 +880,8 @@ mod test {
     fn aes_ecb_no_padding_tests() -> Vec<EcbTest> {
         vec![
             EcbTest {
-                key: Vec::from_elem(16, 0u8),
-                plain: Vec::from_elem(32, 0u8),
+                key: repeat(0).take(16).collect(),
+                plain: repeat(0).take(32).collect(),
                 cipher: vec![
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
                     0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e,
@@ -891,8 +894,8 @@ mod test {
     fn aes_ecb_pkcs_padding_tests() -> Vec<EcbTest> {
         vec![
             EcbTest {
-                key: Vec::from_elem(16, 0u8),
-                plain: Vec::from_elem(32, 0u8),
+                key: repeat(0).take(16).collect(),
+                plain: repeat(0).take(32).collect(),
                 cipher: vec![
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
                     0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e,
@@ -902,8 +905,8 @@ mod test {
                     0xff, 0x9f, 0x69, 0x91, 0x76, 0x80, 0x15, 0x1e ]
             },
             EcbTest {
-                key: Vec::from_elem(16, 0u8),
-                plain: Vec::from_elem(33, 0u8),
+                key: repeat(0).take(16).collect(),
+                plain: repeat(0).take(33).collect(),
                 cipher: vec![
                     0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
                     0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e,
@@ -918,9 +921,9 @@ mod test {
     fn aes_cbc_no_padding_tests() -> Vec<CbcTest> {
         vec![
             CbcTest {
-                key: Vec::from_elem(16, 1u8),
-                iv: Vec::from_elem(16, 3u8),
-                plain: Vec::from_elem(32, 2u8),
+                key: repeat(1).take(16).collect(),
+                iv: repeat(3).take(16).collect(),
+                plain: repeat(2).take(32).collect(),
                 cipher: vec![
                     0x5e, 0x77, 0xe5, 0x9f, 0x8f, 0x85, 0x94, 0x34,
                     0x89, 0xa2, 0x41, 0x49, 0xc7, 0x5f, 0x4e, 0xc9,
@@ -933,9 +936,9 @@ mod test {
     fn aes_cbc_pkcs_padding_tests() -> Vec<CbcTest> {
         vec![
             CbcTest {
-                key: Vec::from_elem(16, 1u8),
-                iv: Vec::from_elem(16, 3u8),
-                plain: Vec::from_elem(32, 2u8),
+                key: repeat(1).take(16).collect(),
+                iv: repeat(3).take(16).collect(),
+                plain: repeat(2).take(32).collect(),
                 cipher: vec![
                     0x5e, 0x77, 0xe5, 0x9f, 0x8f, 0x85, 0x94, 0x34,
                     0x89, 0xa2, 0x41, 0x49, 0xc7, 0x5f, 0x4e, 0xc9,
@@ -945,9 +948,9 @@ mod test {
                     0xef, 0x88, 0xf3, 0x27, 0xbd, 0x9c, 0xc8, 0x4d ]
             },
             CbcTest {
-                key: Vec::from_elem(16, 1u8),
-                iv: Vec::from_elem(16, 3u8),
-                plain: Vec::from_elem(33, 2u8),
+                key: repeat(1).take(16).collect(),
+                iv: repeat(3).take(16).collect(),
+                plain: repeat(2).take(33).collect(),
                 cipher: vec![
                     0x5e, 0x77, 0xe5, 0x9f, 0x8f, 0x85, 0x94, 0x34,
                     0x89, 0xa2, 0x41, 0x49, 0xc7, 0x5f, 0x4e, 0xc9,
@@ -962,9 +965,9 @@ mod test {
     fn aes_ctr_tests() -> Vec<CtrTest> {
         vec![
             CtrTest {
-                key: Vec::from_elem(16, 1u8),
-                ctr: Vec::from_elem(16, 3u8),
-                plain: Vec::from_elem(33, 2u8),
+                key: repeat(1).take(16).collect(),
+                ctr: repeat(3).take(16).collect(),
+                plain: repeat(2).take(33).collect(),
                 cipher: vec![
                     0x64, 0x3e, 0x05, 0x19, 0x79, 0x78, 0xd7, 0x45,
                     0xa9, 0x10, 0x5f, 0xd8, 0x4c, 0xd7, 0xe6, 0xb1,
@@ -980,7 +983,7 @@ mod test {
             test: &T,
             enc: &mut E,
             dec: &mut D) {
-        let mut cipher_out = Vec::from_elem(test.get_cipher().len(), 0u8);
+        let mut cipher_out: Vec<u8> = repeat(0).take(test.get_cipher().len()).collect();
         {
             let mut buff_in = RefReadBuffer::new(test.get_plain());
             let mut buff_out = RefWriteBuffer::new(cipher_out.as_mut_slice());
@@ -992,7 +995,7 @@ mod test {
         }
         assert!(test.get_cipher() == cipher_out[]);
 
-        let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
+        let mut plain_out: Vec<u8> = repeat(0).take(test.get_plain().len()).collect();
         {
             let mut buff_in = RefReadBuffer::new(test.get_cipher());
             let mut buff_out = RefWriteBuffer::new(plain_out.as_mut_slice());
@@ -1117,7 +1120,7 @@ mod test {
             test: &T,
             enc: &mut E,
             dec: &mut D) {
-        let mut cipher_out = Vec::from_elem(test.get_cipher().len(), 0u8);
+        let mut cipher_out: Vec<u8> = repeat(0).take(test.get_cipher().len()).collect();
         run_inc(
             test.get_plain(),
             cipher_out.as_mut_slice(),
@@ -1129,7 +1132,7 @@ mod test {
             false);
         assert!(test.get_cipher() == cipher_out[]);
 
-        let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
+        let mut plain_out: Vec<u8> = repeat(0).take(test.get_plain().len()).collect();
         run_inc(
             test.get_cipher(),
             plain_out.as_mut_slice(),
@@ -1166,7 +1169,7 @@ mod test {
             let mut enc = new_enc();
             let mut dec = new_dec();
 
-            let mut cipher_out = Vec::from_elem(test.get_cipher().len(), 0u8);
+            let mut cipher_out: Vec<u8> = repeat(0).take(test.get_cipher().len()).collect();
             run_inc(
                 test.get_plain(),
                 cipher_out.as_mut_slice(),
@@ -1178,7 +1181,7 @@ mod test {
                 rng3.gen());
             assert!(test.get_cipher() == cipher_out[]);
 
-            let mut plain_out = Vec::from_elem(test.get_plain().len(), 0u8);
+            let mut plain_out: Vec<u8> = repeat(0).take(test.get_plain().len()).collect();
             run_inc(
                 test.get_cipher(),
                 plain_out.as_mut_slice(),

@@ -4,6 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::iter::repeat;
 use std::num::Int;
 use cryptoutil::{read_u64v_le, write_u64v_le};
 use std::slice::bytes::{copy_memory};
@@ -378,7 +379,7 @@ impl Mac for Blake2b {
      * Obtain the result of a Mac computation as a MacResult.
      */
     fn result(&mut self) -> MacResult {
-        let mut mac : Vec<u8> = Vec::from_fn(self.digest_length as uint, |_| 0);
+        let mut mac : Vec<u8> = repeat(0).take(self.digest_length as uint).collect();
         self.raw_result(mac.as_mut_slice());
         MacResult::new_from_owned(mac)
     }
@@ -470,7 +471,7 @@ mod mac_tests {
 
     #[test]
     fn test_blake2b_mac() {
-        let key = Vec::from_fn(64, |i| i as u8);
+        let key: Vec<u8> = range(0, 64).map(|i| i).collect();
         let mut m = Blake2b::new_keyed(64, key[]);
         m.input(&[1,2,4,8]);
         let expected = [
