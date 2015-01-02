@@ -96,7 +96,7 @@ unsafe fn aesimc(round_keys: *mut u8) {
 #[allow(unused_assignments)]
 fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
-        let mut round_keysp: *mut u8 = round_key.unsafe_mut(0);
+        let mut round_keysp: *mut u8 = round_key.get_unchecked_mut(0);
         let keyp: *const u8 = key.unsafe_get(0);
 
         asm!(
@@ -153,7 +153,7 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
             KeyType::Decryption => {
                 // range of rounds keys from #1 to #9; skip the first and last key
                 for i in range(1u, 10) {
-                    aesimc(round_key.unsafe_mut(16 * i));
+                    aesimc(round_key.get_unchecked_mut(16 * i));
                 }
             }
             KeyType::Encryption => { /* nothing more to do */ }
@@ -164,7 +164,7 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
 #[allow(unused_assignments)]
 fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
-        let mut round_keysp: *mut u8 = round_key.unsafe_mut(0);
+        let mut round_keysp: *mut u8 = round_key.get_unchecked_mut(0);
         let keyp: *const u8 = key.unsafe_get(0);
 
         asm!(
@@ -256,7 +256,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
             KeyType::Decryption => {
                 // range of rounds keys from #1 to #11; skip the first and last key
                 for i in range(1u, 12) {
-                    aesimc(round_key.unsafe_mut(16 * i));
+                    aesimc(round_key.get_unchecked_mut(16 * i));
                 }
             }
             KeyType::Encryption => { /* nothing more to do */ }
@@ -267,7 +267,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
 #[allow(unused_assignments)]
 fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u8]) {
     unsafe {
-        let mut round_keysp: *mut u8 = round_key.unsafe_mut(0);
+        let mut round_keysp: *mut u8 = round_key.get_unchecked_mut(0);
         let keyp: *const u8 = key.unsafe_get(0);
 
         asm!(
@@ -367,7 +367,7 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
             KeyType::Decryption => {
                 // range of rounds keys from #1 to #13; skip the first and last key
                 for i in range(1u, 14) {
-                    aesimc(round_key.unsafe_mut(16 * i));
+                    aesimc(round_key.get_unchecked_mut(16 * i));
                 }
             }
             KeyType::Encryption => { /* nothing more to do */ }
@@ -380,7 +380,7 @@ fn encrypt_block_aesni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
     unsafe {
         let mut rounds = rounds;
         let mut round_keysp: *const u8 = round_keys.unsafe_get(0);
-        let outp: *mut u8 = output.unsafe_mut(0);
+        let outp: *mut u8 = output.get_unchecked_mut(0);
         let inp: *const u8 = input.unsafe_get(0);
 
         asm!(
@@ -422,7 +422,7 @@ fn decrypt_block_aesni(rounds: uint, input: &[u8], round_keys: &[u8], output: &m
     unsafe {
         let mut rounds = rounds;
         let mut round_keysp: *const u8 = round_keys.unsafe_get(round_keys.len() - 16);
-        let outp: *mut u8 = output.unsafe_mut(0);
+        let outp: *mut u8 = output.get_unchecked_mut(0);
         let inp: *const u8 = input.unsafe_get(0);
 
         asm!(
