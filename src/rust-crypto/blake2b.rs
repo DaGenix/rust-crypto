@@ -93,14 +93,14 @@ macro_rules! round( ($r:expr, $v:expr, $m:expr) => ( {
 
 impl Blake2b {
     fn set_lastnode(&mut self) {
-        self.f[1] = (0 as u64).not();
+        self.f[1] = 0xFFFFFFFFFFFFFFFF;
     }
 
     fn set_lastblock(&mut self) {
         if self.last_node!=0 {
             self.set_lastnode();
         }
-        self.f[0] = (0 as u64).not();
+        self.f[0] = 0xFFFFFFFFFFFFFFFF;
     }
 
     fn increment_counter(&mut self, inc : u64) {

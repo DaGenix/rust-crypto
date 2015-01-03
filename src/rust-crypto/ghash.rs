@@ -15,6 +15,7 @@
 /// [2] - "Faster and Timing-Attack Resistant AES-GCM" - Emilia Käsper and Peter Schwabe
 ///       <http://cryptojedi.org/papers/aesbs-20090616.pdf>
 
+use std::ops::BitXor;
 use std::mem;
 use std::simd;
 use std::slice::bytes::copy_memory;
