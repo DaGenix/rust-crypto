@@ -32,7 +32,7 @@ const DIGEST_BUF_LEN: uint = 5u;
 const WORK_BUF_LEN: uint = 16u;
 
 /// Structure representing the state of a Ripemd160 computation
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Ripemd160 {
     h: [u32; DIGEST_BUF_LEN],
     length_bits: u64,
@@ -415,7 +415,7 @@ mod tests {
     use digest::Digest;
     use ripemd160::Ripemd160;
 
-    #[deriving(Clone)]
+    #[derive(Clone)]
     struct Test {
         input: &'static str,
         output: Vec<u8>,

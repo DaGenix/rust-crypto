@@ -9,7 +9,7 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct ChaChaState {
   a: u32x4,
   b: u32x4,
@@ -17,7 +17,7 @@ struct ChaChaState {
   d: u32x4
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct ChaCha20 {
     state  : ChaChaState,
     output : [u8; 64],

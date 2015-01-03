@@ -8,7 +8,7 @@ use std::iter::{range, range_step};
 use cryptoutil::{read_u32v_be, write_u32_be};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Blowfish {
     s: [[u32; 256]; 4],
     p: [u32; 18]

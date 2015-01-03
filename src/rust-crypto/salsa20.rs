@@ -11,7 +11,7 @@ use cryptoutil::{read_u32v_le, symm_enc_or_dec, write_u32_le};
 use std::num::Int;
 use std::slice::bytes::copy_memory;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Salsa20 {
     state: [u8; 64],
     output: [u8; 64],

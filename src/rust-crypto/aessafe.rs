@@ -134,7 +134,7 @@ use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDec
 // Defining the type here avoids that problem. Additionally, we need to implement various trait from
 // libstd which wouldn't be possible if we used that type directly.
 #[simd]
-#[deriving(Copy, Eq, PartialEq)]
+#[derive(Copy, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub struct u32x4(u32, u32, u32, u32);
 
@@ -146,7 +146,7 @@ macro_rules! define_aes_struct(
         $name:ident,
         $rounds:expr
     ) => (
-        #[deriving(Copy)]
+        #[derive(Copy)]
         pub struct $name {
             sk: [Bs8State<u16>; ($rounds + 1)]
         }
@@ -234,7 +234,7 @@ macro_rules! define_aes_struct_x8(
         $name:ident,
         $rounds:expr
     ) => (
-        #[deriving(Copy)]
+        #[derive(Copy)]
         pub struct $name {
             sk: [Bs8State<u32x4>; ($rounds + 1)]
         }
@@ -460,7 +460,7 @@ fn decrypt_core<S: AesOps + Copy>(state: &S, sk: &[S]) -> S {
     tmp
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Bs8State<T>(T, T, T, T, T, T, T, T);
 
 impl <T: Copy> Bs8State<T> {
@@ -641,7 +641,7 @@ impl <T: Not<T> + Copy> Bs8State<T> {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Bs4State<T>(T, T, T, T);
 
 impl <T: Copy> Bs4State<T> {
@@ -665,7 +665,7 @@ impl <T: BitXor<T, T> + Copy> Bs4State<T> {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Bs2State<T>(T, T);
 
 impl <T> Bs2State<T> {

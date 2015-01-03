@@ -42,7 +42,7 @@ const K2: u32 = 0x8F1BBCDCu32;
 const K3: u32 = 0xCA62C1D6u32;
 
 /// Structure representing the state of a Sha1 computation
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Sha1 {
     h: [u32; DIGEST_BUF_LEN],
     length_bits: u64,
@@ -184,7 +184,7 @@ mod tests {
     use digest::Digest;
     use sha1::Sha1;
 
-    #[deriving(Clone)]
+    #[derive(Clone)]
     struct Test {
         input: &'static str,
         output: Vec<u8>,

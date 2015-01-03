@@ -142,7 +142,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
 /**
  * The Scrypt parameter values.
  */
-#[deriving(Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct ScryptParams {
     log_n: u8,
     r: u32,

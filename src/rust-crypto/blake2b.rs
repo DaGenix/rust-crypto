@@ -40,7 +40,7 @@ const BLAKE2B_KEYBYTES : uint = 64;
 const BLAKE2B_SALTBYTES : uint = 16;
 const BLAKE2B_PERSONALBYTES : uint = 16;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Blake2b {
     h: [u64; 8],
     t: [u64; 2],
