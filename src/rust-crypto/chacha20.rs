@@ -20,7 +20,7 @@ struct ChaChaState {
 #[deriving(Copy)]
 pub struct ChaCha20 {
     state  : ChaChaState,
-    output : [u8,  ..64],
+    output : [u8; 64],
     offset : uint,
 }
 
@@ -29,7 +29,7 @@ impl ChaCha20 {
         assert!(key.len() == 16 || key.len() == 32);
         assert!(nonce.len() == 8);
 
-        ChaCha20{ state: ChaCha20::expand(key, nonce), output: [0u8, ..64], offset: 64 }
+        ChaCha20{ state: ChaCha20::expand(key, nonce), output: [0u8; 64], offset: 64 }
     }
 
     fn expand(key: &[u8], nonce: &[u8]) -> ChaChaState {
@@ -186,8 +186,8 @@ mod test {
     #[test]
     fn test_chacha20_256_tls_vectors() {
         struct TestVector {
-            key:   [u8, ..32],
-            nonce: [u8, ..8],
+            key:   [u8; 32],
+            nonce: [u8; 8],
             keystream: Vec<u8>,
         };
         // taken from http://tools.ietf.org/html/draft-agl-tls-chacha20poly1305-04
@@ -327,9 +327,9 @@ mod bench {
 
     #[bench]
     pub fn chacha20_10(bh: & mut Bencher) {
-        let mut chacha20 = ChaCha20::new(&[0, ..32], &[0, ..8]);
-        let input = [1u8, ..10];
-        let mut output = [0u8, ..10];
+        let mut chacha20 = ChaCha20::new(&[0; 32], &[0; 8]);
+        let input = [1u8; 10];
+        let mut output = [0u8; 10];
         bh.iter( || {
             chacha20.process(&input, &mut output);
         });
@@ -338,9 +338,9 @@ mod bench {
 
     #[bench]
     pub fn chacha20_1k(bh: & mut Bencher) {
-        let mut chacha20 = ChaCha20::new(&[0, ..32], &[0, ..8]);
-        let input = [1u8, ..1024];
-        let mut output = [0u8, ..1024];
+        let mut chacha20 = ChaCha20::new(&[0; 32], &[0; 8]);
+        let input = [1u8; 1024];
+        let mut output = [0u8; 1024];
         bh.iter( || {
             chacha20.process(&input, &mut output);
         });
@@ -349,9 +349,9 @@ mod bench {
 
     #[bench]
     pub fn chacha20_64k(bh: & mut Bencher) {
-        let mut chacha20 = ChaCha20::new(&[0, ..32], &[0, ..8]);
-        let input = [1u8, ..65536];
-        let mut output = [0u8, ..65536];
+        let mut chacha20 = ChaCha20::new(&[0; 32], &[0; 8]);
+        let input = [1u8; 65536];
+        let mut output = [0u8; 65536];
         bh.iter( || {
             chacha20.process(&input, &mut output);
         });

@@ -10,8 +10,8 @@ use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
 #[deriving(Copy)]
 pub struct Blowfish {
-    s: [[u32, ..256], ..4],
-    p: [u32, ..18]
+    s: [[u32; 256]; 4],
+    p: [u32; 18]
 }
 
 fn next_u32_wrap(buf: &[u8], offset: &mut uint) -> u32 {
@@ -526,7 +526,7 @@ mod test {
     #[test]
     fn encrypt_eay_test_vectors() {
         let tests = eay_test_vectors();
-        let mut output = [0u8, ..8];
+        let mut output = [0u8; 8];
         for test in tests.iter() {
             let state = Blowfish::new(test.key[]);
             state.encrypt_block(test.plaintext[], output.as_mut_slice());
@@ -537,7 +537,7 @@ mod test {
     #[test]
     fn decrypt_eay_test_vectors() {
         let tests = eay_test_vectors();
-        let mut output = [0u8, ..8];
+        let mut output = [0u8; 8];
         for test in tests.iter() {
             let state = Blowfish::new(test.key[]);
             state.decrypt_block(test.ciphertext[], output.as_mut_slice());
@@ -554,10 +554,10 @@ mod bench {
 
     #[bench]
     fn blowfish(bh: &mut Bencher) {
-        let key = [0u8, ..16];
-        let plaintext = [1u8, ..8];
+        let key = [0u8; 16];
+        let plaintext = [1u8; 8];
         let state = Blowfish::new(&key);
-        let mut ciphertext = [0u8, ..8];
+        let mut ciphertext = [0u8; 8];
         
         bh.iter(|| {
             state.encrypt_block(&plaintext, &mut ciphertext);

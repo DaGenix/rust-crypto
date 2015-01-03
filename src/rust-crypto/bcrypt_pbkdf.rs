@@ -10,7 +10,7 @@ use cryptoutil::{read_u32v_be, write_u32_be, write_u32_le};
 use sha2::Sha512;
 use digest::Digest;
 
-fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
+fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     let mut bf = Blowfish::init_state();
     bf.salted_expand_key(hsalt, hpass);
 
@@ -19,7 +19,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
         bf.expand_key(hpass);
     }
 
-    let mut buf = [0u32, ..8];
+    let mut buf = [0u32; 8];
     read_u32v_be(&mut buf, b"OxychromaticBlowfishSwatDynamite");
 
     for i in range_step(0u, 8, 2) {
@@ -36,7 +36,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8, ..32]) {
 }
 
 pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8]) {
-    let mut hpass = [0u8, ..64];
+    let mut hpass = [0u8; 64];
 
     assert!(password.len() > 0);
     assert!(salt.len() > 0);
@@ -51,9 +51,9 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8
     h.result(hpass.as_mut_slice());
 
     for block in range(1u, (nblocks+1)) {
-        let mut count = [0u8, ..4];
-        let mut hsalt = [0u8, ..64];
-        let mut out   = [0u8, ..32];
+        let mut count = [0u8; 4];
+        let mut hsalt = [0u8; 64];
+        let mut out   = [0u8; 32];
         write_u32_be(count.as_mut_slice(), block as u32);
 
         h.reset();
@@ -93,9 +93,9 @@ mod test {
     #[test]
     fn test_bcrypt_hash() {
         struct Test {
-            hpass: [u8, ..64],
-            hsalt: [u8, ..64],
-            out:   [u8, ..32],
+            hpass: [u8; 64],
+            hsalt: [u8; 64],
+            out:   [u8; 32],
         }
 
         let tests = vec!(
@@ -159,7 +159,7 @@ mod test {
         );
 
         for t in tests.iter() {
-            let mut out = [0u8, ..32];
+            let mut out = [0u8; 32];
             bcrypt_hash(&t.hpass, &t.hsalt, &mut out);
             assert_eq!(out[], t.out[]);
         }
@@ -272,9 +272,9 @@ mod bench {
 
     #[bench]
     fn bench_bcrypt_pbkdf_5_32(b: &mut Bencher) {
-        let pass = [0u8, ..16];
-        let salt = [0u8, ..16];
-        let mut out  = [0u8, ..32];
+        let pass = [0u8; 16];
+        let salt = [0u8; 16];
+        let mut out  = [0u8; 32];
 
         b.iter(|| {
             bcrypt_pbkdf(&pass, &salt, 5, out.as_mut_slice());

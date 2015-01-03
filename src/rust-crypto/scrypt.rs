@@ -30,7 +30,7 @@ use util::fixed_time_eq;
 // The salsa20/8 core function.
 fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
-    let mut x = [0u32, ..16];
+    let mut x = [0u32; 16];
     read_u32v_le(&mut x, input);
 
     let rounds = 8;
@@ -95,10 +95,10 @@ fn xor(x: &[u8], y: &[u8], output: &mut [u8]) {
 // input - the input vector. The length must be a multiple of 128.
 // output - the output vector. Must be the same length as input.
 fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
-    let mut x = [0u8, ..64];
+    let mut x = [0u8; 64];
     x.clone_from_slice(input[input.len() - 64..]);
 
-    let mut t = [0u8, ..64];
+    let mut t = [0u8; 64];
 
 
     for (i, chunk) in input.chunks(64).enumerate() {
@@ -278,21 +278,21 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
     let salt: Vec<u8> = rng.gen_iter::<u8>().take(16).collect();
 
     // 256-bit derived key
-    let mut dk = [0u8, ..32];
+    let mut dk = [0u8; 32];
 
     scrypt(password.as_bytes(), salt[], params, &mut dk);
 
     let mut result = String::from_str("$rscrypt$");
     if params.r < 256 && params.p < 256 {
         result.push_str("0$");
-        let mut tmp = [0u8, ..3];
+        let mut tmp = [0u8; 3];
         tmp[0] = params.log_n;
         tmp[1] = params.r as u8;
         tmp[2] = params.p as u8;
         result.push_str(tmp.to_base64(base64::STANDARD)[]);
     } else {
         result.push_str("1$");
-        let mut tmp = [0u8, ..9];
+        let mut tmp = [0u8; 9];
         tmp[0] = params.log_n;
         write_u32_le(tmp.slice_mut(1,5), params.r);
         write_u32_le(tmp.slice_mut(5,9), params.p);
@@ -359,7 +359,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
                 "1" => {
                     if pvec.len() != 9 { return Err(ERR_STR); }
                     let log_n = pvec[0];
-                    let mut pval = [0u32, ..2];
+                    let mut pval = [0u32; 2];
                     read_u32v_le(&mut pval, pvec[1..9]);
                     params = ScryptParams::new(log_n, pval[0], pval[1]);
                 }
