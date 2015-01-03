@@ -714,7 +714,7 @@ mod bench {
     use aessafe;
     use symmetriccipher::{BlockEncryptor, BlockEncryptorX8};
     use util;
-    use aes::KeySize::{mod, KeySize128, KeySize192, KeySize256};
+    use aes::KeySize::{self, KeySize128, KeySize192, KeySize256};
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]

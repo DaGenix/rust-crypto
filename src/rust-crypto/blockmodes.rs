@@ -820,7 +820,7 @@ mod test {
     use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
     use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
     use symmetriccipher::{Encryptor, Decryptor};
-    use symmetriccipher::SymmetricCipherError::{mod, InvalidLength, InvalidPadding};
+    use symmetriccipher::SymmetricCipherError::{self, InvalidLength, InvalidPadding};
 
     use std::cmp;
     use test::Bencher;
