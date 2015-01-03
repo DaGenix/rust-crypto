@@ -12,14 +12,14 @@ use std::intrinsics::volatile_set_memory;
 use digest::Digest;
 use mac::{Mac, MacResult};
 
-static IV : [u64, ..8] = [
+static IV : [u64; 8] = [
   0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
   0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
   0x510e527fade682d1, 0x9b05688c2b3e6c1f,
   0x1f83d9abfb41bd6b, 0x5be0cd19137e2179,
 ];
 
-static SIGMA : [[uint, ..16], ..12] = [
+static SIGMA : [[uint; 16]; 12] = [
   [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 ],
   [ 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 ],
   [ 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 ],
@@ -40,14 +40,14 @@ const BLAKE2B_KEYBYTES : uint = 64;
 const BLAKE2B_SALTBYTES : uint = 16;
 const BLAKE2B_PERSONALBYTES : uint = 16;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Blake2b {
-    h: [u64, ..8],
-    t: [u64, ..2],
-    f: [u64, ..2],
-    buf: [u8, .. 2*BLAKE2B_BLOCKBYTES],
+    h: [u64; 8],
+    t: [u64; 2],
+    f: [u64; 2],
+    buf: [u8; 2*BLAKE2B_BLOCKBYTES],
     buflen: uint,
-    key: [u8, ..BLAKE2B_KEYBYTES],
+    key: [u8; BLAKE2B_KEYBYTES],
     key_length: u8,
     last_node: u8,
     digest_length: u8,
@@ -63,9 +63,9 @@ struct Blake2bParam {
     node_offset: u64,
     node_depth: u8,
     inner_length: u8,
-    reserved: [u8, ..14],
-    salt: [u8, ..BLAKE2B_SALTBYTES],
-    personal: [u8, ..BLAKE2B_PERSONALBYTES],
+    reserved: [u8; 14],
+    salt: [u8; BLAKE2B_SALTBYTES],
+    personal: [u8; BLAKE2B_PERSONALBYTES],
 }
 
 macro_rules! G( ($r:expr, $i:expr, $a:expr, $b:expr, $c:expr, $d:expr, $m:expr) => ({
@@ -93,14 +93,14 @@ macro_rules! round( ($r:expr, $v:expr, $m:expr) => ( {
 
 impl Blake2b {
     fn set_lastnode(&mut self) {
-        self.f[1] = (0 as u64).not();
+        self.f[1] = 0xFFFFFFFFFFFFFFFF;
     }
 
     fn set_lastblock(&mut self) {
         if self.last_node!=0 {
             self.set_lastnode();
         }
-        self.f[0] = (0 as u64).not();
+        self.f[0] = 0xFFFFFFFFFFFFFFFF;
     }
 
     fn increment_counter(&mut self, inc : u64) {
@@ -114,12 +114,12 @@ impl Blake2b {
             h: IV,
             t: [0,0],
             f: [0,0],
-            buf: [0, ..2*BLAKE2B_BLOCKBYTES],
+            buf: [0; 2*BLAKE2B_BLOCKBYTES],
             buflen: 0,
             last_node: 0,
             digest_length: digest_length,
             computed: false,
-            key: [0, ..BLAKE2B_KEYBYTES],
+            key: [0; BLAKE2B_KEYBYTES],
             key_length: key.len() as u8
         };
         copy_memory(&mut b.key, key);
@@ -129,7 +129,7 @@ impl Blake2b {
     fn apply_param(&mut self, p: &Blake2bParam) {
         use std::io::BufWriter;
 
-        let mut param_bytes : [u8, ..64] = [0, ..64];
+        let mut param_bytes : [u8; 64] = [0; 64];
         {
             let mut writer = BufWriter::new(&mut param_bytes);
             writer.write_u8(p.digest_length).unwrap();
@@ -144,7 +144,7 @@ impl Blake2b {
             writer.write(&p.salt).unwrap();
             writer.write(&p.personal).unwrap();
         }
-        let mut param_words : [u64, ..8] = [0, ..8];
+        let mut param_words : [u64; 8] = [0; 8];
         read_u64v_le(&mut param_words, &param_bytes);
         for (h, param_word) in self.h.iter_mut().zip(param_words.iter()) {
             *h = *h ^ *param_word;
@@ -169,9 +169,9 @@ impl Blake2b {
             node_offset: 0,
             node_depth: 0,
             inner_length: 0,
-            reserved: [0, ..14],
-            salt: [0, ..BLAKE2B_SALTBYTES],
-            personal: [0, ..BLAKE2B_PERSONALBYTES],
+            reserved: [0; 14],
+            salt: [0; BLAKE2B_SALTBYTES],
+            personal: [0; BLAKE2B_PERSONALBYTES],
         }
     }
 
@@ -181,7 +181,7 @@ impl Blake2b {
     }
 
     fn apply_key(&mut self) {
-        let mut block : [u8, ..BLAKE2B_BLOCKBYTES] = [0, ..BLAKE2B_BLOCKBYTES];
+        let mut block : [u8; BLAKE2B_BLOCKBYTES] = [0; BLAKE2B_BLOCKBYTES];
         copy_memory(&mut block, self.key[..self.key_length as uint]);
         self.update(&block);
         unsafe {
@@ -202,9 +202,9 @@ impl Blake2b {
             node_offset: 0,
             node_depth: 0,
             inner_length: 0,
-            reserved: [0, ..14],
-            salt: [0, ..BLAKE2B_SALTBYTES],
-            personal: [0, ..BLAKE2B_PERSONALBYTES],
+            reserved: [0; 14],
+            salt: [0; BLAKE2B_SALTBYTES],
+            personal: [0; BLAKE2B_PERSONALBYTES],
         };
 
         let mut b = Blake2b::init_param(&param, key);
@@ -213,8 +213,8 @@ impl Blake2b {
     }
 
     fn compress(&mut self) {
-        let mut ms: [u64, ..16] = [0, ..16];
-        let mut vs: [u64, ..16] = [0, ..16];
+        let mut ms: [u64; 16] = [0; 16];
+        let mut vs: [u64; 16] = [0; 16];
 
         read_u64v_le(&mut ms, self.buf[0..BLAKE2B_BLOCKBYTES]);
 
@@ -499,7 +499,7 @@ mod bench {
     #[bench]
     pub fn blake2b_10(bh: & mut Bencher) {
         let mut sh = Blake2b::new(64);
-        let bytes = [1u8, ..10];
+        let bytes = [1u8; 10];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -509,7 +509,7 @@ mod bench {
     #[bench]
     pub fn blake2b_1k(bh: & mut Bencher) {
         let mut sh = Blake2b::new(64);
-        let bytes = [1u8, ..1024];
+        let bytes = [1u8; 1024];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -519,7 +519,7 @@ mod bench {
     #[bench]
     pub fn blake2b_64k(bh: & mut Bencher) {
         let mut sh = Blake2b::new(64);
-        let bytes = [1u8, ..65536];
+        let bytes = [1u8; 65536];
         bh.iter( || {
             sh.input(&bytes);
         });

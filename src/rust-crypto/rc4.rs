@@ -13,17 +13,17 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::symm_enc_or_dec;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Rc4 {
     i: uint,
     j: uint,
-    state: [u8, ..256]
+    state: [u8; 256]
 }
 
 impl Rc4 {
     pub fn new(key: &[u8]) -> Rc4 {
         assert!(key.len() >= 1 && key.len() <= 256);
-        let mut rc4 = Rc4 { i: 0, j: 0, state: [0, ..256] };
+        let mut rc4 = Rc4 { i: 0, j: 0, state: [0; 256] };
         for (i, x) in rc4.state.iter_mut().enumerate() {
             *x = i as u8;
         }
@@ -121,8 +121,8 @@ mod bench {
     #[bench]
     pub fn rc4_10(bh: & mut Bencher) {
         let mut rc4 = Rc4::new("key".as_bytes());
-        let input = [1u8, ..10];
-        let mut output = [0u8, ..10];
+        let input = [1u8; 10];
+        let mut output = [0u8; 10];
         bh.iter( || {
             rc4.process(&input, &mut output);
         });
@@ -132,8 +132,8 @@ mod bench {
     #[bench]
     pub fn rc4_1k(bh: & mut Bencher) {
         let mut rc4 = Rc4::new("key".as_bytes());
-        let input = [1u8, ..1024];
-        let mut output = [0u8, ..1024];
+        let input = [1u8; 1024];
+        let mut output = [0u8; 1024];
         bh.iter( || {
             rc4.process(&input, &mut output);
         });
@@ -143,8 +143,8 @@ mod bench {
     #[bench]
     pub fn rc4_64k(bh: & mut Bencher) {
         let mut rc4 = Rc4::new("key".as_bytes());
-        let input = [1u8, ..65536];
-        let mut output = [0u8, ..65536];
+        let input = [1u8; 65536];
+        let mut output = [0u8; 65536];
         bh.iter( || {
             rc4.process(&input, &mut output);
         });

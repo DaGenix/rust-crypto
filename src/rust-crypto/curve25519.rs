@@ -1,3 +1,4 @@
+use std::ops::{Add, Sub, Mul};
 use std::fmt;
 use std::cmp::{Eq, PartialEq,min};
 use util::{fixed_time_eq};
@@ -11,8 +12,8 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
-#[deriving(Copy)]
-pub struct Fe([i32, ..10]);
+#[derive(Copy)]
+pub struct Fe([i32; 10]);
 
 impl fmt::Show for Fe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -455,7 +456,7 @@ impl Fe {
       so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
     */
 
-    pub fn to_bytes(&self) -> [u8, ..32] {
+    pub fn to_bytes(&self) -> [u8; 32] {
         let &Fe(es) = self;
         let mut h0 = es[0];
         let mut h1 = es[1];
@@ -1021,7 +1022,7 @@ impl Fe {
 
     fn is_nonzero(&self) -> bool {
         let bs = self.to_bytes();
-        let zero = [0, ..32];
+        let zero = [0; 32];
         !fixed_time_eq(bs.as_slice(), zero.as_slice())
     }
 
@@ -1063,14 +1064,14 @@ impl Fe {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct GeP2 {
     x: Fe,
     y: Fe,
     z: Fe,
 }
 
-#[deriving(Copy, Show)]
+#[derive(Copy, Show)]
 pub struct GeP3 {
     x: Fe,
     y: Fe,
@@ -1078,7 +1079,7 @@ pub struct GeP3 {
     t: Fe,
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct GeP1P1 {
     x: Fe,
     y: Fe,
@@ -1086,14 +1087,14 @@ pub struct GeP1P1 {
     t: Fe,
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct GePrecomp {
     y_plus_x: Fe,
     y_minus_x: Fe,
     xy2d: Fe,
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct GeCached {
     y_plus_x: Fe,
     y_minus_x: Fe,
@@ -1131,7 +1132,7 @@ impl GeP2 {
         }
     }
 
-    pub fn to_bytes(&self) -> [u8, ..32] {
+    pub fn to_bytes(&self) -> [u8; 32] {
         let recip = self.z.invert();
         let x = self.x * recip;
         let y = self.y * recip;
@@ -1154,8 +1155,8 @@ impl GeP2 {
         GeP1P1 { x: x3, y: y3, z: z3, t: t3 }
     }
 
-    fn slide(a: &[u8]) -> [i8, ..256] {
-        let mut r = [0i8, ..256];
+    fn slide(a: &[u8]) -> [i8; 256] {
+        let mut r = [0i8; 256];
         for i in range(0, 256) {
             r[i] = (1 & (a[i >> 3] >> (i & 7))) as i8;
         }
@@ -1195,7 +1196,7 @@ impl GeP2 {
         let aslide = GeP2::slide(a_scalar);
         let bslide = GeP2::slide(b_scalar);
 
-        let mut ai = [GeCached{y_plus_x:FE_ZERO, y_minus_x: FE_ZERO, z: FE_ZERO, t2d: FE_ZERO}, ..8]; /* A,3A,5A,7A,9A,11A,13A,15A */
+        let mut ai = [GeCached{y_plus_x:FE_ZERO, y_minus_x: FE_ZERO, z: FE_ZERO, t2d: FE_ZERO}; 8]; /* A,3A,5A,7A,9A,11A,13A,15A */
         ai[0] = a_point.to_cached();
         let a2 = a_point.dbl().to_p3();
         ai[1] = (a2 + ai[0]).to_p3().to_cached();
@@ -1306,7 +1307,7 @@ impl GeP3 {
         self.to_p2().dbl()
     }
 
-    pub fn to_bytes(&self) -> [u8, ..32] {
+    pub fn to_bytes(&self) -> [u8; 32] {
         let recip = self.z.invert();
         let x = self.x * recip;
         let y = self.y * recip;
@@ -1450,7 +1451,7 @@ Preconditions:
   a[31] <= 127
 */
 pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
-    let mut es: [i8, ..64] = [0, ..64];
+    let mut es: [i8; 64] = [0; 64];
     let mut r: GeP1P1;
     let mut s: GeP2;
     let mut t: GePrecomp;
@@ -2087,8 +2088,8 @@ pub fn sc_muladd(s: &mut[u8], a: &[u8], b: &[u8], c: &[u8]) {
 }
 
 
-pub fn curve25519(n: &[u8], p: &[u8]) -> [u8, ..32] {
-    let mut e = [0u8, ..32];
+pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
+    let mut e = [0u8; 32];
     let mut x2;
     let mut z2;
     let mut x3;
@@ -2150,8 +2151,8 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8, ..32] {
     (z2.invert() * x2).to_bytes()
 }
 
-pub fn curve25519_base(x: &[u8]) -> [u8, ..32] {
-    let mut base : [u8, ..32] = [0, ..32];
+pub fn curve25519_base(x: &[u8]) -> [u8; 32] {
+    let mut base : [u8; 32] = [0; 32];
     base[0] = 9;
     curve25519(x, base.as_slice())
 }
@@ -2236,12 +2237,12 @@ mod tests {
 
     #[test]
     fn base_example() {
-        let sk : [u8, ..32] = [
+        let sk : [u8; 32] = [
             0x77, 0x07, 0x6d, 0x0a, 0x73, 0x18, 0xa5, 0x7d, 0x3c, 0x16, 0xc1,
             0x72, 0x51, 0xb2, 0x66, 0x45, 0xdf, 0x4c, 0x2f, 0x87, 0xeb, 0xc0,
             0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a ];
         let pk = curve25519_base(sk.as_slice());
-        let correct : [u8, ..32] = [
+        let correct : [u8; 32] = [
              0x85,0x20,0xf0,0x09,0x89,0x30,0xa7,0x54
             ,0x74,0x8b,0x7d,0xdc,0xb4,0x3e,0xf7,0x5a
             ,0x0d,0xbf,0x3a,0x0d,0x26,0x38,0x1a,0xf4
@@ -2250,7 +2251,7 @@ mod tests {
     }
 }
 
-static BI: [GePrecomp, ..8] = [
+static BI: [GePrecomp; 8] = [
     GePrecomp {
         y_plus_x: Fe([ 25967493,-14356035,29566456,3660896,-12694345,4014787,27544626,-11754271,-6079156,2047605 ]),
         y_minus_x: Fe([ -12545711,934262,-2722910,3049990,-727428,9406986,12720692,5043384,19500929,-15469378 ]),
@@ -2293,7 +2294,7 @@ static BI: [GePrecomp, ..8] = [
     },
 ];
 
-static GE_PRECOMP_BASE : [[GePrecomp, ..8], ..32] = [
+static GE_PRECOMP_BASE : [[GePrecomp; 8]; 32] = [
 [
  GePrecomp {
   y_plus_x: Fe([25967493,-14356035,29566456,3660896,-12694345,4014787,27544626,-11754271,-6079156,2047605]),

@@ -39,7 +39,7 @@ fn calculate_block<M: Mac>(
         block: &mut [u8]) {
     // Perform the 1st iteration. The output goes directly into block
     mac.input(salt);
-    let mut idx_buf = [0u8, ..4];
+    let mut idx_buf = [0u8; 4];
     write_u32_be(&mut idx_buf, idx);
     mac.input(&idx_buf);
     mac.raw_result(block);
@@ -135,14 +135,14 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
     let salt: Vec<u8> = rng.gen_iter::<u8>().take(16).collect();
 
     // 256-bit derived key
-    let mut dk = [0u8, ..32];
+    let mut dk = [0u8; 32];
 
     let mut mac = Hmac::new(Sha256::new(), password.as_bytes());
 
     pbkdf2(&mut mac, salt[], c, &mut dk);
 
     let mut result = String::from_str("$rpbkdf2$0$");
-    let mut tmp = [0u8, ..4];
+    let mut tmp = [0u8; 4];
     write_u32_be(&mut tmp, c);
     result.push_str(tmp.to_base64(base64::STANDARD)[]);
     result.push('$');

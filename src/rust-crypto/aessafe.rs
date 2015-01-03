@@ -123,6 +123,7 @@ finite field which allows for efficient computation of the AES S-Boxes. See [7] 
       http://www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA434781.
 */
 
+use std::ops::{BitAnd, BitXor, Not};
 use std::num::Int;
 use std::default::Default;
 use std::iter::range_step;
@@ -134,7 +135,7 @@ use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDec
 // Defining the type here avoids that problem. Additionally, we need to implement various trait from
 // libstd which wouldn't be possible if we used that type directly.
 #[simd]
-#[deriving(Copy, Eq, PartialEq)]
+#[derive(Copy, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub struct u32x4(u32, u32, u32, u32);
 
@@ -146,9 +147,9 @@ macro_rules! define_aes_struct(
         $name:ident,
         $rounds:expr
     ) => (
-        #[deriving(Copy)]
+        #[derive(Copy)]
         pub struct $name {
-            sk: [Bs8State<u16>, ..($rounds + 1)]
+            sk: [Bs8State<u16>; ($rounds + 1)]
         }
     )
 );
@@ -163,9 +164,9 @@ macro_rules! define_aes_impl(
         impl $name {
             pub fn new(key: &[u8]) -> $name {
                 let mut a =  $name {
-                    sk: [Bs8State(0, 0, 0, 0, 0, 0, 0, 0), ..($rounds + 1)]
+                    sk: [Bs8State(0, 0, 0, 0, 0, 0, 0, 0); ($rounds + 1)]
                 };
-                let mut tmp = [[0u32, ..4], ..($rounds + 1)];
+                let mut tmp = [[0u32; 4]; ($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_4x4_with_u16(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
@@ -234,9 +235,9 @@ macro_rules! define_aes_struct_x8(
         $name:ident,
         $rounds:expr
     ) => (
-        #[deriving(Copy)]
+        #[derive(Copy)]
         pub struct $name {
-            sk: [Bs8State<u32x4>, ..($rounds + 1)]
+            sk: [Bs8State<u32x4>; ($rounds + 1)]
         }
     )
 );
@@ -260,10 +261,10 @@ macro_rules! define_aes_impl_x8(
                             U32X4_0,
                             U32X4_0,
                             U32X4_0,
-                            U32X4_0),
-                        ..($rounds + 1)]
+                            U32X4_0);
+                        ($rounds + 1)]
                 };
-                let mut tmp = [[0u32, ..4], ..($rounds + 1)];
+                let mut tmp = [[0u32; 4]; ($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
                 for i in range(0u, $rounds + 1) {
                     a.sk[i] = bit_slice_fill_4x4_with_u32x4(
@@ -359,12 +360,12 @@ enum KeyType {
 
 // This array is not accessed in any key-dependant way, so there are no timing problems inherent in
 // using it.
-static RCON: [u32, ..10] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
+static RCON: [u32; 10] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
 
 // The round keys are created without bit-slicing the key data. The individual implementations bit
 // slice the round keys returned from this function. This function, and the few functions above, are
 // derived from the BouncyCastle AES implementation.
-fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32, ..4]]) {
+fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]]) {
     let (key_words, rounds) = match key.len() {
         16 => (4, 10u),
         24 => (6, 12u),
@@ -460,7 +461,7 @@ fn decrypt_core<S: AesOps + Copy>(state: &S, sk: &[S]) -> S {
     tmp
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Bs8State<T>(T, T, T, T, T, T, T, T);
 
 impl <T: Copy> Bs8State<T> {
@@ -641,7 +642,7 @@ impl <T: Not<T> + Copy> Bs8State<T> {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Bs4State<T>(T, T, T, T);
 
 impl <T: Copy> Bs4State<T> {
@@ -665,7 +666,7 @@ impl <T: BitXor<T, T> + Copy> Bs4State<T> {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Bs2State<T>(T, T);
 
 impl <T> Bs2State<T> {
@@ -722,7 +723,7 @@ fn bit_slice_4x1_with_u16(a: u32) -> Bs8State<u16> {
 
 // Bit slice a 16 byte array in column major order
 fn bit_slice_1x16_with_u16(data: &[u8]) -> Bs8State<u16> {
-    let mut n = [0u32, ..4];
+    let mut n = [0u32; 4];
     read_u32v_le(&mut n, data);
 
     let a = n[0];
@@ -842,7 +843,7 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
 // Bit slice a set of 4 u32s by filling a full 128 byte data block with those repeated values. This
 // is used as part of bit slicing the round keys.
 fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32x4> {
-    let mut tmp = [0u8, ..128];
+    let mut tmp = [0u8; 128];
     for i in range(0u, 8) {
         write_u32_le(tmp.slice_mut(i * 16,i * 16 + 4), a);
         write_u32_le(tmp.slice_mut(i * 16 + 4,i * 16 + 8), b);

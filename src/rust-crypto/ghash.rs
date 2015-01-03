@@ -15,6 +15,7 @@
 /// [2] - "Faster and Timing-Attack Resistant AES-GCM" - Emilia Käsper and Peter Schwabe
 ///       <http://cryptojedi.org/papers/aesbs-20090616.pdf>
 
+use std::ops::BitXor;
 use std::mem;
 use std::simd;
 use std::slice::bytes::copy_memory;
@@ -24,7 +25,7 @@ use mac::{Mac, MacResult};
 
 // A struct representing an element in GF(2^128)
 // x^0 is the msb, while x^127 is the lsb
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Gf128 { d: simd::u32x4 }
 
 impl Gf128 {
@@ -41,9 +42,9 @@ impl Gf128 {
         Gf128::new(a, b, c, d)
     }
 
-    fn to_bytes(&self) -> [u8, ..16] {
+    fn to_bytes(&self) -> [u8; 16] {
         let simd::u32x4(a, b, c, d) = self.d;
-        let mut result: [u8, ..16] = unsafe { mem::uninitialized() };
+        let mut result: [u8; 16] = unsafe { mem::uninitialized() };
 
         write_u32_be(result.slice_mut(0,4), d);
         write_u32_be(result.slice_mut(4,8), c);
@@ -84,7 +85,7 @@ impl Gf128 {
     }
 
     // Adds y, and multiplies with h using a precomputed array of the values h * x^0 to h * x^127
-    fn add_and_mul(&mut self, y: Gf128, hs: &[Gf128, ..128]) {
+    fn add_and_mul(&mut self, y: Gf128, hs: &[Gf128; 128]) {
         *self = *self ^ y;
         let mut x = mem::replace(self, Gf128::new(0, 0, 0, 0));
 
@@ -128,27 +129,27 @@ impl BitXor<Gf128, Gf128> for Gf128 {
 }
 
 /// A structure representing the state of a GHASH computation
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Ghash {
-    hs: [Gf128, ..128],
+    hs: [Gf128; 128],
     state: Gf128,
     a_len: uint,
-    rest: Option<[u8, ..16]>,
+    rest: Option<[u8; 16]>,
     finished: bool
 }
 
 /// A structure representing the state of a GHASH computation, after input for C was provided
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct GhashWithC {
-    hs: [Gf128, ..128],
+    hs: [Gf128; 128],
     state: Gf128,
     a_len: uint,
     c_len: uint,
-    rest: Option<[u8, ..16]>
+    rest: Option<[u8; 16]>
 }
 
-fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8, ..16]>,
-          hs: &[Gf128, ..128]) {
+fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8; 16]>,
+          hs: &[Gf128; 128]) {
     let rest_len = *len % 16;
     let data_len = data.len();
     *len += data_len;
@@ -177,7 +178,7 @@ fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8
     }
 
     if rest.len() != 0 {
-        let mut tmp = [0, ..16];
+        let mut tmp = [0; 16];
         copy_memory(&mut tmp, rest);
         *srest = Some(tmp);
     }
@@ -188,7 +189,7 @@ impl Ghash {
     #[inline]
     pub fn new(h: &[u8]) -> Ghash {
         assert!(h.len() == 16);
-        let mut table: [Gf128, ..128] = unsafe { mem::uninitialized() };
+        let mut table: [Gf128; 128] = unsafe { mem::uninitialized() };
 
         // Precompute values for h * x^0 to h * x^127
         let mut h = Gf128::from_bytes(h);
@@ -241,7 +242,7 @@ impl Ghash {
 
     /// Retrieve the digest result
     #[inline]
-    pub fn result(mut self) -> [u8, ..16] {
+    pub fn result(mut self) -> [u8; 16] {
         if !self.finished {
             self.flush();
 
@@ -266,7 +267,7 @@ impl GhashWithC {
 
     /// Retrieve the digest result
     #[inline]
-    pub fn result(mut self) -> [u8, ..16] {
+    pub fn result(mut self) -> [u8; 16] {
         for rest in self.rest.take().iter() {
             self.state.add_and_mul(Gf128::from_bytes(rest), &self.hs);
         }
@@ -295,7 +296,7 @@ impl Mac for Ghash {
     }
 
     fn result(&mut self) -> MacResult {
-        let mut mac = [0u8, ..16];
+        let mut mac = [0u8; 16];
         self.raw_result(mac.as_mut_slice());
         MacResult::new(mac[])
     }
@@ -563,9 +564,9 @@ mod bench {
 
     #[bench]
     pub fn ghash_10(bh: & mut Bencher) {
-        let mut mac = [0u8, ..16];
-        let key     = [0u8, ..16];
-        let bytes   = [1u8, ..10];
+        let mut mac = [0u8; 16];
+        let key     = [0u8; 16];
+        let bytes   = [1u8; 10];
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
@@ -576,9 +577,9 @@ mod bench {
 
     #[bench]
     pub fn ghash_1k(bh: & mut Bencher) {
-        let mut mac = [0u8, ..16];
-        let key     = [0u8, ..16];
-        let bytes   = [1u8, ..1024];
+        let mut mac = [0u8; 16];
+        let key     = [0u8; 16];
+        let bytes   = [1u8; 1024];
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
@@ -589,9 +590,9 @@ mod bench {
 
     #[bench]
     pub fn ghash_64k(bh: & mut Bencher) {
-        let mut mac = [0u8, ..16];
-        let key     = [0u8, ..16];
-        let bytes   = [1u8, ..65536];
+        let mut mac = [0u8; 16];
+        let key     = [0u8; 16];
+        let bytes   = [1u8; 65536];
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);

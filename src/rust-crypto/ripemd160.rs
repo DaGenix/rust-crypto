@@ -32,9 +32,9 @@ const DIGEST_BUF_LEN: uint = 5u;
 const WORK_BUF_LEN: uint = 16u;
 
 /// Structure representing the state of a Ripemd160 computation
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Ripemd160 {
-    h: [u32, ..DIGEST_BUF_LEN],
+    h: [u32; DIGEST_BUF_LEN],
     length_bits: u64,
     buffer: FixedBuffer64,
     computed: bool,
@@ -144,8 +144,8 @@ macro_rules! process_block(
     });
 );
 
-fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
-    let mut w = [0u32, ..WORK_BUF_LEN];
+fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
+    let mut w = [0u32; WORK_BUF_LEN];
     read_u32v_le(w.slice_mut(0,16), data);
     process_block!(h, w[],
         // Round 1
@@ -334,7 +334,7 @@ impl Ripemd160 {
     // Construct a `Ripemd` object
     pub fn new() -> Ripemd160 {
         let mut st = Ripemd160 {
-            h: [0u32, ..DIGEST_BUF_LEN],
+            h: [0u32; DIGEST_BUF_LEN],
             length_bits: 0u64,
             buffer: FixedBuffer64::new(),
             computed: false,
@@ -415,7 +415,7 @@ mod tests {
     use digest::Digest;
     use ripemd160::Ripemd160;
 
-    #[deriving(Clone)]
+    #[derive(Clone)]
     struct Test {
         input: &'static str,
         output: Vec<u8>,
@@ -476,7 +476,7 @@ mod tests {
 
         // Test that it works when accepting the message all at once
 
-        let mut out = [0u8, ..20];
+        let mut out = [0u8; 20];
 
         let mut sh = box Ripemd160::new();
         for t in tests.iter() {
@@ -531,7 +531,7 @@ mod bench {
     #[bench]
     pub fn ripemd160_10(bh: & mut Bencher) {
         let mut sh = Ripemd160::new();
-        let bytes = [1u8, ..10];
+        let bytes = [1u8; 10];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -541,7 +541,7 @@ mod bench {
     #[bench]
     pub fn ripemd160_1k(bh: & mut Bencher) {
         let mut sh = Ripemd160::new();
-        let bytes = [1u8, ..1024];
+        let bytes = [1u8; 1024];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -551,7 +551,7 @@ mod bench {
     #[bench]
     pub fn ripemd160_64k(bh: & mut Bencher) {
         let mut sh = Ripemd160::new();
-        let bytes = [1u8, ..65536];
+        let bytes = [1u8; 65536];
         bh.iter( || {
             sh.input(&bytes);
         });

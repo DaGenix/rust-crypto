@@ -70,16 +70,16 @@ const NUM_POOLS: uint = 32;
 
 /// The underlying PRNG (PC 9.4)
 struct FortunaGenerator {
-    key: [u8, ..KEY_LEN],
-    ctr: [u8, ..CTR_LEN],
+    key: [u8; KEY_LEN],
+    ctr: [u8; CTR_LEN],
 }
 
 impl FortunaGenerator {
     /// Creates a new generator (PC 9.4.1)
     fn new() -> FortunaGenerator {
         FortunaGenerator {
-            key: [0, ..KEY_LEN],
-            ctr: [0, ..CTR_LEN],
+            key: [0; KEY_LEN],
+            ctr: [0; CTR_LEN],
         }
     }
 
@@ -111,7 +111,7 @@ impl FortunaGenerator {
     /// Generates some `k` 16-byte blocks of random output (PC 9.4.3)
     /// This should never be used directly, except by `generate_random_data`.
     fn generate_blocks(&mut self, k: uint, out: &mut [u8]) {
-        assert!(self.ctr[] != [0, ..CTR_LEN][]);
+        assert!(self.ctr[] != [0; CTR_LEN][]);
 
         // Setup AES encryptor
         let block_encryptor = AesSafe256Encryptor::new(self.key[]);
@@ -131,13 +131,13 @@ impl FortunaGenerator {
         // Generate output
         self.generate_blocks(n, out.slice_to_mut(n * AES_BLOCK_SIZE));
         if rem > 0 {
-            let mut buf = [0, ..AES_BLOCK_SIZE];
+            let mut buf = [0; AES_BLOCK_SIZE];
             self.generate_blocks(1, buf.as_mut_slice());
             out.slice_from_mut(n * AES_BLOCK_SIZE).clone_from_slice(buf[..rem]);
         }
 
         // Rekey
-        let mut new_key = [0, ..KEY_LEN];
+        let mut new_key = [0; KEY_LEN];
         self.generate_blocks(KEY_LEN / AES_BLOCK_SIZE, new_key.as_mut_slice());
         self.key = new_key;
     }
@@ -145,7 +145,7 @@ impl FortunaGenerator {
 
 
 /// A single entropy pool (not public)
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Pool {
     state: Sha256,
     count: uint
@@ -175,7 +175,7 @@ impl Pool {
 
 /// The `Fortuna` CSPRNG (PC 9.5)
 pub struct Fortuna {
-    pool: [Pool, ..NUM_POOLS],
+    pool: [Pool; NUM_POOLS],
     generator: FortunaGenerator,
     reseed_count: u32,
     last_reseed_time: f64
@@ -185,7 +185,7 @@ impl Fortuna {
     /// Creates a new unseeded `Fortuna` (PC 9.5.4)
     pub fn new_unseeded() -> Fortuna {
         Fortuna {
-            pool: [Pool::new(), ..NUM_POOLS],
+            pool: [Pool::new(); NUM_POOLS],
             generator: FortunaGenerator::new(),
             reseed_count: 0,
             last_reseed_time: 0.0
@@ -220,7 +220,7 @@ impl Rng for Fortuna {
             self.reseed_count += 1;
             self.last_reseed_time = now;
             // Compute key as Sha256d( key || s )
-            let mut hash = [0, ..(32 * NUM_POOLS)];
+            let mut hash = [0; (32 * NUM_POOLS)];
             let mut n_pools = 0;
             while self.reseed_count % (1 << n_pools) == 0 {
                 (&mut self.pool[n_pools]).result(hash.slice_mut(n_pools * 32,(n_pools + 1) * 32));
@@ -241,7 +241,7 @@ impl Rng for Fortuna {
     }
 
     fn next_u32(&mut self) -> u32 {
-        let mut ret = [0, ..4];
+        let mut ret = [0; 4];
         self.fill_bytes(ret.as_mut_slice());
         read_u32_le(ret[])
     }
@@ -286,7 +286,7 @@ mod tests {
     #[should_fail]
     fn test_badly_seeded() {
         let mut f: Fortuna = Fortuna::new_unseeded();
-        f.add_random_event(0, 0, &[10, ..32]);
+        f.add_random_event(0, 0, &[10; 32]);
         let _ = f.next_u32();
     }
 
@@ -294,7 +294,7 @@ mod tests {
     #[should_fail]
     fn test_too_big_event() {
         let mut f: Fortuna = Fortuna::new_unseeded();
-        f.add_random_event(0, 0, &[10, ..33]);
+        f.add_random_event(0, 0, &[10; 33]);
     }
 
     #[test]
@@ -318,18 +318,18 @@ mod tests {
 
         // These three should all be different
         let mut f4: Fortuna = Fortuna::new_unseeded();
-        f4.add_random_event(0, 0, &[10, ..32]);
-        f4.add_random_event(0, 0, &[10, ..32]);
+        f4.add_random_event(0, 0, &[10; 32]);
+        f4.add_random_event(0, 0, &[10; 32]);
         let x = f4.next_u32();
 
         let mut f5: Fortuna = Fortuna::new_unseeded();
-        f5.add_random_event(0, 0, &[10, ..32]);
-        f5.add_random_event(0, 0, &[20, ..32]);
+        f5.add_random_event(0, 0, &[10; 32]);
+        f5.add_random_event(0, 0, &[20; 32]);
         let y = f5.next_u32();
 
         let mut f6: Fortuna = Fortuna::new_unseeded();
-        f6.add_random_event(0, 0, &[20, ..32]);
-        f6.add_random_event(0, 0, &[10, ..32]);
+        f6.add_random_event(0, 0, &[20; 32]);
+        f6.add_random_event(0, 0, &[10; 32]);
         let z = f6.next_u32();
 
         assert!(x != y);
@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_generator_correctness() {
-        let mut output = [0, ..100];
+        let mut output = [0; 100];
         // Expected output as in http://www.seehuhn.de/pages/fortuna
         let expected = [ 82, 254, 233, 139, 254,  85,   6, 222, 222, 149,
                         120,  35, 173,  71,  89, 232,  51, 182, 252, 139,
@@ -355,7 +355,7 @@ mod tests {
         f.fill_bytes(output.as_mut_slice());
         assert_eq!(expected[], output[]);
 
-        let mut scratch = [0, ..(1 << 20)];
+        let mut scratch = [0; (1 << 20)];
         f.generator.generate_random_data(scratch.as_mut_slice());
 
         let expected = [122, 164,  26,  67, 102,  65,  30, 217, 219, 113,
@@ -390,16 +390,16 @@ mod tests {
 
     #[test]
     fn test_accumulator_correctness() {
-        let mut output = [0, ..100];
+        let mut output = [0; 100];
         // Expected output from experiments with pycryto
         // Note that this does not match the results for the Go implementation
         // as described at http://www.seehuhn.de/pages/fortuna ... I believe
         // this is because the author there is reusing some Fortuna state from
         // the previous test. These results agree with pycrypto on a fresh slate
         let mut f = Fortuna::new_unseeded();
-        f.pool = [Pool::new(), ..NUM_POOLS];
-        f.add_random_event(0, 0, &[0, ..32]);
-        f.add_random_event(0, 0, &[0, ..32]);
+        f.pool = [Pool::new(); NUM_POOLS];
+        f.add_random_event(0, 0, &[0; 32]);
+        f.add_random_event(0, 0, &[0; 32]);
         for i in range(0, 32) {
             f.add_random_event(1, i, &[1, 2]);
         }
@@ -425,8 +425,8 @@ mod tests {
         assert_eq!(expected[], output[]);
 
         // Immediately (less than 100ms)
-        f.add_random_event(0, 0, &[0, ..32]);
-        f.add_random_event(0, 0, &[0, ..32]);
+        f.add_random_event(0, 0, &[0; 32]);
+        f.add_random_event(0, 0, &[0; 32]);
 
         // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")  
         // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
@@ -472,7 +472,7 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_32(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed([100, ..64][]);
+        let mut f: Fortuna = SeedableRng::from_seed([100; 64][]);
         bh.iter( || {
             f.next_u32();
         });
@@ -481,7 +481,7 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_64(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed([100, ..64][]);
+        let mut f: Fortuna = SeedableRng::from_seed([100; 64][]);
         bh.iter( || {
             f.next_u64();
         });
@@ -490,8 +490,8 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_1k(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed([100, ..64][]);
-        let mut bytes = [0u8, ..1024];
+        let mut f: Fortuna = SeedableRng::from_seed([100; 64][]);
+        let mut bytes = [0u8; 1024];
         bh.iter( || {
             f.fill_bytes(&mut bytes);
         });
@@ -500,8 +500,8 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_64k(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed([100, ..64][]);
-        let mut bytes = [0u8, ..65536];
+        let mut f: Fortuna = SeedableRng::from_seed([100; 64][]);
+        let mut bytes = [0u8; 65536];
         bh.iter( || {
             f.fill_bytes(&mut bytes);
         });

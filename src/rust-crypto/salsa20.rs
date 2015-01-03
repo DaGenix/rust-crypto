@@ -11,15 +11,15 @@ use cryptoutil::{read_u32v_le, symm_enc_or_dec, write_u32_le};
 use std::num::Int;
 use std::slice::bytes::copy_memory;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Salsa20 {
-    state: [u8, ..64],
-    output: [u8, ..64],
+    state: [u8; 64],
+    output: [u8; 64],
     counter: u64,
     offset: uint,
 }
 
-fn doubleround(y: &mut [u32, ..16]) {
+fn doubleround(y: &mut [u32; 16]) {
     y[ 4] = y[ 4] ^ (y[ 0]+y[12]).rotate_left( 7);
     y[ 8] = y[ 8] ^ (y[ 4]+y[ 0]).rotate_left( 9);
     y[12] = y[12] ^ (y[ 8]+y[ 4]).rotate_left(13);
@@ -63,7 +63,7 @@ fn doubleround(y: &mut [u32, ..16]) {
 
 impl Salsa20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> Salsa20 {
-        let mut salsa20 = Salsa20 { state: [0, ..64], output: [0, ..64], counter: 0, offset: 64 };
+        let mut salsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
 
         assert!(key.len() == 16 || key.len() == 32);
         assert!(nonce.len() == 8);
@@ -80,12 +80,12 @@ impl Salsa20 {
     pub fn new_xsalsa20(key: &[u8], nonce: &[u8]) -> Salsa20 {
         assert!(key.len() == 32);
         assert!(nonce.len() == 24);
-        let mut xsalsa20 = Salsa20 { state: [0, ..64], output: [0, ..64], counter: 0, offset: 64 };
+        let mut xsalsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
 
         xsalsa20.hsalsa20_expand(key, nonce[0..16]);
         xsalsa20.hsalsa20_hash();
 
-        let mut new_key = [0, ..32];
+        let mut new_key = [0; 32];
         copy_memory(new_key.slice_mut(0,4), xsalsa20.output[0..4]);
         copy_memory(new_key.slice_mut(4,8), xsalsa20.output[20..24]);
         copy_memory(new_key.slice_mut(8,12), xsalsa20.output[40..44]);
@@ -131,8 +131,8 @@ impl Salsa20 {
         write_u32_le(self.state.slice_mut(32,36), self.counter as u32);
         write_u32_le(self.state.slice_mut(36,40), (self.counter >> 32) as u32);
         
-        let mut x = [0u32, ..16];
-        let mut z = [0u32, ..16];
+        let mut x = [0u32; 16];
+        let mut z = [0u32; 16];
         read_u32v_le(x.as_mut_slice(), &self.state);
         read_u32v_le(z.as_mut_slice(), &self.state);
         for _ in range(0u, 10) {
@@ -147,7 +147,7 @@ impl Salsa20 {
     }
 
     fn hsalsa20_hash(&mut self) {
-        let mut x = [0u32, ..16];
+        let mut x = [0u32; 16];
         read_u32v_le(x.as_mut_slice(), &self.state);
         for _ in range(0u, 10) {
             doubleround(&mut x);
@@ -198,9 +198,9 @@ mod test {
     #[test]
     fn test_salsa20_128bit_ecrypt_set_1_vector_0() {
         let key = [128u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let nonce = [0u8, ..8];
-        let input = [0u8, ..64];
-        let mut stream = [0u8, ..64];
+        let nonce = [0u8; 8];
+        let input = [0u8; 64];
+        let mut stream = [0u8; 64];
         let result =
             [0x4D, 0xFA, 0x5E, 0x48, 0x1D, 0xA2, 0x3E, 0xA0,
              0x9A, 0x31, 0x02, 0x20, 0x50, 0x85, 0x99, 0x36,
@@ -221,9 +221,9 @@ mod test {
         let key =
             [128u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let nonce = [0u8, ..8];
-        let input = [0u8, ..64];
-        let mut stream = [0u8, ..64];
+        let nonce = [0u8; 8];
+        let input = [0u8; 64];
+        let mut stream = [0u8; 64];
         let result =
             [0xE3, 0xBE, 0x8F, 0xDD, 0x8B, 0xEC, 0xA2, 0xE3,
              0xEA, 0x8E, 0xF9, 0x47, 0x5B, 0x29, 0xA6, 0xE7,
@@ -250,8 +250,8 @@ mod test {
             [0x69, 0x69, 0x6e, 0xe9, 0x55, 0xb6, 0x2b, 0x73,
              0xcd, 0x62, 0xbd, 0xa8, 0x75, 0xfc, 0x73, 0xd6,
              0x82, 0x19, 0xe0, 0x03, 0x6b, 0x7a, 0x0b, 0x37];
-        let input = [0u8, ..139];
-        let mut stream = [0u8, ..139];
+        let input = [0u8; 139];
+        let mut stream = [0u8; 139];
         let result =
             [0xee, 0xa6, 0xa7, 0x25, 0x1c, 0x1e, 0x72, 0x91,
              0x6d, 0x11, 0xc2, 0xcb, 0x21, 0x4d, 0x3c, 0x25,
@@ -286,9 +286,9 @@ mod bench {
 
     #[bench]
     pub fn salsa20_10(bh: & mut Bencher) {
-        let mut salsa20 = Salsa20::new(&[0, ..32], &[0, ..8]);
-        let input = [1u8, ..10];
-        let mut output = [0u8, ..10];
+        let mut salsa20 = Salsa20::new(&[0; 32], &[0; 8]);
+        let input = [1u8; 10];
+        let mut output = [0u8; 10];
         bh.iter( || {
             salsa20.process(&input, &mut output);
         });
@@ -297,9 +297,9 @@ mod bench {
     
     #[bench]
     pub fn salsa20_1k(bh: & mut Bencher) {
-        let mut salsa20 = Salsa20::new(&[0, ..32], &[0, ..8]);
-        let input = [1u8, ..1024];
-        let mut output = [0u8, ..1024];
+        let mut salsa20 = Salsa20::new(&[0; 32], &[0; 8]);
+        let input = [1u8; 1024];
+        let mut output = [0u8; 1024];
         bh.iter( || {
             salsa20.process(&input, &mut output);
         });
@@ -308,9 +308,9 @@ mod bench {
  
     #[bench]
     pub fn salsa20_64k(bh: & mut Bencher) {
-        let mut salsa20 = Salsa20::new(&[0, ..32], &[0, ..8]);
-        let input = [1u8, ..65536];
-        let mut output = [0u8, ..65536];
+        let mut salsa20 = Salsa20::new(&[0; 32], &[0; 8]);
+        let input = [1u8; 65536];
+        let mut output = [0u8; 65536];
         bh.iter( || {
             salsa20.process(&input, &mut output);
         });

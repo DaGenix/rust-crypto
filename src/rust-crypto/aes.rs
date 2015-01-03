@@ -14,7 +14,7 @@ use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher};
 use util;
 
 /// AES key size
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum KeySize {
     KeySize128,
     KeySize192,
@@ -463,7 +463,7 @@ mod test {
     }
 
     fn run_test<E: BlockEncryptor, D: BlockDecryptor>(enc: &mut E, dec: &mut D, test: &Test) {
-        let mut tmp = [0u8, ..16];
+        let mut tmp = [0u8; 16];
         for data in test.data.iter() {
             enc.encrypt_block(data.plain[], &mut tmp);
             assert!(tmp[] == data.cipher[]);
@@ -545,10 +545,10 @@ mod test {
 
     #[test]
     fn test_aessafe_128_x8() {
-        let key: [u8, ..16] = [
+        let key: [u8; 16] = [
             0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
             0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c ];
-        let plain: [u8, ..128] = [
+        let plain: [u8; 128] = [
             0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
             0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
             0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
@@ -565,7 +565,7 @@ mod test {
             0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
             0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
             0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10 ];
-        let cipher: [u8, ..128] = [
+        let cipher: [u8; 128] = [
             0x3a, 0xd7, 0x7b, 0xb4, 0x0d, 0x7a, 0x36, 0x60,
             0xa8, 0x9e, 0xca, 0xf3, 0x24, 0x66, 0xef, 0x97,
             0xf5, 0xd3, 0xd5, 0x85, 0x03, 0xb9, 0x69, 0x9d,
@@ -585,7 +585,7 @@ mod test {
 
         let enc = aessafe::AesSafe128EncryptorX8::new(&key);
         let dec = aessafe::AesSafe128DecryptorX8::new(&key);
-        let mut tmp = [0u8, ..128];
+        let mut tmp = [0u8; 128];
         enc.encrypt_block_x8(&plain, &mut tmp);
         assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(&cipher, &mut tmp);
@@ -594,10 +594,10 @@ mod test {
 
     #[test]
     fn test_aessafe_192_x8() {
-        let key: [u8, ..24] = [
+        let key: [u8; 24] = [
             0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 0xc8, 0x10, 0xf3, 0x2b,
             0x80, 0x90, 0x79, 0xe5, 0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b ];
-        let plain: [u8, ..128] = [
+        let plain: [u8; 128] = [
             0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
             0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
             0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
@@ -614,7 +614,7 @@ mod test {
             0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
             0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
             0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10 ];
-        let cipher: [u8, ..128] = [
+        let cipher: [u8; 128] = [
             0xbd, 0x33, 0x4f, 0x1d, 0x6e, 0x45, 0xf2, 0x5f,
             0xf7, 0x12, 0xa2, 0x14, 0x57, 0x1f, 0xa5, 0xcc,
             0x97, 0x41, 0x04, 0x84, 0x6d, 0x0a, 0xd3, 0xad,
@@ -634,7 +634,7 @@ mod test {
 
         let enc = aessafe::AesSafe192EncryptorX8::new(&key);
         let dec = aessafe::AesSafe192DecryptorX8::new(&key);
-        let mut tmp = [0u8, ..128];
+        let mut tmp = [0u8; 128];
         enc.encrypt_block_x8(&plain, &mut tmp);
         assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(&cipher, &mut tmp);
@@ -643,12 +643,12 @@ mod test {
 
     #[test]
     fn test_aessafe_256_x8() {
-        let key: [u8, ..32] = [
+        let key: [u8; 32] = [
             0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe,
             0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
             0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7,
             0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4 ];
-        let plain: [u8, ..128] = [
+        let plain: [u8; 128] = [
             0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
             0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
             0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
@@ -665,7 +665,7 @@ mod test {
             0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
             0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
             0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10 ];
-        let cipher: [u8, ..128] = [
+        let cipher: [u8; 128] = [
             0xf3, 0xee, 0xd1, 0xbd, 0xb5, 0xd2, 0xa0, 0x3c,
             0x06, 0x4b, 0x5a, 0x7e, 0x3d, 0xb1, 0x81, 0xf8,
             0x59, 0x1c, 0xcb, 0x10, 0xd4, 0x10, 0xed, 0x26,
@@ -685,7 +685,7 @@ mod test {
 
         let enc = aessafe::AesSafe256EncryptorX8::new(&key);
         let dec = aessafe::AesSafe256DecryptorX8::new(&key);
-        let mut tmp = [0u8, ..128];
+        let mut tmp = [0u8; 128];
         enc.encrypt_block_x8(&plain, &mut tmp);
         assert!(tmp[] == cipher[]);
         dec.decrypt_block_x8(&cipher, &mut tmp);
@@ -714,7 +714,7 @@ mod bench {
     use aessafe;
     use symmetriccipher::{BlockEncryptor, BlockEncryptorX8};
     use util;
-    use aes::KeySize::{mod, KeySize128, KeySize192, KeySize256};
+    use aes::KeySize::{self, KeySize128, KeySize192, KeySize256};
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]
@@ -736,12 +736,12 @@ mod bench {
 
     fn aesni_bench(bh: &mut Bencher, key_size: KeySize) {
         if util::supports_aesni() {
-            let key: [u8, ..16] = [1u8, ..16];
-            let plain: [u8, ..16] = [2u8, ..16];
+            let key: [u8; 16] = [1u8; 16];
+            let plain: [u8; 16] = [2u8; 16];
 
             let a = aesni::AesNiEncryptor::new(key_size, &key);
 
-            let mut tmp = [0u8, ..16];
+            let mut tmp = [0u8; 16];
 
             bh.iter( || {
                 a.encrypt_block(&plain, &mut tmp);
@@ -753,12 +753,12 @@ mod bench {
 
     #[bench]
     pub fn aes_safe_bench(bh: &mut Bencher) {
-        let key: [u8, ..16] = [1u8, ..16];
-        let plain: [u8, ..16] = [2u8, ..16];
+        let key: [u8; 16] = [1u8; 16];
+        let plain: [u8; 16] = [2u8; 16];
 
         let a = aessafe::AesSafe128Encryptor::new(&key);
 
-        let mut tmp = [0u8, ..16];
+        let mut tmp = [0u8; 16];
 
         bh.iter( || {
             a.encrypt_block(&plain, &mut tmp);
@@ -769,12 +769,12 @@ mod bench {
 
     #[bench]
     pub fn aes_safe_x8_bench(bh: &mut Bencher) {
-        let key: [u8, ..16] = [1u8, ..16];
-        let plain: [u8, ..128] = [2u8, ..128];
+        let key: [u8; 16] = [1u8; 16];
+        let plain: [u8; 128] = [2u8; 128];
 
         let a = aessafe::AesSafe128EncryptorX8::new(&key);
 
-        let mut tmp = [0u8, ..128];
+        let mut tmp = [0u8; 128];
 
         bh.iter( || {
             a.encrypt_block_x8(&plain, &mut tmp);

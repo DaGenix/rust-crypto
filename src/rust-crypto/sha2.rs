@@ -28,7 +28,7 @@ struct Engine512State {
 }
 
 impl Engine512State {
-    fn new(h: &[u64, ..8]) -> Engine512State {
+    fn new(h: &[u64; 8]) -> Engine512State {
         Engine512State {
             h0: h[0],
             h1: h[1],
@@ -41,7 +41,7 @@ impl Engine512State {
         }
     }
 
-    fn reset(&mut self, h: &[u64, ..8]) {
+    fn reset(&mut self, h: &[u64; 8]) {
         self.h0 = h[0];
         self.h1 = h[1];
         self.h2 = h[2];
@@ -86,7 +86,7 @@ impl Engine512State {
         let mut g = self.h6;
         let mut h = self.h7;
 
-        let mut w = [0u64, ..80];
+        let mut w = [0u64; 80];
 
         // Sha-512 and Sha-256 use basically the same calculations which are implemented by
         // these macros. Inlining the calculations seems to result in better generated code.
@@ -154,7 +154,7 @@ impl Engine512State {
 }
 
 // Constants necessary for SHA-2 512 family of digests.
-static K64: [u64, ..80] = [
+static K64: [u64; 80] = [
     0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
     0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
     0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
@@ -188,7 +188,7 @@ struct Engine512 {
 }
 
 impl Engine512 {
-    fn new(h: &[u64, ..8]) -> Engine512 {
+    fn new(h: &[u64; 8]) -> Engine512 {
         Engine512 {
             length_bits: (0, 0),
             buffer: FixedBuffer128::new(),
@@ -197,7 +197,7 @@ impl Engine512 {
         }
     }
 
-    fn reset(&mut self, h: &[u64, ..8]) {
+    fn reset(&mut self, h: &[u64; 8]) {
         self.length_bits = (0, 0);
         self.buffer.reset();
         self.state.reset(h);
@@ -275,7 +275,7 @@ impl Digest for Sha512 {
     fn block_size(&self) -> uint { 128 }
 }
 
-static H512: [u64, ..8] = [
+static H512: [u64; 8] = [
     0x6a09e667f3bcc908,
     0xbb67ae8584caa73b,
     0x3c6ef372fe94f82b,
@@ -328,7 +328,7 @@ impl Digest for Sha384 {
     fn block_size(&self) -> uint { 128 }
 }
 
-static H384: [u64, ..8] = [
+static H384: [u64; 8] = [
     0xcbbb9d5dc1059ed8,
     0x629a292a367cd507,
     0x9159015a3070dd17,
@@ -379,7 +379,7 @@ impl Digest for Sha512Trunc256 {
     fn block_size(&self) -> uint { 128 }
 }
 
-static H512_TRUNC_256: [u64, ..8] = [
+static H512_TRUNC_256: [u64; 8] = [
     0x22312194fc2bf72c,
     0x9f555fa3c84c64c2,
     0x2393b86b6f53b151,
@@ -430,7 +430,7 @@ impl Digest for Sha512Trunc224 {
     fn block_size(&self) -> uint { 128 }
 }
 
-static H512_TRUNC_224: [u64, ..8] = [
+static H512_TRUNC_224: [u64; 8] = [
     0x8c3d37c819544da2,
     0x73e1996689dcd4d6,
     0x1dfab7ae32ff9c82,
@@ -444,7 +444,7 @@ static H512_TRUNC_224: [u64, ..8] = [
 
 // A structure that represents that state of a digest computation for the SHA-2 512 family of digest
 // functions
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Engine256State {
     h0: u32,
     h1: u32,
@@ -457,7 +457,7 @@ struct Engine256State {
 }
 
 impl Engine256State {
-    fn new(h: &[u32, ..8]) -> Engine256State {
+    fn new(h: &[u32; 8]) -> Engine256State {
         Engine256State {
             h0: h[0],
             h1: h[1],
@@ -470,7 +470,7 @@ impl Engine256State {
         }
     }
 
-    fn reset(&mut self, h: &[u32, ..8]) {
+    fn reset(&mut self, h: &[u32; 8]) {
         self.h0 = h[0];
         self.h1 = h[1];
         self.h2 = h[2];
@@ -515,7 +515,7 @@ impl Engine256State {
         let mut g = self.h6;
         let mut h = self.h7;
 
-        let mut w = [0u32, ..64];
+        let mut w = [0u32; 64];
 
         // Sha-512 and Sha-256 use basically the same calculations which are implemented
         // by these macros. Inlining the calculations seems to result in better generated code.
@@ -582,7 +582,7 @@ impl Engine256State {
     }
 }
 
-static K32: [u32, ..64] = [
+static K32: [u32; 64] = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -604,7 +604,7 @@ static K32: [u32, ..64] = [
 
 // A structure that keeps track of the state of the Sha-256 operation and contains the logic
 // necessary to perform the final calculations.
-#[deriving(Copy)]
+#[derive(Copy)]
 struct Engine256 {
     length_bits: u64,
     buffer: FixedBuffer64,
@@ -613,7 +613,7 @@ struct Engine256 {
 }
 
 impl Engine256 {
-    fn new(h: &[u32, ..8]) -> Engine256 {
+    fn new(h: &[u32; 8]) -> Engine256 {
         Engine256 {
             length_bits: 0,
             buffer: FixedBuffer64::new(),
@@ -622,7 +622,7 @@ impl Engine256 {
         }
     }
 
-    fn reset(&mut self, h: &[u32, ..8]) {
+    fn reset(&mut self, h: &[u32; 8]) {
         self.length_bits = 0;
         self.buffer.reset();
         self.state.reset(h);
@@ -654,7 +654,7 @@ impl Engine256 {
 
 
 /// The SHA-256 hash algorithm
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Sha256 {
     engine: Engine256
 }
@@ -697,7 +697,7 @@ impl Digest for Sha256 {
     fn block_size(&self) -> uint { 64 }
 }
 
-static H256: [u32, ..8] = [
+static H256: [u32; 8] = [
     0x6a09e667,
     0xbb67ae85,
     0x3c6ef372,
@@ -710,7 +710,7 @@ static H256: [u32, ..8] = [
 
 
 /// The SHA-224 hash algorithm
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Sha224 {
     engine: Engine256
 }
@@ -751,7 +751,7 @@ impl Digest for Sha224 {
     fn block_size(&self) -> uint { 64 }
 }
 
-static H224: [u32, ..8] = [
+static H224: [u32; 8] = [
     0xc1059ed8,
     0x367cd507,
     0x3070dd17,
@@ -982,7 +982,7 @@ mod bench {
     #[bench]
     pub fn sha256_10(bh: & mut Bencher) {
         let mut sh = Sha256::new();
-        let bytes = [1u8, ..10];
+        let bytes = [1u8; 10];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -992,7 +992,7 @@ mod bench {
     #[bench]
     pub fn sha256_1k(bh: & mut Bencher) {
         let mut sh = Sha256::new();
-        let bytes = [1u8, ..1024];
+        let bytes = [1u8; 1024];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -1002,7 +1002,7 @@ mod bench {
     #[bench]
     pub fn sha256_64k(bh: & mut Bencher) {
         let mut sh = Sha256::new();
-        let bytes = [1u8, ..65536];
+        let bytes = [1u8; 65536];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -1014,7 +1014,7 @@ mod bench {
     #[bench]
     pub fn sha512_10(bh: & mut Bencher) {
         let mut sh = Sha512::new();
-        let bytes = [1u8, ..10];
+        let bytes = [1u8; 10];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -1024,7 +1024,7 @@ mod bench {
     #[bench]
     pub fn sha512_1k(bh: & mut Bencher) {
         let mut sh = Sha512::new();
-        let bytes = [1u8, ..1024];
+        let bytes = [1u8; 1024];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -1034,7 +1034,7 @@ mod bench {
     #[bench]
     pub fn sha512_64k(bh: & mut Bencher) {
         let mut sh = Sha512::new();
-        let bytes = [1u8, ..65536];
+        let bytes = [1u8; 65536];
         bh.iter( || {
             sh.input(&bytes);
         });

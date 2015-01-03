@@ -42,9 +42,9 @@ const K2: u32 = 0x8F1BBCDCu32;
 const K3: u32 = 0xCA62C1D6u32;
 
 /// Structure representing the state of a Sha1 computation
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Sha1 {
-    h: [u32, ..DIGEST_BUF_LEN],
+    h: [u32; DIGEST_BUF_LEN],
     length_bits: u64,
     buffer: FixedBuffer64,
     computed: bool,
@@ -58,10 +58,10 @@ fn add_input(st: &mut Sha1, msg: &[u8]) {
     st.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
 }
 
-fn process_msg_block(data: &[u8], h: &mut [u32, ..DIGEST_BUF_LEN]) {
+fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
     let mut t: uint; // Loop counter
 
-    let mut w = [0u32, ..WORK_BUF_LEN];
+    let mut w = [0u32; WORK_BUF_LEN];
 
     // Initialize the first 16 words of the vector w
     read_u32v_be(w.slice_mut(0,16), data);
@@ -151,7 +151,7 @@ impl Sha1 {
     /// Construct a `sha` object
     pub fn new() -> Sha1 {
         let mut st = Sha1 {
-            h: [0u32, ..DIGEST_BUF_LEN],
+            h: [0u32; DIGEST_BUF_LEN],
             length_bits: 0u64,
             buffer: FixedBuffer64::new(),
             computed: false,
@@ -184,7 +184,7 @@ mod tests {
     use digest::Digest;
     use sha1::Sha1;
 
-    #[deriving(Clone)]
+    #[derive(Clone)]
     struct Test {
         input: &'static str,
         output: Vec<u8>,
@@ -245,7 +245,7 @@ mod tests {
 
         // Test that it works when accepting the message all at once
 
-        let mut out = [0u8, ..20];
+        let mut out = [0u8; 20];
 
         let mut sh = box Sha1::new();
         for t in tests.iter() {
@@ -300,7 +300,7 @@ mod bench {
     #[bench]
     pub fn sha1_10(bh: & mut Bencher) {
         let mut sh = Sha1::new();
-        let bytes = [1u8, ..10];
+        let bytes = [1u8; 10];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -310,7 +310,7 @@ mod bench {
     #[bench]
     pub fn sha1_1k(bh: & mut Bencher) {
         let mut sh = Sha1::new();
-        let bytes = [1u8, ..1024];
+        let bytes = [1u8; 1024];
         bh.iter( || {
             sh.input(&bytes);
         });
@@ -320,7 +320,7 @@ mod bench {
     #[bench]
     pub fn sha1_64k(bh: & mut Bencher) {
         let mut sh = Sha1::new();
-        let bytes = [1u8, ..65536];
+        let bytes = [1u8; 65536];
         bh.iter( || {
             sh.input(&bytes);
         });

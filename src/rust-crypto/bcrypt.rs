@@ -138,7 +138,7 @@ mod test {
     #[test]
     fn test_openwall_test_vectors() {
         let tests = openwall_test_vectors();
-        let mut output = [0u8, ..24];
+        let mut output = [0u8; 24];
         for test in tests.iter() {
             bcrypt(test.cost, test.salt[], test.input[], output.as_mut_slice());
             assert_eq!(output[0..23], test.output[]);
@@ -153,9 +153,9 @@ mod bench {
 
     #[bench]
     pub fn bcrypt_16_5(bh: & mut Bencher) {
-        let pass = [0u8, ..16];
-        let salt = [0u8, ..16];
-        let mut out  = [0u8, ..24];
+        let pass = [0u8; 16];
+        let salt = [0u8; 16];
+        let mut out  = [0u8; 24];
         bh.iter( || {
             bcrypt(5, &salt, &pass, &mut out);
         });

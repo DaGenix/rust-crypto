@@ -12,20 +12,20 @@ use std::cmp::min;
 use cryptoutil::{read_u32_le, write_u32_le};
 use mac::{Mac, MacResult};
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Poly1305 {
-    r         : [u32, ..5],
-    h         : [u32, ..5],
-    pad       : [u32, ..4],
+    r         : [u32; 5],
+    h         : [u32; 5],
+    pad       : [u32; 4],
     leftover  : uint,
-    buffer    : [u8, ..16],
+    buffer    : [u8; 16],
     finalized : bool,
 }
 
 impl Poly1305 {
     pub fn new(key: &[u8]) -> Poly1305 {
         assert!(key.len() == 32);
-        let mut poly = Poly1305{ r: [0u32, ..5], h: [0u32, ..5], pad: [0u32, ..4], leftover: 0, buffer: [0u8, ..16], finalized: false };
+        let mut poly = Poly1305{ r: [0u32; 5], h: [0u32; 5], pad: [0u32; 4], leftover: 0, buffer: [0u8; 16], finalized: false };
 
         // r &= 0xffffffc0ffffffc0ffffffc0fffffff
         poly.r[0] = (read_u32_le(key[0..4])     ) & 0x3ffffff;
@@ -196,13 +196,13 @@ impl Mac for Poly1305 {
     }
 
     fn reset(&mut self) {
-        self.h = [0u32, ..5];
+        self.h = [0u32; 5];
         self.leftover = 0;
         self.finalized = false;
     }
 
     fn result(&mut self) -> MacResult {
-        let mut mac = [0u8, ..16];
+        let mut mac = [0u8; 16];
         self.raw_result(mac.as_mut_slice());
         MacResult::new(mac[])
     }
@@ -268,7 +268,7 @@ mod test {
             0x2a,0x7d,0xfb,0x4b,0x3d,0x33,0x05,0xd9,
         ];
 
-        let mut mac = [0u8, ..16];
+        let mut mac = [0u8; 16];
         poly1305(&key, &msg, mac.as_mut_slice());
         assert_eq!(mac[], expected[]);
 
@@ -307,7 +307,7 @@ mod test {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ];
 
-        let mut mac = [0u8, ..16];
+        let mut mac = [0u8; 16];
         poly1305(&wrap_key, &wrap_msg, mac.as_mut_slice());
         assert_eq!(mac[], wrap_mac[]);
 
@@ -327,7 +327,7 @@ mod test {
         for i in range(0u, 256) {
             let key: Vec<u8> = repeat(i as u8).take(32).collect();
             let msg: Vec<u8> = repeat(i as u8).take(256).collect();
-            let mut mac = [0u8, ..16];
+            let mut mac = [0u8; 16];
             poly1305(key[], msg.slice(0, i), &mut mac);
             tpoly.input(&mac);
         }
@@ -339,12 +339,12 @@ mod test {
     fn test_tls_vectors() {
         // from http://tools.ietf.org/html/draft-agl-tls-chacha20poly1305-04
         let key = b"this is 32-byte key for Poly1305";
-        let msg = [0u8, ..32];
+        let msg = [0u8; 32];
         let expected = [
             0x49, 0xec, 0x78, 0x09, 0x0e, 0x48, 0x1e, 0xc6,
             0xc2, 0x6b, 0x33, 0xb9, 0x1c, 0xcc, 0x03, 0x07,
         ];
-        let mut mac = [0u8, ..16];
+        let mut mac = [0u8; 16];
         poly1305(key, &msg, mac.as_mut_slice());
         assert_eq!(mac[], expected[]);
 
@@ -366,9 +366,9 @@ mod bench {
 
     #[bench]
     pub fn poly1305_10(bh: & mut Bencher) {
-        let mut mac = [0u8, ..16];
-        let key     = [0u8, ..32];
-        let bytes   = [1u8, ..10];
+        let mut mac = [0u8; 16];
+        let key     = [0u8; 32];
+        let bytes   = [1u8; 10];
         bh.iter( || {
             let mut poly = Poly1305::new(&key);
             poly.input(&bytes);
@@ -379,9 +379,9 @@ mod bench {
 
     #[bench]
     pub fn poly1305_1k(bh: & mut Bencher) {
-        let mut mac = [0u8, ..16];
-        let key     = [0u8, ..32];
-        let bytes   = [1u8, ..1024];
+        let mut mac = [0u8; 16];
+        let key     = [0u8; 32];
+        let bytes   = [1u8; 1024];
         bh.iter( || {
             let mut poly = Poly1305::new(&key);
             poly.input(&bytes);
@@ -392,9 +392,9 @@ mod bench {
 
     #[bench]
     pub fn poly1305_64k(bh: & mut Bencher) {
-        let mut mac = [0u8, ..16];
-        let key     = [0u8, ..32];
-        let bytes   = [1u8, ..65536];
+        let mut mac = [0u8; 16];
+        let key     = [0u8; 32];
+        let bytes   = [1u8; 65536];
         bh.iter( || {
             let mut poly = Poly1305::new(&key);
             poly.input(&bytes);

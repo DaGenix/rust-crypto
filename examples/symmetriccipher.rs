@@ -30,7 +30,7 @@ fn encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symmetricciphe
     // read from or written to them.
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(data);
-    let mut buffer = [0, ..4096];
+    let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
 
     // Each encryption operation will "make progress". "Making progress"
@@ -87,7 +87,7 @@ fn decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symm
 
     let mut final_result = Vec::<u8>::new();
     let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
-    let mut buffer = [0, ..4096];
+    let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
 
     loop {
@@ -105,8 +105,8 @@ fn decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symm
 fn main() {
     let message = "Hello World!";
 
-    let mut key: [u8, ..32] = [0, ..32];
-    let mut iv: [u8, ..16] = [0, ..16];
+    let mut key: [u8; 32] = [0; 32];
+    let mut iv: [u8; 16] = [0; 16];
 
     // In a real program, the key and iv may be determined
     // using some other mechanism. If a password is to be used

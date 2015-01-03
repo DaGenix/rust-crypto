@@ -8,16 +8,16 @@ use aes::KeySize;
 use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct AesNiEncryptor {
     rounds: uint,
-    round_keys: [u8, ..240]
+    round_keys: [u8; 240]
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct AesNiDecryptor {
     rounds: uint,
-    round_keys: [u8, ..240]
+    round_keys: [u8; 240]
 }
 
 /// The number of rounds as well as a function to setup an appropriately sized key.
@@ -32,7 +32,7 @@ impl AesNiEncryptor {
         };
         let mut e = AesNiEncryptor {
             rounds: rounds,
-            round_keys: [0u8, ..240]
+            round_keys: [0u8; 240]
         };
         setup_function(key, KeyType::Encryption, e.round_keys.slice_mut(0, size(e.rounds)));
         e
@@ -48,7 +48,7 @@ impl AesNiDecryptor {
         };
         let mut d = AesNiDecryptor {
             rounds: rounds,
-            round_keys: [0u8, ..240]
+            round_keys: [0u8; 240]
         };
         setup_function(key, KeyType::Decryption, d.round_keys.slice_mut(0, size(d.rounds)));
         d

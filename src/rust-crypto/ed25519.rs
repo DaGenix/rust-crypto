@@ -4,9 +4,9 @@ use curve25519::{GeP2, GeP3, ge_scalarmult_base, sc_reduce, sc_muladd};
 use util::{fixed_time_eq};
 use std::iter::range_step;
 
-pub fn keypair(seed: &[u8]) -> ([u8, ..64], [u8, ..32]) {
-    let mut secret: [u8, ..64] = {
-        let mut hash_output: [u8, ..64] = [0, ..64];
+pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
+    let mut secret: [u8; 64] = {
+        let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
         hasher.input(seed);
         hasher.result(hash_output.as_mut_slice());
@@ -27,11 +27,11 @@ pub fn keypair(seed: &[u8]) -> ([u8, ..64], [u8, ..32]) {
     (secret, public_key)
 }
 
-pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8, ..64] {
+pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
     let seed = secret_key.slice(0, 32);
     let public_key = secret_key.slice(32, 64);
-    let az: [u8, ..64] = {
-        let mut hash_output: [u8, ..64] = [0, ..64];
+    let az: [u8; 64] = {
+        let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
         hasher.input(seed);
         hasher.result(hash_output.as_mut_slice());
@@ -42,7 +42,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8, ..64] {
     };
 
     let nonce = {
-        let mut hash_output: [u8, ..64] = [0, ..64];
+        let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
         hasher.input(az.slice(32, 64));
         hasher.input(message);
@@ -51,7 +51,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8, ..64] {
         hash_output
     };
 
-    let mut signature: [u8, ..64] = [0, ..64];
+    let mut signature: [u8; 64] = [0; 64];
     let r: GeP3 = ge_scalarmult_base(nonce.slice(0, 32));
     for (result_byte, source_byte) in signature.slice_mut(0, 32).iter_mut().zip(r.to_bytes().iter()) {
         *result_byte = *source_byte;
@@ -64,7 +64,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8, ..64] {
         let mut hasher = Sha512::new();
         hasher.input(signature.as_slice());
         hasher.input(message);
-        let mut hram: [u8, ..64] = [0, ..64];
+        let mut hram: [u8; 64] = [0; 64];
         hasher.result(hram.as_mut_slice());
         sc_reduce(hram.as_mut_slice());
         sc_muladd(signature.slice_mut(32, 64), hram.slice(0, 32), az.slice(0, 32), nonce.slice(0, 32));
@@ -74,7 +74,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8, ..64] {
 }
 fn check_s_lt_l(s: &[u8]) -> bool
 {
-    let l: [u8, ..32] =
+    let l: [u8; 32] =
       [ 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x14, 0xde, 0xf9, 0xde, 0xa2, 0xf7, 0x9c, 0xd6,
@@ -111,7 +111,7 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
     hasher.input(signature.slice(0, 32));
     hasher.input(public_key);
     hasher.input(message);
-    let mut hash: [u8, ..64] = [0, ..64];
+    let mut hash: [u8; 64] = [0; 64];
     hasher.result(hash.as_mut_slice());
     sc_reduce(hash.as_mut_slice());
 
@@ -125,7 +125,7 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
 mod tests {
     use ed25519::{keypair, signature, verify};
 
-    fn do_keypair_case(seed: [u8, ..32], expected_secret: [u8, ..64], expected_public: [u8, ..32]) {
+    fn do_keypair_case(seed: [u8; 32], expected_secret: [u8; 64], expected_public: [u8; 32]) {
         let (actual_secret, actual_public) = keypair(seed.as_slice());
         assert_eq!(actual_secret.to_vec(), expected_secret.to_vec());
         assert_eq!(actual_public.to_vec(), expected_public.to_vec());
@@ -153,7 +153,7 @@ mod tests {
              0x43, 0x7b, 0xa6, 0x80, 0x1e, 0xb2, 0x10, 0xac, 0x4c, 0x39, 0xd9, 0x00, 0x72, 0xd7, 0x0d, 0xa8]);
     }
 
-    fn do_sign_verify_case(seed: [u8, ..32], message: &[u8], expected_signature: [u8, ..64]) {
+    fn do_sign_verify_case(seed: [u8; 32], message: &[u8], expected_signature: [u8; 64]) {
         let (secret_key, public_key) = keypair(seed.as_slice());
         let mut actual_signature = signature(message, secret_key.as_slice());
         assert_eq!(expected_signature.to_vec(), actual_signature.to_vec());

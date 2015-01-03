@@ -43,7 +43,7 @@ pub trait PaddingProcessor {
 
 /// The BlockEngine is implemented as a state machine with the following states. See comments in the
 /// BlockEngine code for more information on the states.
-#[deriving(Copy)]
+#[derive(Copy)]
 enum BlockEngineState {
     FastMode,
     NeedInput,
@@ -418,7 +418,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
 }
 
 /// No padding mode for ECB and CBC encryption
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct NoPadding;
 
 impl PaddingProcessor for NoPadding {
@@ -427,7 +427,7 @@ impl PaddingProcessor for NoPadding {
 }
 
 /// PKCS padding mode for ECB and CBC encryption
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct PkcsPadding;
 
 // This class implements both encryption padding, where padding is added, and decryption padding,
@@ -820,7 +820,7 @@ mod test {
     use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
     use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
     use symmetriccipher::{Encryptor, Decryptor};
-    use symmetriccipher::SymmetricCipherError::{mod, InvalidLength, InvalidPadding};
+    use symmetriccipher::SymmetricCipherError::{self, InvalidLength, InvalidPadding};
 
     use std::cmp;
     use test::Bencher;
@@ -1308,9 +1308,9 @@ mod test {
 
     #[bench]
     pub fn aes_ecb_no_padding_bench(bh: &mut Bencher) {
-        let key = [1u8, ..16];
-        let plain = [3u8, ..512];
-        let mut cipher = [3u8, ..528];
+        let key = [1u8; 16];
+        let plain = [3u8; 512];
+        let mut cipher = [3u8; 528];
 
         let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = EcbEncryptor::new(aes_enc, NoPadding);
@@ -1333,10 +1333,10 @@ mod test {
 
     #[bench]
     pub fn aes_cbc_pkcs_padding_bench(bh: &mut Bencher) {
-        let key = [1u8, ..16];
-        let iv = [2u8, ..16];
-        let plain = [3u8, ..512];
-        let mut cipher = [3u8, ..528];
+        let key = [1u8; 16];
+        let iv = [2u8; 16];
+        let plain = [3u8; 512];
+        let mut cipher = [3u8; 528];
 
         let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = CbcEncryptor::new(aes_enc, PkcsPadding, iv.to_vec());
@@ -1359,10 +1359,10 @@ mod test {
 
     #[bench]
     pub fn aes_ctr_bench(bh: &mut Bencher) {
-        let key = [1u8, ..16];
-        let ctr = [2u8, ..16];
-        let plain = [3u8, ..512];
-        let mut cipher = [3u8, ..528];
+        let key = [1u8; 16];
+        let ctr = [2u8; 16];
+        let plain = [3u8; 512];
+        let mut cipher = [3u8; 528];
 
         let aes_enc = aessafe::AesSafe128Encryptor::new(&key);
         let mut enc = CtrMode::new(aes_enc, ctr.to_vec());
@@ -1385,10 +1385,10 @@ mod test {
 
     #[bench]
     pub fn aes_ctr_x8_bench(bh: &mut Bencher) {
-        let key = [1u8, ..16];
-        let ctr = [2u8, ..16];
-        let plain = [3u8, ..512];
-        let mut cipher = [3u8, ..528];
+        let key = [1u8; 16];
+        let ctr = [2u8; 16];
+        let plain = [3u8; 512];
+        let mut cipher = [3u8; 528];
 
         let aes_enc = aessafe::AesSafe128EncryptorX8::new(&key);
         let mut enc = CtrModeX8::new(aes_enc, &ctr);
