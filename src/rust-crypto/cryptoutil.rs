@@ -10,7 +10,7 @@
 
 use std;
 use std::mem;
-use std::num::{Int, Unsigned};
+use std::num::{Int, UnsignedInt};
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
@@ -198,7 +198,7 @@ pub fn add_bytes_to_bits<T: Int + ToBits>(bits: T, bytes: T) -> T {
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
 /// the high order value. panic!() if this would cause numeric overflow.
 pub fn add_bytes_to_bits_tuple
-        <T: Int + Unsigned + ToBits>
+        <T: Int + UnsignedInt + ToBits>
         (bits: (T, T), bytes: T) -> (T, T) {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
     let (hi, low) = bits;
@@ -231,8 +231,8 @@ pub fn add_bytes_to_bits_tuple
                 // avoided by using the checked add intrinsic directly, but that involves using
                 // unsafe code and is not really worthwhile considering how infrequently code will
                 // run in practice. This is the reason that this function requires that the type T
-                // be Unsigned - overflow is not defined for Signed types. This function could be
-                // implemented for signed types as well if that were needed.
+                // be UnsignedInt - overflow is not defined for Signed types. This function could
+                // be implemented for signed types as well if that were needed.
                 Some(y) => return (y, low + new_low_bits),
                 None => panic!("Numeric overflow occured.")
             }
