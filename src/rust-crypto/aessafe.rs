@@ -471,7 +471,7 @@ impl <T: Copy> Bs8State<T> {
     }
 }
 
-impl <T: BitXor<T, T> + Copy> Bs8State<T> {
+impl <T: BitXor<Output = T> + Copy> Bs8State<T> {
     fn xor(self, rhs: Bs8State<T>) -> Bs8State<T> {
         let Bs8State(a0, a1, a2, a3, a4, a5, a6, a7) = self;
         let Bs8State(b0, b1, b2, b3, b4, b5, b6, b7) = rhs;
@@ -622,7 +622,7 @@ impl <T: BitXor<T, T> + Copy> Bs8State<T> {
     }
 }
 
-impl <T: Not<T> + Copy> Bs8State<T> {
+impl <T: Not<Output = T> + Copy> Bs8State<T> {
     // The special value "x63" is used as part of the sub_bytes and inv_sub_bytes
     // steps. It is conceptually a Bs8State value where the 0th, 1st, 5th, and 6th
     // elements are all 1s and the other elements are all 0s. The only thing that
@@ -658,7 +658,7 @@ impl <T: Copy> Bs4State<T> {
     }
 }
 
-impl <T: BitXor<T, T> + Copy> Bs4State<T> {
+impl <T: BitXor<Output = T> + Copy> Bs4State<T> {
     fn xor(self, rhs: Bs4State<T>) -> Bs4State<T> {
         let Bs4State(a0, a1, a2, a3) = self;
         let Bs4State(b0, b1, b2, b3) = rhs;
@@ -682,7 +682,7 @@ impl <T> Bs2State<T> {
     }
 }
 
-impl <T: BitXor<T, T> + Copy> Bs2State<T> {
+impl <T: BitXor<Output = T> + Copy> Bs2State<T> {
     fn xor(self, rhs: Bs2State<T>) -> Bs2State<T> {
         let Bs2State(a0, a1) = self;
         let Bs2State(b0, b1) = rhs;
@@ -938,7 +938,7 @@ trait Gf2Ops {
     fn inv(self) -> Self;
 }
 
-impl <T: BitXor<T, T> + BitAnd<T, T> + Copy> Gf2Ops for Bs2State<T> {
+impl <T: BitXor<Output = T> + BitAnd<Output = T> + Copy> Gf2Ops for Bs2State<T> {
     fn mul(self, y: Bs2State<T>) -> Bs2State<T> {
         let (b, a) = self.split();
         let (d, c) = y.split();
@@ -984,7 +984,7 @@ trait Gf4Ops {
     fn inv(self) -> Self;
 }
 
-impl <T: BitXor<T, T> + BitAnd<T, T> + Copy> Gf4Ops for Bs4State<T> {
+impl <T: BitXor<Output = T> + BitAnd<Output = T> + Copy> Gf4Ops for Bs4State<T> {
     fn mul(self, y: Bs4State<T>) -> Bs4State<T> {
         let (b, a) = self.split();
         let (d, c) = y.split();
@@ -1019,7 +1019,7 @@ trait Gf8Ops<T> {
     fn inv(&self) -> Self;
 }
 
-impl <T: BitXor<T, T> + BitAnd<T, T> + Copy + Default> Gf8Ops<T> for Bs8State<T> {
+impl <T: BitXor<Output = T> + BitAnd<Output = T> + Copy + Default> Gf8Ops<T> for Bs8State<T> {
     fn inv(&self) -> Bs8State<T> {
         let (b, a) = self.split();
         let c = a.xor(b).sq_scl();
@@ -1133,7 +1133,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
     }
 }
 
-trait AesBitValueOps: BitXor<Self, Self> + BitAnd<Self, Self> + Not<Self> + Default {
+trait AesBitValueOps: BitXor<Output = Self> + BitAnd<Output = Self> + Not<Output = Self> + Default {
     fn shift_row(self) -> Self;
     fn inv_shift_row(self) -> Self;
     fn ror1(self) -> Self;
@@ -1197,19 +1197,25 @@ impl u32x4 {
     }
 }
 
-impl BitXor<u32x4, u32x4> for u32x4 {
+impl BitXor for u32x4 {
+    type Output = u32x4;
+
     fn bitxor(self, rhs: u32x4) -> u32x4 {
         self ^ rhs
     }
 }
 
-impl BitAnd<u32x4, u32x4> for u32x4 {
+impl BitAnd for u32x4 {
+    type Output = u32x4;
+
     fn bitand(self, rhs: u32x4) -> u32x4 {
         self & rhs
     }
 }
 
-impl Not<u32x4> for u32x4 {
+impl Not for u32x4 {
+    type Output = u32x4;
+
     fn not(self) -> u32x4 {
         self ^ U32X4_1
     }
