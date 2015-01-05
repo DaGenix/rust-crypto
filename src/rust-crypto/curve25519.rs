@@ -56,7 +56,9 @@ fn load_3i(s: &[u8]) -> i64 {
     load_3u(s) as i64
 }
 
-impl Add<Fe, Fe> for Fe {
+impl Add for Fe {
+    type Output = Fe;
+
     /*
     h = f + g
     Can overlap h with f or g.
@@ -106,7 +108,9 @@ impl Add<Fe, Fe> for Fe {
     }
 }
 
-impl Sub<Fe, Fe> for Fe {
+impl Sub for Fe {
+    type Output = Fe;
+
     /*
     h = f - g
     Can overlap h with f or g.
@@ -156,7 +160,9 @@ impl Sub<Fe, Fe> for Fe {
     }
 }
 
-impl Mul<Fe, Fe> for Fe {
+impl Mul for Fe {
+    type Output = Fe;
+
     /*
     h = f * g
     Can overlap h with f or g.
@@ -1319,7 +1325,9 @@ impl GeP3 {
 
 }
 
-impl Add<GeCached, GeP1P1> for GeP3 {
+impl Add<GeCached> for GeP3 {
+    type Output = GeP1P1;
+
     fn add(self, _rhs: GeCached) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
@@ -1337,7 +1345,9 @@ impl Add<GeCached, GeP1P1> for GeP3 {
     }
 }
 
-impl Add<GePrecomp, GeP1P1> for GeP3 {
+impl Add<GePrecomp> for GeP3 {
+    type Output = GeP1P1;
+
     fn add(self, _rhs: GePrecomp) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
@@ -1354,7 +1364,9 @@ impl Add<GePrecomp, GeP1P1> for GeP3 {
     }
 }
 
-impl Sub<GeCached, GeP1P1> for GeP3 {
+impl Sub<GeCached> for GeP3 {
+    type Output = GeP1P1;
+
     fn sub(self, _rhs: GeCached) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
@@ -1372,7 +1384,9 @@ impl Sub<GeCached, GeP1P1> for GeP3 {
     }
 }
 
-impl Sub<GePrecomp, GeP1P1> for GeP3 {
+impl Sub<GePrecomp> for GeP3 {
+    type Output = GeP1P1;
+
     fn sub(self, _rhs: GePrecomp) -> GeP1P1 {
         let y1_plus_x1 = self.y + self.x;
         let y1_minus_x1 = self.y - self.x;
@@ -2197,7 +2211,9 @@ mod tests {
             CurveGen{which: seed}
         }
     }
-    impl Iterator<Fe> for CurveGen {
+    impl Iterator for CurveGen {
+        type Item = Fe;
+
         fn next(&mut self) -> Option<Fe> {
             let mut e: Vec<u8> = range(0, 32).map(|idx| (idx*(1289+self.which*761)) as u8).collect();
             e.as_mut_slice()[0] &= 248;
