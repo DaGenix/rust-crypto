@@ -1023,13 +1023,13 @@ mod test {
     ///                  function.
     /// * immediate_eof - Whether eof should be set immediately upon running out of input or if eof
     ///                   should be passed only after all input has been consumed.
-    fn run_inc(
+    fn run_inc<F1: FnMut() -> uint, F2: FnMut() -> uint>(
             input: &[u8],
             output: &mut [u8],
             mut op: &mut FnMut(&mut RefReadBuffer, &mut RefWriteBuffer, bool)
                   -> Result<BufferResult, SymmetricCipherError>,
-            next_in_len: &mut FnMut() -> uint,
-            next_out_len: &mut FnMut() -> uint,
+            mut next_in_len: F1,
+            mut next_out_len: F2,
             immediate_eof: bool) {
         use std::cell::Cell;
 
@@ -1127,8 +1127,8 @@ mod test {
             &mut |&mut: in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                 enc.encrypt(in_buff, out_buff, eof)
             },
-            &mut |&: | { 0 },
-            &mut |&: | { 1 },
+            || { 0 },
+            || { 1 },
             false);
         assert!(test.get_cipher() == cipher_out[]);
 
@@ -1139,8 +1139,8 @@ mod test {
             &mut |&mut: in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                 dec.decrypt(in_buff, out_buff, eof)
             },
-            &mut |&: | { 0 },
-            &mut |&: | { 1 },
+            || { 0 },
+            || { 1 },
             false);
         assert!(test.get_plain() == plain_out[]);
     }
@@ -1176,8 +1176,8 @@ mod test {
                 &mut |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     enc.encrypt(in_buff, out_buff, eof)
                 },
-                &mut |&mut: | { r1() },
-                &mut |&mut: | { r2() },
+                || { r1() },
+                || { r2() },
                 rng3.gen());
             assert!(test.get_cipher() == cipher_out[]);
 
@@ -1188,8 +1188,8 @@ mod test {
                 &mut |&mut: in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     dec.decrypt(in_buff, out_buff, eof)
                 },
-                &mut |&mut: | { r1() },
-                &mut |&mut: | { r2() },
+                || { r1() },
+                || { r2() },
                 rng3.gen());
             assert!(test.get_plain() == plain_out[]);
         }
