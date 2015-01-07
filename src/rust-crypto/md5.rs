@@ -179,7 +179,7 @@ impl Digest for Md5 {
         // 2^64 - ie: integer overflow is OK.
         self.length_bytes += input.len() as u64;
         let self_state = &mut self.state;
-        self.buffer.input(input, &mut |d: &[u8]| { self_state.process_block(d);}
+        self.buffer.input(input, |d: &[u8]| { self_state.process_block(d);}
         );
     }
 
@@ -193,7 +193,7 @@ impl Digest for Md5 {
     fn result(&mut self, out: &mut [u8]) {
         if !self.finished {
             let self_state = &mut self.state;
-            self.buffer.standard_padding(8, &mut |d: &[u8]| { self_state.process_block(d); });
+            self.buffer.standard_padding(8, |d: &[u8]| { self_state.process_block(d); });
             write_u32_le(self.buffer.next(4), (self.length_bytes << 3) as u32);
             write_u32_le(self.buffer.next(4), (self.length_bytes >> 29) as u32);
             self_state.process_block(self.buffer.full_buffer());
