@@ -5,9 +5,6 @@
 // except according to those terms.
 
 #![feature(asm)]
-#![feature(associated_types)]
-#![feature(default_type_params)]
-#![feature(macro_rules)]
 #![feature(simd)]
 #![feature(slicing_syntax)]
 
