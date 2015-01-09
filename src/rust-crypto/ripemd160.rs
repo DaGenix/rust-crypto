@@ -371,7 +371,7 @@ impl Digest for Ripemd160 {
         // Assumes that msg.len() can be converted to u64 without overflow
         self.length_bits = add_bytes_to_bits(self.length_bits, msg.len() as u64);
         let st_h = &mut self.h;
-        self.buffer.input(msg, &mut |d: &[u8]| {process_msg_block(d, &mut *st_h);}
+        self.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h);}
         );
     }
     
@@ -383,7 +383,7 @@ impl Digest for Ripemd160 {
         
         if !self.computed {
             let st_h = &mut self.h;
-            self.buffer.standard_padding(8, &mut |d: &[u8]| { process_msg_block(d, &mut *st_h) });
+            self.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
 
             write_u32_le(self.buffer.next(4), self.length_bits as u32);
             write_u32_le(self.buffer.next(4), (self.length_bits >> 32) as u32 );

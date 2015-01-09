@@ -209,7 +209,7 @@ impl Engine512 {
         // Assumes that input.len() can be converted to u64 without overflow
         self.length_bits = add_bytes_to_bits_tuple(self.length_bits, input.len() as u64);
         let self_state = &mut self.state;
-        self.buffer.input(input, &mut |input: &[u8]| { self_state.process_block(input) });
+        self.buffer.input(input, |input: &[u8]| { self_state.process_block(input) });
     }
 
     fn finish(&mut self) {
@@ -218,7 +218,7 @@ impl Engine512 {
         }
 
         let self_state = &mut self.state;
-        self.buffer.standard_padding(16, &mut |input: &[u8]| { self_state.process_block(input) });
+        self.buffer.standard_padding(16, |input: &[u8]| { self_state.process_block(input) });
         match self.length_bits {
             (hi, low) => {
                 write_u64_be(self.buffer.next(8), hi);
@@ -634,7 +634,7 @@ impl Engine256 {
         // Assumes that input.len() can be converted to u64 without overflow
         self.length_bits = add_bytes_to_bits(self.length_bits, input.len() as u64);
         let self_state = &mut self.state;
-        self.buffer.input(input, &mut |input: &[u8]| { self_state.process_block(input) });
+        self.buffer.input(input, |input: &[u8]| { self_state.process_block(input) });
     }
 
     fn finish(&mut self) {
@@ -643,7 +643,7 @@ impl Engine256 {
         }
 
         let self_state = &mut self.state;
-        self.buffer.standard_padding(8, &mut |input: &[u8]| { self_state.process_block(input) });
+        self.buffer.standard_padding(8, |input: &[u8]| { self_state.process_block(input) });
         write_u32_be(self.buffer.next(4), (self.length_bits >> 32) as u32 );
         write_u32_be(self.buffer.next(4), self.length_bits as u32);
         self_state.process_block(self.buffer.full_buffer());

@@ -1023,14 +1023,18 @@ mod test {
     ///                  function.
     /// * immediate_eof - Whether eof should be set immediately upon running out of input or if eof
     ///                   should be passed only after all input has been consumed.
-    fn run_inc<F1: FnMut() -> uint, F2: FnMut() -> uint>(
+    fn run_inc<OpFunc, NextInFunc, NextOutFunc>(
             input: &[u8],
             output: &mut [u8],
-            mut op: &mut FnMut(&mut RefReadBuffer, &mut RefWriteBuffer, bool)
-                  -> Result<BufferResult, SymmetricCipherError>,
-            mut next_in_len: F1,
-            mut next_out_len: F2,
-            immediate_eof: bool) {
+            mut op: OpFunc,
+            mut next_in_len: NextInFunc,
+            mut next_out_len: NextOutFunc,
+            immediate_eof: bool)
+            where
+                OpFunc: FnMut(&mut RefReadBuffer, &mut RefWriteBuffer, bool) ->
+                    Result<BufferResult, SymmetricCipherError>,
+                NextInFunc: FnMut() -> uint,
+                NextOutFunc: FnMut() -> uint{
         use std::cell::Cell;
 
         let in_len = input.len();
@@ -1041,7 +1045,7 @@ mod test {
         let mut out_pos = 0u;
         let eof = Cell::new(false);
 
-        let in_end = &mut |&mut: in_pos: uint, primary: bool| {
+        let mut in_end = |&mut: in_pos: uint, primary: bool| {
             if eof.get() {
                 return in_len;
             }
@@ -1052,7 +1056,7 @@ mod test {
             cmp::min(in_len, in_pos + cmp::max(x, if primary { 1 } else { 0 }))
         };
 
-        let out_end = &mut |&mut: out_pos: uint| {
+        let mut out_end = |&mut: out_pos: uint| {
             let x = next_out_len();
             cmp::min(out_len, out_pos + cmp::max(x, 1))
         };
@@ -1124,7 +1128,7 @@ mod test {
         run_inc(
             test.get_plain(),
             cipher_out.as_mut_slice(),
-            &mut |&mut: in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
+            |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                 enc.encrypt(in_buff, out_buff, eof)
             },
             || { 0 },
@@ -1136,7 +1140,7 @@ mod test {
         run_inc(
             test.get_cipher(),
             plain_out.as_mut_slice(),
-            &mut |&mut: in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
+            |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                 dec.decrypt(in_buff, out_buff, eof)
             },
             || { 0 },
@@ -1145,10 +1149,16 @@ mod test {
         assert!(test.get_plain() == plain_out[]);
     }
 
-    fn run_rand_test<T: CipherTest, E: Encryptor, D: Decryptor>(
+    fn run_rand_test<T, E, D, NewEncFunc, NewDecFunc>(
             test: &T,
-            new_enc: &mut FnMut() -> E,
-            new_dec: &mut FnMut() -> D) {
+            mut new_enc: NewEncFunc,
+            mut new_dec: NewDecFunc)
+            where
+                T: CipherTest,
+                E: Encryptor,
+                D: Decryptor,
+                NewEncFunc: FnMut() -> E,
+                NewDecFunc: FnMut() -> D{
         use std::rand;
         use std::rand::Rng;
 
@@ -1158,10 +1168,10 @@ mod test {
         let mut rng3: rand::StdRng = rand::SeedableRng::from_seed(tmp);
         let max_size = cmp::max(test.get_plain().len(), test.get_cipher().len());
 
-        let r1 = &mut |&mut: | {
+        let mut r1 = |&mut:| {
             rng1.gen_range(0, max_size)
         };
-        let r2 = &mut |&mut: | {
+        let mut r2 = |&mut:| {
             rng2.gen_range(0, max_size)
         };
 
@@ -1173,7 +1183,7 @@ mod test {
             run_inc(
                 test.get_plain(),
                 cipher_out.as_mut_slice(),
-                &mut |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
+                |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     enc.encrypt(in_buff, out_buff, eof)
                 },
                 || { r1() },
@@ -1185,7 +1195,7 @@ mod test {
             run_inc(
                 test.get_cipher(),
                 plain_out.as_mut_slice(),
-                &mut |&mut: in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
+                |in_buff: &mut RefReadBuffer, out_buff: &mut RefWriteBuffer, eof: bool| {
                     dec.decrypt(in_buff, out_buff, eof)
                 },
                 || { r1() },
@@ -1195,10 +1205,16 @@ mod test {
         }
     }
 
-    fn run_test<T: CipherTest, E: Encryptor, D: Decryptor>(
+    fn run_test<T, E, D, NewEncFunc, NewDecFunc>(
             test: &T,
-            new_enc: &mut FnMut() -> E,
-            new_dec: &mut FnMut() -> D) {
+            mut new_enc: NewEncFunc,
+            mut new_dec: NewDecFunc)
+            where
+                T: CipherTest,
+                E: Encryptor,
+                D: Decryptor,
+                NewEncFunc: FnMut() -> E,
+                NewDecFunc: FnMut() -> D{
         run_full_test(test, &mut new_enc(), &mut new_dec());
         run_inc1_test(test, &mut new_enc(), &mut new_dec());
         run_rand_test(test, new_enc, new_dec);
@@ -1210,11 +1226,11 @@ mod test {
         for test in tests.iter() {
             run_test(
                 test,
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
                     EcbEncryptor::new(aes_enc, NoPadding)
                 },
-                &mut |&: | {
+                || {
                     let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
                     EcbDecryptor::new(aes_dec, NoPadding)
                 });
@@ -1227,11 +1243,11 @@ mod test {
         for test in tests.iter() {
             run_test(
                 test,
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
                     EcbEncryptor::new(aes_enc, PkcsPadding)
                 },
-                &mut |&: | {
+                || {
                     let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
                     EcbDecryptor::new(aes_dec, PkcsPadding)
                 });
@@ -1244,11 +1260,11 @@ mod test {
         for test in tests.iter() {
             run_test(
                 test,
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
                     CbcEncryptor::new(aes_enc, NoPadding, test.iv.clone())
                 },
-                &mut |&: | {
+                || {
                     let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
                     CbcDecryptor::new(aes_dec, NoPadding, test.iv.clone())
                 });
@@ -1261,11 +1277,11 @@ mod test {
         for test in tests.iter() {
             run_test(
                 test,
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
                     CbcEncryptor::new(aes_enc, PkcsPadding, test.iv.clone())
                 },
-                &mut |&: | {
+                || {
                     let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
                     CbcDecryptor::new(aes_dec, PkcsPadding, test.iv.clone())
                 });
@@ -1278,11 +1294,11 @@ mod test {
         for test in tests.iter() {
             run_test(
                 test,
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
                     CtrMode::new(aes_enc, test.ctr.clone())
                 },
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
                     CtrMode::new(aes_enc, test.ctr.clone())
                 });
@@ -1295,11 +1311,11 @@ mod test {
         for test in tests.iter() {
             run_test(
                 test,
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key[]);
                     CtrModeX8::new(aes_enc, test.ctr[])
                 },
-                &mut |&: | {
+                || {
                     let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key[]);
                     CtrModeX8::new(aes_enc, test.ctr[])
                 });
