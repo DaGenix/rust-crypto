@@ -193,4 +193,11 @@ mod test {
             assert!(result == expected);
         }
     }
+
+    #[test]
+    fn test_hmac_md5_str() {
+        let mut hmac = Hmac::new(Md5::new(), "Jefe".as_bytes());
+        hmac.input_str("what do ya want for nothing?");
+        assert!(hmac.result_str() == "750c783e6ab0b503eaa86e310a5db738");
+    }
 }
