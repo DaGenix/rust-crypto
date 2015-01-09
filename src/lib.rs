@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(asm)]
 #![feature(core)]
 #![feature(simd)]
 #![feature(step_by)]
@@ -15,6 +14,7 @@ extern crate rand;
 extern crate rustc_serialize as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;
+extern crate libc;
 
 pub mod aead;
 pub mod aes;

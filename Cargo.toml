@@ -8,11 +8,17 @@ repository = "https://github.com/DaGenix/rust-crypto/"
 description = "A (mostly) pure-Rust implementation of various common cryptographic algorithms."
 keywords = [ "Crypto", "MD5", "Sha1", "Sha2", "AES" ]
 readme = "README.md"
+build = "build.rs"
 
 [lib]
 name = "crypto"
 
+[build-dependencies]
+gcc = "*"
+
 [dependencies]
+libc = "*"
 time = "*"
 rand = "*"
 rustc-serialize = "*"
+
