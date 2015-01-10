@@ -80,7 +80,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
 
     for i in range(0u, 16) {
         write_u32_le(
-            output.slice_mut(i * 4, (i + 1) * 4),
+            &mut output[i * 4..(i + 1) * 4],
             x[i] + read_u32_le(&input[i * 4..(i + 1) * 4]));
     }
 }
@@ -104,7 +104,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
         xor(&x, chunk, &mut t);
         salsa20_8(&t, &mut x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
-        output.slice_mut(pos,pos + 64).clone_from_slice(&x);
+        &mut output[pos..pos + 64].clone_from_slice(&x);
     }
 }
 
@@ -293,8 +293,8 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> 
         result.push_str("1$");
         let mut tmp = [0u8; 9];
         tmp[0] = params.log_n;
-        write_u32_le(tmp.slice_mut(1,5), params.r);
-        write_u32_le(tmp.slice_mut(5,9), params.p);
+        write_u32_le(&mut tmp[1..5], params.r);
+        write_u32_le(&mut tmp[5..9], params.p);
         result.push_str(&*tmp.to_base64(base64::STANDARD));
     }
     result.push('$');

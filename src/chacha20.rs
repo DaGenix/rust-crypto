@@ -130,7 +130,7 @@ impl ChaCha20 {
             d1,d2,d3,d4
         ];
         for i in range(0, lens.len()) {
-            write_u32_le(self.output.slice_mut(i*4,(i+1)*4), lens[i]);
+            write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
         }
 
         self.state.d += u32x4(1, 0, 0, 0);

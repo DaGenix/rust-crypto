@@ -179,7 +179,7 @@ impl <'a> WriteBuffer for RefWriteBuffer<'a> {
     }
 
     fn take_next(&mut self, count: uint) -> &mut [u8] {
-        let r = self.buff.slice_mut(self.pos,self.pos + count);
+        let r = &mut self.buff[self.pos..self.pos + count];
         self.pos += count;
         r
     }
@@ -227,7 +227,7 @@ impl <'a> WriteBuffer for BorrowedWriteBuffer<'a> {
     }
 
     fn take_next<>(&mut self, count: uint) -> &mut [u8] {
-        let r = self.parent.buff.slice_mut(self.pos,self.pos + count);
+        let r = &mut self.parent.buff[self.pos..self.pos + count];
         self.pos += count;
         self.parent.len += count;
         r
@@ -275,7 +275,7 @@ impl WriteBuffer for OwnedWriteBuffer {
     }
 
     fn take_next<'a>(&'a mut self, count: uint) -> &'a mut [u8] {
-        let r = self.buff.slice_mut(self.pos,self.pos + count);
+        let r = &mut self.buff[self.pos..self.pos + count];
         self.pos += count;
         r
     }

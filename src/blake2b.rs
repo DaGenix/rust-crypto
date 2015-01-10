@@ -297,7 +297,7 @@ impl Blake2b {
             }
             self.compress();
 
-            write_u64v_le(self.buf.slice_mut(0,64), &self.h);
+            write_u64v_le(&mut self.buf[0..64], &self.h);
             self.computed = true;
         }
         let outlen = out.len();

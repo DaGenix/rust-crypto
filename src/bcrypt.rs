@@ -34,8 +34,8 @@ pub fn bcrypt(cost: uint, salt: &[u8], password: &[u8], output: &mut [u8]) {
             ctext[i] = l;
             ctext[i+1] = r;
         }
-        write_u32_be(output.slice_mut(i*4,(i+1)*4), ctext[i]);
-        write_u32_be(output.slice_mut((i+1)*4,(i+2)*4), ctext[i+1]);
+        write_u32_be(&mut output[i*4..(i+1)*4], ctext[i]);
+        write_u32_be(&mut output[(i+1)*4..(i+2)*4], ctext[i+1]);
     }
 }
 

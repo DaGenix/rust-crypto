@@ -31,7 +31,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     }
 
     for i in range(0u, 8) {
-        write_u32_le(output.slice_mut(i*4, (i+1)*4), buf[i]);
+        write_u32_le(&mut output[i*4..(i+1)*4], buf[i]);
     }
 }
 

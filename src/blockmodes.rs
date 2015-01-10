@@ -1069,7 +1069,7 @@ mod test {
                     }
                     let mut tmp_in = RefReadBuffer::new(&input[in_pos..in_end(in_pos, true)]);
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
+                    let mut tmp_out = RefWriteBuffer::new(&mut output[out_pos..out_end]);
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferUnderflow) => assert!(tmp_in.is_empty()),
@@ -1081,7 +1081,7 @@ mod test {
                 Ok(BufferOverflow) => {
                     let mut tmp_in = RefReadBuffer::new(&input[in_pos..in_end(in_pos, false)]);
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
+                    let mut tmp_out = RefWriteBuffer::new(&mut output[out_pos..out_end]);
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
                     match state {
                         Ok(BufferOverflow) => assert!(tmp_out.is_full()),
@@ -1097,7 +1097,7 @@ mod test {
 
         if !eof.get() {
             eof.set(true);
-            let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end(out_pos)));
+            let mut tmp_out = RefWriteBuffer::new(&mut output[out_pos..out_end(out_pos)]);
             state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
             out_pos += tmp_out.position();
         }
@@ -1109,7 +1109,7 @@ mod test {
                 }
                 Ok(BufferOverflow) => {
                     let out_end = out_end(out_pos);
-                    let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
+                    let mut tmp_out = RefWriteBuffer::new(&mut output[out_pos..out_end]);
                     state = op(&mut RefReadBuffer::new(&[]), &mut tmp_out, eof.get());
                     assert!(tmp_out.is_full());
                     out_pos += tmp_out.position();

@@ -118,7 +118,7 @@ impl FortunaGenerator {
         // Concatenate all the blocks
         for j in range(0, k) {
             block_encryptor.encrypt_block(&self.ctr[],
-                                          out.slice_mut(AES_BLOCK_SIZE * j,AES_BLOCK_SIZE * (j + 1)));
+                                          &mut out[AES_BLOCK_SIZE * j..AES_BLOCK_SIZE * (j + 1)]);
             self.increment_counter();
         }
     }
@@ -223,7 +223,7 @@ impl Rng for Fortuna {
             let mut hash = [0; (32 * NUM_POOLS)];
             let mut n_pools = 0;
             while self.reseed_count % (1 << n_pools) == 0 {
-                (&mut self.pool[n_pools]).result(hash.slice_mut(n_pools * 32,(n_pools + 1) * 32));
+                (&mut self.pool[n_pools]).result(&mut hash[n_pools * 32..(n_pools + 1) * 32]);
                 n_pools += 1;
                 assert!(n_pools < NUM_POOLS);
                 assert!(n_pools < 32); // width of counter

@@ -46,10 +46,10 @@ impl Gf128 {
         let simd::u32x4(a, b, c, d) = self.d;
         let mut result: [u8; 16] = unsafe { mem::uninitialized() };
 
-        write_u32_be(result.slice_mut(0,4), d);
-        write_u32_be(result.slice_mut(4,8), c);
-        write_u32_be(result.slice_mut(8,12), b);
-        write_u32_be(result.slice_mut(12,16), a);
+        write_u32_be(&mut result[0..4], d);
+        write_u32_be(&mut result[4..8], c);
+        write_u32_be(&mut result[8..12], b);
+        write_u32_be(&mut result[12..16], a);
 
         result
     }

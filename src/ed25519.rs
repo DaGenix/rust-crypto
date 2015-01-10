@@ -18,10 +18,10 @@ pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
 
     let a = ge_scalarmult_base(&secret[0..32]);
     let public_key = a.to_bytes();
-    for (dest, src) in secret.slice_mut(32,64).iter_mut().zip(public_key.iter()) {
+    for (dest, src) in (&mut secret[32..64]).iter_mut().zip(public_key.iter()) {
         *dest = *src;
     }
-    for (dest, src) in secret.slice_mut(0,32).iter_mut().zip(seed.iter()) {
+    for (dest, src) in (&mut secret[0..32]).iter_mut().zip(seed.iter()) {
         *dest = *src;
     }
     (secret, public_key)
@@ -47,16 +47,16 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
         hasher.input(&az[32..64]);
         hasher.input(message);
         hasher.result(hash_output.as_mut_slice());
-        sc_reduce(hash_output.slice_mut(0, 64));
+        sc_reduce(&mut hash_output[0..64]);
         hash_output
     };
 
     let mut signature: [u8; 64] = [0; 64];
     let r: GeP3 = ge_scalarmult_base(&nonce[0..32]);
-    for (result_byte, source_byte) in signature.slice_mut(0, 32).iter_mut().zip(r.to_bytes().iter()) {
+    for (result_byte, source_byte) in (&mut signature[0..32]).iter_mut().zip(r.to_bytes().iter()) {
         *result_byte = *source_byte;
     }
-    for (result_byte, source_byte) in signature.slice_mut(32, 64).iter_mut().zip(public_key.iter()) {
+    for (result_byte, source_byte) in (&mut signature[32..64]).iter_mut().zip(public_key.iter()) {
         *result_byte = *source_byte;
     }
 
@@ -67,7 +67,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
         let mut hram: [u8; 64] = [0; 64];
         hasher.result(hram.as_mut_slice());
         sc_reduce(hram.as_mut_slice());
-        sc_muladd(signature.slice_mut(32, 64), &hram[0..32], &az[0..32], &nonce[0..32]);
+        sc_muladd(&mut signature[32..64], &hram[0..32], &az[0..32], &nonce[0..32]);
     }
 
     signature
