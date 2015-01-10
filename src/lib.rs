@@ -5,6 +5,7 @@
 // except according to those terms.
 
 #![feature(asm)]
+#![feature(box_syntax)]
 #![feature(int_uint)]
 #![feature(simd)]
 #![feature(slicing_syntax)]
