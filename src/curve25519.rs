@@ -1,5 +1,4 @@
 use std::ops::{Add, Sub, Mul};
-use std::fmt;
 use std::cmp::{Eq, PartialEq,min};
 use util::{fixed_time_eq};
 use std::iter::range_step;
@@ -14,13 +13,6 @@ Bounds on each t[i] vary depending on context.
 
 #[derive(Copy)]
 pub struct Fe([i32; 10]);
-
-impl fmt::Show for Fe {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let &Fe(elems) = self;
-        write!(f, "Fe({})", elems.to_vec())
-    }
-}
 
 impl PartialEq for Fe {
     fn eq(&self, other: &Fe) -> bool {
@@ -1077,7 +1069,7 @@ pub struct GeP2 {
     z: Fe,
 }
 
-#[derive(Copy, Show)]
+#[derive(Copy)]
 pub struct GeP3 {
     x: Fe,
     y: Fe,
@@ -2184,7 +2176,7 @@ mod tests {
             e.as_mut_slice()[31] |= 64;
             let fe = Fe::from_bytes(e.as_slice());
             let e_preserved = fe.to_bytes();
-            assert_eq!(e, e_preserved.to_vec());
+            assert!(e == e_preserved.to_vec());
         }
     }
 
@@ -2195,12 +2187,12 @@ mod tests {
         let f_initial = f;
         let g_initial = g;
         f.maybe_swap_with(&mut g, 0);
-        assert_eq!(f, f_initial);
-        assert_eq!(g, g_initial);
+        assert!(f == f_initial);
+        assert!(g == g_initial);
 
         f.maybe_swap_with(&mut g, 1);
-        assert_eq!(f, g_initial);
-        assert_eq!(g, f_initial);
+        assert!(f == g_initial);
+        assert!(g == f_initial);
     }
 
     struct CurveGen {
@@ -2226,28 +2218,28 @@ mod tests {
     #[test]
     fn mul_commutes() {
        for (x,y) in CurveGen::new(1).zip(CurveGen::new(2)).take(40) {
-          assert_eq!(x*y, y*x);
+          assert!(x*y == y*x);
        };
     }
 
     #[test]
     fn mul_assoc() {
        for (x,(y,z)) in CurveGen::new(1).zip(CurveGen::new(2).zip(CurveGen::new(3))).take(40) {
-          assert_eq!((x*y)*z, x*(y*z));
+          assert!((x*y)*z == x*(y*z));
        };
     }
 
     #[test]
     fn invert_inverts() {
        for x in CurveGen::new(1).take(40) {
-          assert_eq!(x.invert().invert(), x);
+          assert!(x.invert().invert() == x);
        };
     }
 
     #[test]
     fn square_by_mul() {
        for x in CurveGen::new(1).take(40) {
-          assert_eq!(x*x, x.square());
+          assert!(x*x == x.square());
        };
     }
 
