@@ -8,22 +8,22 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use cryptoutil::symm_enc_or_dec;
 
 pub trait BlockEncryptor {
-    fn block_size(&self) -> uint;
+    fn block_size(&self) -> usize;
     fn encrypt_block(&self, input: &[u8], output: &mut [u8]);
 }
 
 pub trait BlockEncryptorX8 {
-    fn block_size(&self) -> uint;
+    fn block_size(&self) -> usize;
     fn encrypt_block_x8(&self, input: &[u8], output: &mut [u8]);
 }
 
 pub trait BlockDecryptor {
-    fn block_size(&self) -> uint;
+    fn block_size(&self) -> usize;
     fn decrypt_block(&self, input: &[u8], output: &mut [u8]);
 }
 
 pub trait BlockDecryptorX8 {
-    fn block_size(&self) -> uint;
+    fn block_size(&self) -> usize;
     fn decrypt_block_x8(&self, input: &[u8], output: &mut [u8]);
 }
 
