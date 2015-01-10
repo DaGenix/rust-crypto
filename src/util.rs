@@ -30,7 +30,7 @@ pub fn supports_aesni() -> bool {
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 #[allow(unused_assignments)]
 #[allow(unused_variables)]
-unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
+unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: usize) -> bool {
     let mut result: u8 = 0;
 
     asm!(
@@ -57,7 +57,7 @@ unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count:
 
 #[cfg(target_arch = "arm")]
 #[allow(unused_assignments)]
-unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: uint) -> bool {
+unsafe fn fixed_time_eq_asm(mut lhsp: *const u8, mut rhsp: *const u8, mut count: usize) -> bool {
     let mut result: u8 = 0;
 
     asm!(
