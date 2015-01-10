@@ -539,8 +539,8 @@ impl Fe {
     }
 
     pub fn maybe_swap_with(&mut self, other: &mut Fe, do_swap: i32) {
-        let &Fe(f) = self;
-        let &Fe(g) = other;
+        let &mut Fe(f) = self;
+        let &mut Fe(g) = other;
         let f0 = f[0];
         let f1 = f[1];
         let f2 = f[2];
@@ -589,7 +589,7 @@ impl Fe {
     }
 
     pub fn maybe_set(&mut self, other: &Fe, do_swap: i32) {
-        let &Fe(f) = self;
+        let &mut Fe(f) = self;
         let &Fe(g) = other;
         let f0 = f[0];
         let f1 = f[1];
