@@ -186,7 +186,7 @@ mod test {
         for t in tests.iter() {
             let mut hmac = Hmac::new(Md5::new(), &t.key[]);
             for i in range(0, t.data.len()) {
-                hmac.input(t.data.slice(i, i + 1));
+                hmac.input(&t.data[i..i + 1]);
             }
             let result = hmac.result();
             let expected = MacResult::new(&t.expected[]);

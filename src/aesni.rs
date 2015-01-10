@@ -59,14 +59,14 @@ impl AesNiDecryptor {
 impl BlockEncryptor for AesNiEncryptor {
     fn block_size(&self) -> uint { 16 }
     fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        encrypt_block_aesni(self.rounds, input, self.round_keys.slice(0, size(self.rounds)), output);
+        encrypt_block_aesni(self.rounds, input, &self.round_keys[0..size(self.rounds)], output);
     }
 }
 
 impl BlockDecryptor for AesNiDecryptor {
     fn block_size(&self) -> uint { 16 }
     fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        decrypt_block_aesni(self.rounds, input, self.round_keys.slice(0, size(self.rounds)), output);
+        decrypt_block_aesni(self.rounds, input, &self.round_keys[0..size(self.rounds)], output);
     }
 }
 

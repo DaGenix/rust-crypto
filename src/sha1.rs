@@ -267,7 +267,7 @@ mod tests {
             let mut left = len;
             while left > 0u {
                 let take = (left + 1u) / 2u;
-                (*sh).input_str(t.input.slice(len - left, take + len - left));
+                (*sh).input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }
             sh.result(&mut out);

@@ -328,7 +328,7 @@ mod test {
             let key: Vec<u8> = repeat(i as u8).take(32).collect();
             let msg: Vec<u8> = repeat(i as u8).take(256).collect();
             let mut mac = [0u8; 16];
-            poly1305(&key[], &msg.slice(0..i), &mut mac);
+            poly1305(&key[], &msg[0..i], &mut mac);
             tpoly.input(&mac);
         }
         tpoly.raw_result(&mut mac);
