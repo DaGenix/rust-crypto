@@ -528,8 +528,8 @@ mod test {
         let tests = eay_test_vectors();
         let mut output = [0u8; 8];
         for test in tests.iter() {
-            let state = Blowfish::new(test.key[]);
-            state.encrypt_block(test.plaintext[], output.as_mut_slice());
+            let state = Blowfish::new(&test.key[]);
+            state.encrypt_block(&test.plaintext[], &mut output[]);
             assert!(test.ciphertext[] == output[]);
         }
     }
@@ -539,8 +539,8 @@ mod test {
         let tests = eay_test_vectors();
         let mut output = [0u8; 8];
         for test in tests.iter() {
-            let state = Blowfish::new(test.key[]);
-            state.decrypt_block(test.ciphertext[], output.as_mut_slice());
+            let state = Blowfish::new(&test.key[]);
+            state.decrypt_block(&test.ciphertext[], &mut output[]);
             assert!(test.plaintext[] == output[]);
         }
     }

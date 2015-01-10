@@ -84,14 +84,14 @@ impl <'a> ReadBuffer for RefReadBuffer<'a> {
 
     fn rewind(&mut self, distance: uint) { self.pos -= distance; }
     fn truncate(&mut self, amount: uint) {
-        self.buff = self.buff[..self.buff.len() - amount];
+        self.buff = &self.buff[..self.buff.len() - amount];
     }
     fn reset(&mut self) { self.pos = 0; }
 
-    fn peek_next(&self, count: uint) -> &[u8] { self.buff[self.pos..count] }
+    fn peek_next(&self, count: uint) -> &[u8] { &self.buff[self.pos..count] }
 
     fn take_next(&mut self, count: uint) -> &[u8] {
-        let r = self.buff[self.pos..self.pos + count];
+        let r = &self.buff[self.pos..self.pos + count];
         self.pos += count;
         r
     }
@@ -139,10 +139,10 @@ impl ReadBuffer for OwnedReadBuffer {
     fn truncate(&mut self, amount: uint) { self.len -= amount; }
     fn reset(&mut self) { self.pos = 0; }
 
-    fn peek_next(&self, count: uint) -> &[u8] { self.buff[self.pos..count] }
+    fn peek_next(&self, count: uint) -> &[u8] { &self.buff[self.pos..count] }
 
     fn take_next(&mut self, count: uint) -> &[u8] {
-        let r = self.buff[self.pos..self.pos + count];
+        let r = &self.buff[self.pos..self.pos + count];
         self.pos += count;
         r
     }
@@ -223,7 +223,7 @@ impl <'a> WriteBuffer for BorrowedWriteBuffer<'a> {
     }
 
     fn peek_read_buffer(&mut self) -> RefReadBuffer {
-        RefReadBuffer::new(self.parent.buff[..self.pos])
+        RefReadBuffer::new(&self.parent.buff[..self.pos])
     }
 
     fn take_next<>(&mut self, count: uint) -> &mut [u8] {
@@ -233,7 +233,7 @@ impl <'a> WriteBuffer for BorrowedWriteBuffer<'a> {
         r
     }
     fn take_read_buffer(&mut self) -> RefReadBuffer {
-        let r = RefReadBuffer::new(self.parent.buff[..self.pos]);
+        let r = RefReadBuffer::new(&self.parent.buff[..self.pos]);
         self.pos = 0;
         self.parent.len = 0;
         r
@@ -271,7 +271,7 @@ impl WriteBuffer for OwnedWriteBuffer {
     fn reset(&mut self) { self.pos = 0; }
 
     fn peek_read_buffer<'a>(&'a mut self) -> RefReadBuffer<'a> {
-        RefReadBuffer::new(self.buff[..self.pos])
+        RefReadBuffer::new(&self.buff[..self.pos])
     }
 
     fn take_next<'a>(&'a mut self, count: uint) -> &'a mut [u8] {
@@ -280,7 +280,7 @@ impl WriteBuffer for OwnedWriteBuffer {
         r
     }
     fn take_read_buffer<'a>(&'a mut self) -> RefReadBuffer<'a> {
-        let r = RefReadBuffer::new(self.buff[..self.pos]);
+        let r = RefReadBuffer::new(&self.buff[..self.pos]);
         self.pos = 0;
         r
     }

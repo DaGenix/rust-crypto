@@ -140,8 +140,8 @@ mod test {
         let tests = openwall_test_vectors();
         let mut output = [0u8; 24];
         for test in tests.iter() {
-            bcrypt(test.cost, test.salt[], test.input[], output.as_mut_slice());
-            assert_eq!(output[0..23], test.output[]);
+            bcrypt(test.cost, &test.salt[], &test.input[], &mut output[]);
+            assert!(output[0..23] == test.output[]);
         }
     }
 }

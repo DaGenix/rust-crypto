@@ -95,13 +95,13 @@ fn update_history(in_hist: &mut [u8], out_hist: &mut [u8], last_in: &[u8], last_
     if in_hist_len > 0 {
         slice::bytes::copy_memory(
             in_hist,
-            last_in[last_in.len() - in_hist_len..]);
+            &last_in[last_in.len() - in_hist_len..]);
     }
     let out_hist_len = out_hist.len();
     if out_hist_len > 0 {
         slice::bytes::copy_memory(
             out_hist,
-            last_out[last_out.len() - out_hist_len..]);
+            &last_out[last_out.len() - out_hist_len..]);
     }
 }
 
@@ -155,7 +155,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             enough_input && enough_output
         };
         fn split_at<'a>(vec: &'a [u8], at: uint) -> (&'a [u8], &'a [u8]) {
-            (vec[..at], vec[at..])
+            (&vec[..at], &vec[at..])
         }
 
         // First block processing. We have to retrieve the history information from self.in_hist and
@@ -170,8 +170,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
             let next_in = input.take_next(self.block_size);
             let next_out = output.take_next(self.block_size);
             self.processor.process_block(
-                self.in_hist[],
-                self.out_hist[],
+                &self.in_hist[],
+                &self.out_hist[],
                 next_in,
                 next_out);
         }
@@ -228,8 +228,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
                 let next_in = rin.take_remaining();
                 let next_out = wout.take_remaining();
                 me.processor.process_block(
-                    me.in_hist[],
-                    me.out_hist[],
+                    &me.in_hist[],
+                    &me.out_hist[],
                     next_in,
                     next_out);
                 update_history(
@@ -575,7 +575,7 @@ impl <T: BlockEncryptor> BlockProcessor for CbcEncryptorProcessor<T> {
         for ((&x, &y), o) in input.iter().zip(out_hist.iter()).zip(self.temp.iter_mut()) {
             *o = x ^ y;
         }
-        self.algo.encrypt_block(self.temp[], output.as_mut_slice());
+        self.algo.encrypt_block(&self.temp[], output.as_mut_slice());
     }
 }
 
@@ -700,7 +700,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
         while i < len {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
-                self.algo.encrypt_block(self.ctr[], wb.take_remaining());
+                self.algo.encrypt_block(&self.ctr[], wb.take_remaining());
                 add_ctr(self.ctr.as_mut_slice(), 1);
             }
             let count = cmp::min(self.bytes.remaining(), len - i);
@@ -773,7 +773,7 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
         while i < len {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
-                self.algo.encrypt_block_x8(self.ctr_x8[], wb.take_remaining());
+                self.algo.encrypt_block_x8(&self.ctr_x8[], wb.take_remaining());
                 for ctr_i in self.ctr_x8.as_mut_slice().chunks_mut(self.algo.block_size()) {
                     add_ctr(ctr_i, 8);
                 }
@@ -838,10 +838,10 @@ mod test {
 
     impl CipherTest for EcbTest {
         fn get_plain<'a>(&'a self) -> &'a [u8] {
-            self.plain[]
+            &self.plain[]
         }
         fn get_cipher<'a>(&'a self) -> &'a [u8] {
-            self.cipher[]
+            &self.cipher[]
         }
     }
 
@@ -854,10 +854,10 @@ mod test {
 
     impl CipherTest for CbcTest {
         fn get_plain<'a>(&'a self) -> &'a [u8] {
-            self.plain[]
+            &self.plain[]
         }
         fn get_cipher<'a>(&'a self) -> &'a [u8] {
-            self.cipher[]
+            &self.cipher[]
         }
     }
 
@@ -870,10 +870,10 @@ mod test {
 
     impl CipherTest for CtrTest {
         fn get_plain<'a>(&'a self) -> &'a [u8] {
-            self.plain[]
+            &self.plain[]
         }
         fn get_cipher<'a>(&'a self) -> &'a [u8] {
-            self.cipher[]
+            &self.cipher[]
         }
     }
 
@@ -993,7 +993,7 @@ mod test {
                 Err(_) => panic!("Error"),
             }
         }
-        assert!(test.get_cipher() == cipher_out[]);
+        assert!(test.get_cipher() == &cipher_out[]);
 
         let mut plain_out: Vec<u8> = repeat(0).take(test.get_plain().len()).collect();
         {
@@ -1005,7 +1005,7 @@ mod test {
                 Err(_) => panic!("Error"),
             }
         }
-        assert!(test.get_plain() == plain_out[]);
+        assert!(test.get_plain() == &plain_out[]);
     }
 
     /// Run and encryption or decryption operation, passing in variable sized input and output
@@ -1067,7 +1067,7 @@ mod test {
                     if in_pos == input.len() {
                         break;
                     }
-                    let mut tmp_in = RefReadBuffer::new(input[in_pos..in_end(in_pos, true)]);
+                    let mut tmp_in = RefReadBuffer::new(&input[in_pos..in_end(in_pos, true)]);
                     let out_end = out_end(out_pos);
                     let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
@@ -1079,7 +1079,7 @@ mod test {
                     out_pos += tmp_out.position();
                 }
                 Ok(BufferOverflow) => {
-                    let mut tmp_in = RefReadBuffer::new(input[in_pos..in_end(in_pos, false)]);
+                    let mut tmp_in = RefReadBuffer::new(&input[in_pos..in_end(in_pos, false)]);
                     let out_end = out_end(out_pos);
                     let mut tmp_out = RefWriteBuffer::new(output.slice_mut(out_pos,out_end));
                     state = op(&mut tmp_in, &mut tmp_out, eof.get());
@@ -1134,7 +1134,7 @@ mod test {
             || { 0 },
             || { 1 },
             false);
-        assert!(test.get_cipher() == cipher_out[]);
+        assert!(test.get_cipher() == &cipher_out[]);
 
         let mut plain_out: Vec<u8> = repeat(0).take(test.get_plain().len()).collect();
         run_inc(
@@ -1146,7 +1146,7 @@ mod test {
             || { 0 },
             || { 1 },
             false);
-        assert!(test.get_plain() == plain_out[]);
+        assert!(test.get_plain() == &plain_out[]);
     }
 
     fn run_rand_test<T, E, D, NewEncFunc, NewDecFunc>(
@@ -1189,7 +1189,7 @@ mod test {
                 || { r1() },
                 || { r2() },
                 rng3.gen());
-            assert!(test.get_cipher() == cipher_out[]);
+            assert!(test.get_cipher() == &cipher_out[]);
 
             let mut plain_out: Vec<u8> = repeat(0).take(test.get_plain().len()).collect();
             run_inc(
@@ -1201,7 +1201,7 @@ mod test {
                 || { r1() },
                 || { r2() },
                 rng3.gen());
-            assert!(test.get_plain() == plain_out[]);
+            assert!(test.get_plain() == &plain_out[]);
         }
     }
 
@@ -1227,11 +1227,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[]);
                     EcbEncryptor::new(aes_enc, NoPadding)
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(&test.key[]);
                     EcbDecryptor::new(aes_dec, NoPadding)
                 });
         }
@@ -1244,11 +1244,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[]);
                     EcbEncryptor::new(aes_enc, PkcsPadding)
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(&test.key[]);
                     EcbDecryptor::new(aes_dec, PkcsPadding)
                 });
         }
@@ -1261,11 +1261,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[]);
                     CbcEncryptor::new(aes_enc, NoPadding, test.iv.clone())
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(&test.key[]);
                     CbcDecryptor::new(aes_dec, NoPadding, test.iv.clone())
                 });
         }
@@ -1278,11 +1278,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[]);
                     CbcEncryptor::new(aes_enc, PkcsPadding, test.iv.clone())
                 },
                 || {
-                    let aes_dec = aessafe::AesSafe128Decryptor::new(test.key[]);
+                    let aes_dec = aessafe::AesSafe128Decryptor::new(&test.key[]);
                     CbcDecryptor::new(aes_dec, PkcsPadding, test.iv.clone())
                 });
         }
@@ -1295,11 +1295,11 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[]);
                     CtrMode::new(aes_enc, test.ctr.clone())
                 },
                 || {
-                    let aes_enc = aessafe::AesSafe128Encryptor::new(test.key[]);
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[]);
                     CtrMode::new(aes_enc, test.ctr.clone())
                 });
         }
@@ -1312,12 +1312,12 @@ mod test {
             run_test(
                 test,
                 || {
-                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key[]);
-                    CtrModeX8::new(aes_enc, test.ctr[])
+                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(&test.key[]);
+                    CtrModeX8::new(aes_enc, &test.ctr[])
                 },
                 || {
-                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(test.key[]);
-                    CtrModeX8::new(aes_enc, test.ctr[])
+                    let aes_enc = aessafe::AesSafe128EncryptorX8::new(&test.key[]);
+                    CtrModeX8::new(aes_enc, &test.ctr[])
                 });
         }
     }

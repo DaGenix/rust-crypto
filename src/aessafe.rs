@@ -811,14 +811,14 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
             ((data[15] as u32) << 24))
     }
 
-    let t0 = read_row_major(data[0..16]);
-    let t1 = read_row_major(data[16..32]);
-    let t2 = read_row_major(data[32..48]);
-    let t3 = read_row_major(data[48..64]);
-    let t4 = read_row_major(data[64..80]);
-    let t5 = read_row_major(data[80..96]);
-    let t6 = read_row_major(data[96..112]);
-    let t7 = read_row_major(data[112..128]);
+    let t0 = read_row_major(&data[0..16]);
+    let t1 = read_row_major(&data[16..32]);
+    let t2 = read_row_major(&data[32..48]);
+    let t3 = read_row_major(&data[48..64]);
+    let t4 = read_row_major(&data[64..80]);
+    let t5 = read_row_major(&data[80..96]);
+    let t6 = read_row_major(&data[96..112]);
+    let t7 = read_row_major(&data[112..128]);
 
     let x0 = (t0 & bit0) | (t1.lsh(1) & bit1) | (t2.lsh(2) & bit2) | (t3.lsh(3) & bit3) |
         (t4.lsh(4) & bit4) | (t5.lsh(5) & bit5) | (t6.lsh(6) & bit6) | (t7.lsh(7) & bit7);

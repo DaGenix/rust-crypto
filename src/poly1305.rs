@@ -28,16 +28,16 @@ impl Poly1305 {
         let mut poly = Poly1305{ r: [0u32; 5], h: [0u32; 5], pad: [0u32; 4], leftover: 0, buffer: [0u8; 16], finalized: false };
 
         // r &= 0xffffffc0ffffffc0ffffffc0fffffff
-        poly.r[0] = (read_u32_le(key[0..4])     ) & 0x3ffffff;
-        poly.r[1] = (read_u32_le(key[3..7]) >> 2) & 0x3ffff03;
-        poly.r[2] = (read_u32_le(key[6..10]) >> 4) & 0x3ffc0ff;
-        poly.r[3] = (read_u32_le(key[9..13]) >> 6) & 0x3f03fff;
-        poly.r[4] = (read_u32_le(key[12..16]) >> 8) & 0x00fffff;
+        poly.r[0] = (read_u32_le(&key[0..4])     ) & 0x3ffffff;
+        poly.r[1] = (read_u32_le(&key[3..7]) >> 2) & 0x3ffff03;
+        poly.r[2] = (read_u32_le(&key[6..10]) >> 4) & 0x3ffc0ff;
+        poly.r[3] = (read_u32_le(&key[9..13]) >> 6) & 0x3f03fff;
+        poly.r[4] = (read_u32_le(&key[12..16]) >> 8) & 0x00fffff;
 
-        poly.pad[0] = read_u32_le(key[16..20]);
-        poly.pad[1] = read_u32_le(key[20..24]);
-        poly.pad[2] = read_u32_le(key[24..28]);
-        poly.pad[3] = read_u32_le(key[28..32]);
+        poly.pad[0] = read_u32_le(&key[16..20]);
+        poly.pad[1] = read_u32_le(&key[20..24]);
+        poly.pad[2] = read_u32_le(&key[24..28]);
+        poly.pad[3] = read_u32_le(&key[28..32]);
 
         poly
     }
@@ -63,11 +63,11 @@ impl Poly1305 {
         let mut h4 = self.h[4];
 
         // h += m
-        h0 += (read_u32_le(m[0..4])     ) & 0x3ffffff;
-        h1 += (read_u32_le(m[3..7]) >> 2) & 0x3ffffff;
-        h2 += (read_u32_le(m[6..10]) >> 4) & 0x3ffffff;
-        h3 += (read_u32_le(m[9..13]) >> 6) & 0x3ffffff;
-        h4 += (read_u32_le(m[12..16]) >> 8) | hibit;
+        h0 += (read_u32_le(&m[0..4])     ) & 0x3ffffff;
+        h1 += (read_u32_le(&m[3..7]) >> 2) & 0x3ffffff;
+        h2 += (read_u32_le(&m[6..10]) >> 4) & 0x3ffffff;
+        h3 += (read_u32_le(&m[9..13]) >> 6) & 0x3ffffff;
+        h4 += (read_u32_le(&m[12..16]) >> 8) | hibit;
 
         // h *= r
         let     d0 = (h0 as u64 * r0 as u64) + (h1 as u64 * s4 as u64) + (h2 as u64 * s3 as u64) + (h3 as u64 * s2 as u64) + (h4 as u64 * s1 as u64);
@@ -170,7 +170,7 @@ impl Mac for Poly1305 {
             for i in range(0, want) {
                 self.buffer[self.leftover+i] = m[i];
             }
-            m = m[want..];
+            m = &m[want..];
             self.leftover += want;
 
             if self.leftover < 16 {
@@ -185,8 +185,8 @@ impl Mac for Poly1305 {
         }
 
         while m.len() >= 16 {
-            self.block(m[0..16]);
-            m = m[16..];
+            self.block(&m[0..16]);
+            m = &m[16..];
         }
 
         for i in range(0, m.len()) {
@@ -204,7 +204,7 @@ impl Mac for Poly1305 {
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8; 16];
         self.raw_result(mac.as_mut_slice());
-        MacResult::new(mac[])
+        MacResult::new(&mac[])
     }
 
     fn raw_result(&mut self, output: &mut [u8]) {
@@ -270,22 +270,22 @@ mod test {
 
         let mut mac = [0u8; 16];
         poly1305(&key, &msg, mac.as_mut_slice());
-        assert_eq!(mac[], expected[]);
+        assert_eq!(&mac[], &expected[]);
 
         let mut poly = Poly1305::new(&key);
-        poly.input(msg[0..32]);
-        poly.input(msg[32..96]);
-        poly.input(msg[96..112]);
-        poly.input(msg[112..120]);
-        poly.input(msg[120..124]);
-        poly.input(msg[124..126]);
-        poly.input(msg[126..127]);
-        poly.input(msg[127..128]);
-        poly.input(msg[128..129]);
-        poly.input(msg[129..130]);
-        poly.input(msg[130..131]);
+        poly.input(&msg[0..32]);
+        poly.input(&msg[32..96]);
+        poly.input(&msg[96..112]);
+        poly.input(&msg[112..120]);
+        poly.input(&msg[120..124]);
+        poly.input(&msg[124..126]);
+        poly.input(&msg[126..127]);
+        poly.input(&msg[127..128]);
+        poly.input(&msg[128..129]);
+        poly.input(&msg[129..130]);
+        poly.input(&msg[130..131]);
         poly.raw_result(mac.as_mut_slice());
-        assert_eq!(mac[], expected[]);
+        assert_eq!(&mac[], &expected[]);
     }
 
     #[test]
@@ -309,7 +309,7 @@ mod test {
 
         let mut mac = [0u8; 16];
         poly1305(&wrap_key, &wrap_msg, mac.as_mut_slice());
-        assert_eq!(mac[], wrap_mac[]);
+        assert_eq!(&mac[], &wrap_mac[]);
 
         let total_key = [
             0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xff,
@@ -328,11 +328,11 @@ mod test {
             let key: Vec<u8> = repeat(i as u8).take(32).collect();
             let msg: Vec<u8> = repeat(i as u8).take(256).collect();
             let mut mac = [0u8; 16];
-            poly1305(key[], msg.slice(0, i), &mut mac);
+            poly1305(&key[], &msg.slice(0..i), &mut mac);
             tpoly.input(&mac);
         }
         tpoly.raw_result(&mut mac);
-        assert_eq!(mac[], total_mac[]);
+        assert_eq!(&mac[], &total_mac[]);
     }
 
     #[test]
@@ -346,7 +346,7 @@ mod test {
         ];
         let mut mac = [0u8; 16];
         poly1305(key, &msg, mac.as_mut_slice());
-        assert_eq!(mac[], expected[]);
+        assert_eq!(&mac[], &expected[]);
 
         let msg = b"Hello world!";
         let expected= [
@@ -354,7 +354,7 @@ mod test {
             0xa2, 0x0d, 0xcc, 0x74, 0xee, 0xf2, 0xb2, 0xf0,
         ];
         poly1305(key, msg, mac.as_mut_slice());
-        assert_eq!(mac[], expected[]);
+        assert_eq!(&mac[], &expected[]);
     }
 }
 

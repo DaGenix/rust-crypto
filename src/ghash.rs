@@ -35,10 +35,10 @@ impl Gf128 {
 
     fn from_bytes(bytes: &[u8]) -> Gf128 {
         assert!(bytes.len() == 16);
-        let d = read_u32_be(bytes[0..4]);
-        let c = read_u32_be(bytes[4..8]);
-        let b = read_u32_be(bytes[8..12]);
-        let a = read_u32_be(bytes[12..16]);
+        let d = read_u32_be(&bytes[0..4]);
+        let c = read_u32_be(&bytes[4..8]);
+        let b = read_u32_be(&bytes[8..12]);
+        let a = read_u32_be(&bytes[12..16]);
         Gf128::new(a, b, c, d)
     }
 
@@ -299,8 +299,8 @@ impl Mac for Ghash {
 
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8; 16];
-        self.raw_result(mac.as_mut_slice());
-        MacResult::new(mac[])
+        self.raw_result(&mut mac[]);
+        MacResult::new(&mac[])
     }
 
     fn raw_result(&mut self, output: &mut [u8]) {
@@ -539,7 +539,7 @@ mod test {
     fn hash() {
         for &(h, a, c, g) in CASES.iter() {
             let ghash = Ghash::new(h);
-            assert_eq!(ghash.input_a(a).input_c(c).result()[], g);
+            assert_eq!(&ghash.input_a(a).input_c(c).result()[], g);
         }
     }
 
@@ -549,7 +549,7 @@ mod test {
             let ghash = Ghash::new(h);
             let (a1, a2) = a.split_at(a.len() / 2);
             let (c1, c2) = c.split_at(c.len() / 2);
-            assert_eq!(ghash.input_a(a1)
+            assert_eq!(&ghash.input_a(a1)
                             .input_a(a2)
                             .input_c(c1)
                             .input_c(c2)

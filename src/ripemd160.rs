@@ -483,11 +483,11 @@ mod tests {
         for t in tests.iter() {
             (*sh).input_str(t.input);
             sh.result(&mut out);
-            assert_eq!(t.output[], out[]);
+            assert_eq!(&t.output[], &out[]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert_eq!(out_str[], t.output_str);
+            assert_eq!(&out_str[], t.output_str);
 
             sh.reset();
         }
@@ -503,11 +503,11 @@ mod tests {
                 left = left - take;
             }
             sh.result(&mut out);
-            assert_eq!(t.output[], out[]);
+            assert_eq!(&t.output[], &out[]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(out_str[] == t.output_str);
+            assert!(&out_str[] == t.output_str);
 
             sh.reset();
         }

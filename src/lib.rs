@@ -8,6 +8,8 @@
 #![feature(simd)]
 #![feature(slicing_syntax)]
 
+#![allow(unstable)]
+
 extern crate "rustc-serialize" as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;

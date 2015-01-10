@@ -293,7 +293,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                 if input.len() >= buffer_remaining {
                         copy_memory(
                             self.buffer.slice_mut(self.buffer_idx,size),
-                            input[..buffer_remaining]);
+                            &input[..buffer_remaining]);
                     self.buffer_idx = 0;
                     func(&self.buffer);
                     i += buffer_remaining;
@@ -309,7 +309,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             // While we have at least a full buffer size chunks's worth of data, process that data
             // without copying it into the buffer
             while input.len() - i >= size {
-                func(input[i..i + size]);
+                func(&input[i..i + size]);
                 i += size;
             }
 
@@ -319,7 +319,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             let input_remaining = input.len() - i;
             copy_memory(
                 self.buffer.slice_mut(0,input_remaining),
-                input[i..]);
+                &input[i..]);
             self.buffer_idx += input_remaining;
         }
 
@@ -341,13 +341,13 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
         fn full_buffer<'s>(&'s mut self) -> &'s [u8] {
             assert!(self.buffer_idx == $size);
             self.buffer_idx = 0;
-            self.buffer[..$size]
+            &self.buffer[..$size]
         }
 
         fn current_buffer<'s>(&'s mut self) -> &'s [u8] {
             let tmp = self.buffer_idx;
             self.buffer_idx = 0;
-            self.buffer[..tmp]
+            &self.buffer[..tmp]
         }
 
         fn position(&self) -> uint { self.buffer_idx }
@@ -448,13 +448,13 @@ pub mod test {
             let next = range.ind_sample(&mut rng);
             let remaining = total_size - count;
             let size = if next > remaining { remaining } else { next };
-            digest.input(buffer[..size]);
+            digest.input(&buffer[..size]);
             count += size;
         }
 
         let result_str = digest.result_str();
 
-        assert!(expected == result_str[]);
+        assert!(expected == &result_str[]);
     }
 
     // A normal addition - no overflow occurs

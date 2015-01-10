@@ -780,7 +780,7 @@ mod tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(out_str[] == t.output_str);
+            assert!(&out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -791,12 +791,12 @@ mod tests {
             let mut left = len;
             while left > 0u {
                 let take = (left + 1u) / 2u;
-                sh.input_str(t.input[len - left..take + len - left]);
+                sh.input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }
 
             let out_str = sh.result_str();
-            assert!(out_str[] == t.output_str);
+            assert!(&out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -824,7 +824,7 @@ mod tests {
 
         let mut sh = box Sha512::new();
 
-        test_hash(&mut *sh, tests[]);
+        test_hash(&mut *sh, &tests[]);
     }
 
     #[test]
@@ -849,7 +849,7 @@ mod tests {
 
         let mut sh = box Sha384::new();
 
-        test_hash(&mut *sh, tests[]);
+        test_hash(&mut *sh, &tests[]);
     }
 
     #[test]
@@ -874,7 +874,7 @@ mod tests {
 
         let mut sh = box Sha512Trunc256::new();
 
-        test_hash(&mut *sh, tests[]);
+        test_hash(&mut *sh, &tests[]);
     }
 
     #[test]
@@ -899,7 +899,7 @@ mod tests {
 
         let mut sh = box Sha512Trunc224::new();
 
-        test_hash(&mut *sh, tests[]);
+        test_hash(&mut *sh, &tests[]);
     }
 
     #[test]
@@ -924,7 +924,7 @@ mod tests {
 
         let mut sh = box Sha256::new();
 
-        test_hash(&mut *sh, tests[]);
+        test_hash(&mut *sh, &tests[]);
     }
 
     #[test]
@@ -949,7 +949,7 @@ mod tests {
 
         let mut sh = box Sha224::new();
 
-        test_hash(&mut *sh, tests[]);
+        test_hash(&mut *sh, &tests[]);
     }
 
     #[test]
