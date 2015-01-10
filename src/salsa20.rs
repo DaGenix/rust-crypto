@@ -82,54 +82,54 @@ impl Salsa20 {
         assert!(nonce.len() == 24);
         let mut xsalsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
 
-        xsalsa20.hsalsa20_expand(key, nonce[0..16]);
+        xsalsa20.hsalsa20_expand(key, &nonce[0..16]);
         xsalsa20.hsalsa20_hash();
 
         let mut new_key = [0; 32];
-        copy_memory(new_key.slice_mut(0,4), xsalsa20.output[0..4]);
-        copy_memory(new_key.slice_mut(4,8), xsalsa20.output[20..24]);
-        copy_memory(new_key.slice_mut(8,12), xsalsa20.output[40..44]);
-        copy_memory(new_key.slice_mut(12,16), xsalsa20.output[60..64]);
-        copy_memory(new_key.slice_mut(16,32), xsalsa20.output[24..40]);
+        copy_memory(&mut new_key[0..4], &xsalsa20.output[0..4]);
+        copy_memory(&mut new_key[4..8], &xsalsa20.output[20..24]);
+        copy_memory(&mut new_key[8..12], &xsalsa20.output[40..44]);
+        copy_memory(&mut new_key[12..16], &xsalsa20.output[60..64]);
+        copy_memory(&mut new_key[16..32], &xsalsa20.output[24..40]);
 
-        xsalsa20.expand32(&new_key, nonce[16..24]);
+        xsalsa20.expand32(&new_key, &nonce[16..24]);
 
         xsalsa20
     }
 
     fn expand16(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(self.state.slice_mut(0,4), &[101u8, 120, 112, 97]);
-        copy_memory(self.state.slice_mut(4,20), key);
-        copy_memory(self.state.slice_mut(20,24), &[110u8, 100, 32, 49]);
-        copy_memory(self.state.slice_mut(24,32), nonce);
-        copy_memory(self.state.slice_mut(40,44), &[54u8, 45, 98, 121]);
-        copy_memory(self.state.slice_mut(44,60), key);
-        copy_memory(self.state.slice_mut(60,64), &[116u8, 101, 32, 107]);
+        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
+        copy_memory(&mut self.state[4..20], key);
+        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 49]);
+        copy_memory(&mut self.state[24..32], nonce);
+        copy_memory(&mut self.state[40..44], &[54u8, 45, 98, 121]);
+        copy_memory(&mut self.state[44..60], key);
+        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
     }
 
     fn expand32(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(self.state.slice_mut(0,4), &[101u8, 120, 112, 97]);
-        copy_memory(self.state.slice_mut(4,20), key[0..16]);
-        copy_memory(self.state.slice_mut(20,24), &[110u8, 100, 32, 51]);
-        copy_memory(self.state.slice_mut(24,32), nonce);
-        copy_memory(self.state.slice_mut(40,44), &[50u8, 45, 98, 121]);
-        copy_memory(self.state.slice_mut(44,60), key[16..32]);
-        copy_memory(self.state.slice_mut(60,64), &[116u8, 101, 32, 107]);
+        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
+        copy_memory(&mut self.state[4..20], &key[0..16]);
+        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 51]);
+        copy_memory(&mut self.state[24..32], nonce);
+        copy_memory(&mut self.state[40..44], &[50u8, 45, 98, 121]);
+        copy_memory(&mut self.state[44..60], &key[16..32]);
+        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
     }
 
     fn hsalsa20_expand(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(self.state.slice_mut(0,4), &[101u8, 120, 112, 97]);
-        copy_memory(self.state.slice_mut(4,20), key[0..16]);
-        copy_memory(self.state.slice_mut(20,24), &[110u8, 100, 32, 51]);
-        copy_memory(self.state.slice_mut(24,40), nonce);
-        copy_memory(self.state.slice_mut(40,44), &[50u8, 45, 98, 121]);
-        copy_memory(self.state.slice_mut(44,60), key[16..32]);
-        copy_memory(self.state.slice_mut(60,64), &[116u8, 101, 32, 107]);
+        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
+        copy_memory(&mut self.state[4..20], &key[0..16]);
+        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 51]);
+        copy_memory(&mut self.state[24..40], nonce);
+        copy_memory(&mut self.state[40..44], &[50u8, 45, 98, 121]);
+        copy_memory(&mut self.state[44..60], &key[16..32]);
+        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
     }
 
     fn hash(&mut self) {
-        write_u32_le(self.state.slice_mut(32,36), self.counter as u32);
-        write_u32_le(self.state.slice_mut(36,40), (self.counter >> 32) as u32);
+        write_u32_le(&mut self.state[32..36], self.counter as u32);
+        write_u32_le(&mut self.state[36..40], (self.counter >> 32) as u32);
         
         let mut x = [0u32; 16];
         let mut z = [0u32; 16];
@@ -139,7 +139,7 @@ impl Salsa20 {
             doubleround(&mut z);
         }
         for i in range(0u, 16) {
-            write_u32_le(self.output.slice_mut(i*4,(i+1)*4), x[i] + z[i]);
+            write_u32_le(&mut self.output[i*4..(i+1)*4], x[i] + z[i]);
         }
         
         self.counter += 1;
@@ -153,7 +153,7 @@ impl Salsa20 {
             doubleround(&mut x);
         }
         for i in range(0u, 16) {
-            write_u32_le(self.output.slice_mut(i*4,(i+1)*4), x[i]);
+            write_u32_le(&mut self.output[i*4..(i+1)*4], x[i]);
         }
     }
 

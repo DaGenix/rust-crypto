@@ -317,8 +317,8 @@ impl BlockEncryptor for Blowfish {
         let mut block = [0u32, 0u32];
         read_u32v_be(block.as_mut_slice(), input);
         let (l, r) = self.encrypt(block[0], block[1]);
-        write_u32_be(output.slice_mut(0,4), l);
-        write_u32_be(output.slice_mut(4,8), r);
+        write_u32_be(&mut output[0..4], l);
+        write_u32_be(&mut output[4..8], r);
     }
 }
 
@@ -333,8 +333,8 @@ impl BlockDecryptor for Blowfish {
         let mut block = [0u32, 0u32];
         read_u32v_be(block.as_mut_slice(), input);
         let (l, r) = self.decrypt(block[0], block[1]);
-        write_u32_be(output.slice_mut(0,4), l);
-        write_u32_be(output.slice_mut(4,8), r);
+        write_u32_be(&mut output[0..4], l);
+        write_u32_be(&mut output[4..8], r);
     }
 }
 
@@ -528,8 +528,8 @@ mod test {
         let tests = eay_test_vectors();
         let mut output = [0u8; 8];
         for test in tests.iter() {
-            let state = Blowfish::new(test.key[]);
-            state.encrypt_block(test.plaintext[], output.as_mut_slice());
+            let state = Blowfish::new(&test.key[]);
+            state.encrypt_block(&test.plaintext[], &mut output[]);
             assert!(test.ciphertext[] == output[]);
         }
     }
@@ -539,8 +539,8 @@ mod test {
         let tests = eay_test_vectors();
         let mut output = [0u8; 8];
         for test in tests.iter() {
-            let state = Blowfish::new(test.key[]);
-            state.decrypt_block(test.ciphertext[], output.as_mut_slice());
+            let state = Blowfish::new(&test.key[]);
+            state.decrypt_block(&test.ciphertext[], &mut output[]);
             assert!(test.plaintext[] == output[]);
         }
     }

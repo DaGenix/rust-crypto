@@ -64,7 +64,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
     let mut w = [0u32; WORK_BUF_LEN];
 
     // Initialize the first 16 words of the vector w
-    read_u32v_be(w.slice_mut(0,16), data);
+    read_u32v_be(&mut w[0..16], data);
 
     // Initialize the rest of vector w
     t = 16u;
@@ -140,11 +140,11 @@ fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
         st.computed = true;
     }
 
-    write_u32_be(rs.slice_mut(0,4), st.h[0]);
-    write_u32_be(rs.slice_mut(4,8), st.h[1]);
-    write_u32_be(rs.slice_mut(8,12), st.h[2]);
-    write_u32_be(rs.slice_mut(12,16), st.h[3]);
-    write_u32_be(rs.slice_mut(16,20), st.h[4]);
+    write_u32_be(&mut rs[0..4], st.h[0]);
+    write_u32_be(&mut rs[4..8], st.h[1]);
+    write_u32_be(&mut rs[8..12], st.h[2]);
+    write_u32_be(&mut rs[12..16], st.h[3]);
+    write_u32_be(&mut rs[16..20], st.h[4]);
 }
 
 impl Sha1 {
@@ -255,7 +255,7 @@ mod tests {
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(out_str[] == t.output_str);
+            assert!(&out_str[] == t.output_str);
 
             sh.reset();
         }
@@ -267,7 +267,7 @@ mod tests {
             let mut left = len;
             while left > 0u {
                 let take = (left + 1u) / 2u;
-                (*sh).input_str(t.input.slice(len - left, take + len - left));
+                (*sh).input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }
             sh.result(&mut out);
@@ -275,7 +275,7 @@ mod tests {
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(out_str[] == t.output_str);
+            assert!(&out_str[] == t.output_str);
 
             sh.reset();
         }

@@ -34,7 +34,7 @@ impl AesNiEncryptor {
             rounds: rounds,
             round_keys: [0u8; 240]
         };
-        setup_function(key, KeyType::Encryption, e.round_keys.slice_mut(0, size(e.rounds)));
+        setup_function(key, KeyType::Encryption, &mut e.round_keys[0..size(e.rounds)]);
         e
     }
 }
@@ -50,7 +50,7 @@ impl AesNiDecryptor {
             rounds: rounds,
             round_keys: [0u8; 240]
         };
-        setup_function(key, KeyType::Decryption, d.round_keys.slice_mut(0, size(d.rounds)));
+        setup_function(key, KeyType::Decryption, &mut d.round_keys[0..size(d.rounds)]);
         d
     }
 
@@ -59,14 +59,14 @@ impl AesNiDecryptor {
 impl BlockEncryptor for AesNiEncryptor {
     fn block_size(&self) -> uint { 16 }
     fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        encrypt_block_aesni(self.rounds, input, self.round_keys.slice(0, size(self.rounds))[], output);
+        encrypt_block_aesni(self.rounds, input, &self.round_keys[0..size(self.rounds)], output);
     }
 }
 
 impl BlockDecryptor for AesNiDecryptor {
     fn block_size(&self) -> uint { 16 }
     fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
-        decrypt_block_aesni(self.rounds, input, self.round_keys.slice(0, size(self.rounds))[], output);
+        decrypt_block_aesni(self.rounds, input, &self.round_keys[0..size(self.rounds)], output);
     }
 }
 

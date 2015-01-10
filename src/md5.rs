@@ -200,10 +200,10 @@ impl Digest for Md5 {
             self.finished = true;
         }
 
-        write_u32_le(out.slice_mut(0,4), self.state.s0);
-        write_u32_le(out.slice_mut(4,8), self.state.s1);
-        write_u32_le(out.slice_mut(8,12), self.state.s2);
-        write_u32_le(out.slice_mut(12,16), self.state.s3);
+        write_u32_le(&mut out[0..4], self.state.s0);
+        write_u32_le(&mut out[4..8], self.state.s1);
+        write_u32_le(&mut out[8..12], self.state.s2);
+        write_u32_le(&mut out[12..16], self.state.s3);
     }
 
     fn output_bits(&self) -> uint { 128 }
@@ -230,7 +230,7 @@ mod tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(out_str[] == t.output_str);
+            assert_eq!(out_str, t.output_str);
 
             sh.reset();
         }
@@ -241,12 +241,12 @@ mod tests {
             let mut left = len;
             while left > 0u {
                 let take = (left + 1u) / 2u;
-                sh.input_str(t.input.slice(len - left, take + len - left));
+                sh.input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }
 
             let out_str = sh.result_str();
-            assert!(out_str[] == t.output_str);
+            assert_eq!(out_str, t.output_str);
 
             sh.reset();
         }
@@ -274,7 +274,7 @@ mod tests {
 
         let mut sh = Md5::new();
 
-        test_hash(&mut sh, tests[]);
+        test_hash(&mut sh, &tests[]);
     }
 
     #[test]

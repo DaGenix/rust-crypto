@@ -31,7 +31,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     }
 
     for i in range(0u, 8) {
-        write_u32_le(output.slice_mut(i*4, (i+1)*4), buf[i]);
+        write_u32_le(&mut output[i*4..(i+1)*4], buf[i]);
     }
 }
 
@@ -161,7 +161,7 @@ mod test {
         for t in tests.iter() {
             let mut out = [0u8; 32];
             bcrypt_hash(&t.hpass, &t.hsalt, &mut out);
-            assert_eq!(out[], t.out[]);
+            assert!(out == t.out);
         }
     }
 
@@ -259,7 +259,7 @@ mod test {
 
         for t in tests.iter() {
             let mut out: Vec<u8> = repeat(0).take(t.out.len()).collect();
-            bcrypt_pbkdf(t.password[], t.salt[], t.rounds, out.as_mut_slice());
+            bcrypt_pbkdf(&t.password[], &t.salt[], t.rounds, &mut out[]);
             assert_eq!(out, t.out);
         }
     }

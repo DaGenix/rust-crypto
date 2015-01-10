@@ -41,37 +41,37 @@ impl ChaCha20 {
         };
         ChaChaState {
             a: u32x4(
-                read_u32_le(constant[0..4]),
-                read_u32_le(constant[4..8]),
-                read_u32_le(constant[8..12]),
-                read_u32_le(constant[12..16])
+                read_u32_le(&constant[0..4]),
+                read_u32_le(&constant[4..8]),
+                read_u32_le(&constant[8..12]),
+                read_u32_le(&constant[12..16])
             ),
             b: u32x4(
-                read_u32_le(key[0..4]),
-                read_u32_le(key[4..8]),
-                read_u32_le(key[8..12]),
-                read_u32_le(key[12..16])
+                read_u32_le(&key[0..4]),
+                read_u32_le(&key[4..8]),
+                read_u32_le(&key[8..12]),
+                read_u32_le(&key[12..16])
             ),
             c: if key.len() == 16 {
                     u32x4(
-                        read_u32_le(key[0..4]),
-                        read_u32_le(key[4..8]),
-                        read_u32_le(key[8..12]),
-                        read_u32_le(key[12..16])
+                        read_u32_le(&key[0..4]),
+                        read_u32_le(&key[4..8]),
+                        read_u32_le(&key[8..12]),
+                        read_u32_le(&key[12..16])
                     )
                 } else {
                     u32x4(
-                        read_u32_le(key[16..20]),
-                        read_u32_le(key[20..24]),
-                        read_u32_le(key[24..28]),
-                        read_u32_le(key[28..32])
+                        read_u32_le(&key[16..20]),
+                        read_u32_le(&key[20..24]),
+                        read_u32_le(&key[24..28]),
+                        read_u32_le(&key[28..32])
                     )
                 },
             d: u32x4(
                 0,
                 0,
-                read_u32_le(nonce[0..4]),
-                read_u32_le(nonce[4..8])
+                read_u32_le(&nonce[0..4]),
+                read_u32_le(&nonce[4..8])
             )
         }
     }
@@ -130,7 +130,7 @@ impl ChaCha20 {
             d1,d2,d3,d4
         ];
         for i in range(0, lens.len()) {
-            write_u32_le(self.output.slice_mut(i*4,(i+1)*4), lens[i]);
+            write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
         }
 
         self.state.d += u32x4(1, 0, 0, 0);
@@ -313,7 +313,7 @@ mod test {
             let mut c = ChaCha20::new(&tv.key, &tv.nonce);
             let input: Vec<u8> = repeat(0).take(tv.keystream.len()).collect();
             let mut output: Vec<u8> = repeat(0).take(input.len()).collect();
-            c.process(input[], output.as_mut_slice());
+            c.process(&input[], &mut output[]);
             assert_eq!(output, tv.keystream);
         }
     }

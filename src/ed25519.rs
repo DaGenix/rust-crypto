@@ -16,20 +16,20 @@ pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
         hash_output
     };
 
-    let a = ge_scalarmult_base(secret.slice(0, 32));
+    let a = ge_scalarmult_base(&secret[0..32]);
     let public_key = a.to_bytes();
-    for (dest, src) in secret.slice_mut(32,64).iter_mut().zip(public_key.iter()) {
+    for (dest, src) in (&mut secret[32..64]).iter_mut().zip(public_key.iter()) {
         *dest = *src;
     }
-    for (dest, src) in secret.slice_mut(0,32).iter_mut().zip(seed.iter()) {
+    for (dest, src) in (&mut secret[0..32]).iter_mut().zip(seed.iter()) {
         *dest = *src;
     }
     (secret, public_key)
 }
 
 pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
-    let seed = secret_key.slice(0, 32);
-    let public_key = secret_key.slice(32, 64);
+    let seed = &secret_key[0..32];
+    let public_key = &secret_key[32..64];
     let az: [u8; 64] = {
         let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
@@ -44,19 +44,19 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
     let nonce = {
         let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
-        hasher.input(az.slice(32, 64));
+        hasher.input(&az[32..64]);
         hasher.input(message);
         hasher.result(hash_output.as_mut_slice());
-        sc_reduce(hash_output.slice_mut(0, 64));
+        sc_reduce(&mut hash_output[0..64]);
         hash_output
     };
 
     let mut signature: [u8; 64] = [0; 64];
-    let r: GeP3 = ge_scalarmult_base(nonce.slice(0, 32));
-    for (result_byte, source_byte) in signature.slice_mut(0, 32).iter_mut().zip(r.to_bytes().iter()) {
+    let r: GeP3 = ge_scalarmult_base(&nonce[0..32]);
+    for (result_byte, source_byte) in (&mut signature[0..32]).iter_mut().zip(r.to_bytes().iter()) {
         *result_byte = *source_byte;
     }
-    for (result_byte, source_byte) in signature.slice_mut(32, 64).iter_mut().zip(public_key.iter()) {
+    for (result_byte, source_byte) in (&mut signature[32..64]).iter_mut().zip(public_key.iter()) {
         *result_byte = *source_byte;
     }
 
@@ -67,7 +67,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
         let mut hram: [u8; 64] = [0; 64];
         hasher.result(hram.as_mut_slice());
         sc_reduce(hram.as_mut_slice());
-        sc_muladd(signature.slice_mut(32, 64), hram.slice(0, 32), az.slice(0, 32), nonce.slice(0, 32));
+        sc_muladd(&mut signature[32..64], &hram[0..32], &az[0..32], &nonce[0..32]);
     }
 
     signature
@@ -91,7 +91,7 @@ fn check_s_lt_l(s: &[u8]) -> bool
 }
 
 pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
-    if check_s_lt_l(signature.slice(32, 64)) {
+    if check_s_lt_l(&signature[32..64]) {
         return false;
     }
 
@@ -108,17 +108,17 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
     }
 
     let mut hasher = Sha512::new();
-    hasher.input(signature.slice(0, 32));
+    hasher.input(&signature[0..32]);
     hasher.input(public_key);
     hasher.input(message);
     let mut hash: [u8; 64] = [0; 64];
     hasher.result(hash.as_mut_slice());
     sc_reduce(hash.as_mut_slice());
 
-    let r = GeP2::double_scalarmult_vartime(hash.as_slice(), a, signature.slice(32, 64));
+    let r = GeP2::double_scalarmult_vartime(hash.as_slice(), a, &signature[32..64]);
     let rcheck = r.to_bytes();
 
-    fixed_time_eq(rcheck.as_slice(), signature.slice(0, 32))
+    fixed_time_eq(rcheck.as_slice(), &signature[0..32])
 }
 
 #[cfg(test)]

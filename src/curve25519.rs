@@ -1,5 +1,4 @@
 use std::ops::{Add, Sub, Mul};
-use std::fmt;
 use std::cmp::{Eq, PartialEq,min};
 use util::{fixed_time_eq};
 use std::iter::range_step;
@@ -14,13 +13,6 @@ Bounds on each t[i] vary depending on context.
 
 #[derive(Copy)]
 pub struct Fe([i32; 10]);
-
-impl fmt::Show for Fe {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let &Fe(elems) = self;
-        write!(f, "Fe({})", elems.to_vec())
-    }
-}
 
 impl PartialEq for Fe {
     fn eq(&self, other: &Fe) -> bool {
@@ -410,16 +402,16 @@ impl Mul for Fe {
 
 impl Fe {
     pub fn from_bytes(s: &[u8]) -> Fe {
-        let mut h0 = load_4i(s.slice(0,4));
-        let mut h1 = load_3i(s.slice(4,7)) << 6;
-        let mut h2 = load_3i(s.slice(7,10)) << 5;
-        let mut h3 = load_3i(s.slice(10,13)) << 3;
-        let mut h4 = load_3i(s.slice(13,16)) << 2;
-        let mut h5 = load_4i(s.slice(16,20));
-        let mut h6 = load_3i(s.slice(20,23)) << 7;
-        let mut h7 = load_3i(s.slice(23,26)) << 5;
-        let mut h8 = load_3i(s.slice(26,29)) << 4;
-        let mut h9 = (load_3i(s.slice(29,32)) & 8388607) << 2;
+        let mut h0 = load_4i(&s[0..4]);
+        let mut h1 = load_3i(&s[4..7]) << 6;
+        let mut h2 = load_3i(&s[7..10]) << 5;
+        let mut h3 = load_3i(&s[10..13]) << 3;
+        let mut h4 = load_3i(&s[13..16]) << 2;
+        let mut h5 = load_4i(&s[16..20]);
+        let mut h6 = load_3i(&s[20..23]) << 7;
+        let mut h7 = load_3i(&s[23..26]) << 5;
+        let mut h8 = load_3i(&s[26..29]) << 4;
+        let mut h9 = (load_3i(&s[29..32]) & 8388607) << 2;
 
         let carry9 = (h9 + (1<<24)) >> 25; h0 += carry9 * 19; h9 -= carry9 << 25;
         let carry1 = (h1 + (1<<24)) >> 25; h2 += carry1; h1 -= carry1 << 25;
@@ -547,8 +539,8 @@ impl Fe {
     }
 
     pub fn maybe_swap_with(&mut self, other: &mut Fe, do_swap: i32) {
-        let &Fe(f) = self;
-        let &Fe(g) = other;
+        let &mut Fe(f) = self;
+        let &mut Fe(g) = other;
         let f0 = f[0];
         let f1 = f[1];
         let f2 = f[2];
@@ -597,7 +589,7 @@ impl Fe {
     }
 
     pub fn maybe_set(&mut self, other: &Fe, do_swap: i32) {
-        let &Fe(f) = self;
+        let &mut Fe(f) = self;
         let &Fe(g) = other;
         let f0 = f[0];
         let f1 = f[1];
@@ -1077,7 +1069,7 @@ pub struct GeP2 {
     z: Fe,
 }
 
-#[derive(Copy, Show)]
+#[derive(Copy)]
 pub struct GeP3 {
     x: Fe,
     y: Fe,
@@ -1518,29 +1510,29 @@ Output:
 */
 pub fn sc_reduce(s: &mut [u8]) {
     let mut s0: i64 = 2097151 & load_3i(s);
-    let mut s1: i64 = 2097151 & (load_4i(s.slice(2, 6)) >> 5);
-    let mut s2: i64 = 2097151 & (load_3i(s.slice(5, 8)) >> 2);
-    let mut s3: i64 = 2097151 & (load_4i(s.slice(7, 11)) >> 7);
-    let mut s4: i64 = 2097151 & (load_4i(s.slice(10, 14)) >> 4);
-    let mut s5: i64 = 2097151 & (load_3i(s.slice(13, 16)) >> 1);
-    let mut s6: i64 = 2097151 & (load_4i(s.slice(15, 19)) >> 6);
-    let mut s7: i64 = 2097151 & (load_3i(s.slice(18, 21)) >> 3);
-    let mut s8: i64 = 2097151 & load_3i(s.slice(21, 24));
-    let mut s9: i64 = 2097151 & (load_4i(s.slice(23, 27)) >> 5);
-    let mut s10: i64 = 2097151 & (load_3i(s.slice(26, 29)) >> 2);
-    let mut s11: i64 = 2097151 & (load_4i(s.slice(28, 32)) >> 7);
-    let mut s12: i64 = 2097151 & (load_4i(s.slice(31, 35)) >> 4);
-    let mut s13: i64 = 2097151 & (load_3i(s.slice(34, 37)) >> 1);
-    let mut s14: i64 = 2097151 & (load_4i(s.slice(36, 40)) >> 6);
-    let mut s15: i64 = 2097151 & (load_3i(s.slice(39, 42)) >> 3);
-    let mut s16: i64 = 2097151 & load_3i(s.slice(42, 45));
-    let mut s17: i64 = 2097151 & (load_4i(s.slice(44, 48)) >> 5);
-    let s18: i64 = 2097151 & (load_3i(s.slice(47, 50)) >> 2);
-    let s19: i64 = 2097151 & (load_4i(s.slice(49, 53)) >> 7);
-    let s20: i64 = 2097151 & (load_4i(s.slice(52, 56)) >> 4);
-    let s21: i64 = 2097151 & (load_3i(s.slice(55, 58)) >> 1);
-    let s22: i64 = 2097151 & (load_4i(s.slice(57, 61)) >> 6);
-    let s23: i64 = load_4i(s.slice(60, 64)) >> 3;
+    let mut s1: i64 = 2097151 & (load_4i(&s[2..6]) >> 5);
+    let mut s2: i64 = 2097151 & (load_3i(&s[5..8]) >> 2);
+    let mut s3: i64 = 2097151 & (load_4i(&s[7..11]) >> 7);
+    let mut s4: i64 = 2097151 & (load_4i(&s[10..14]) >> 4);
+    let mut s5: i64 = 2097151 & (load_3i(&s[13..16]) >> 1);
+    let mut s6: i64 = 2097151 & (load_4i(&s[15..19]) >> 6);
+    let mut s7: i64 = 2097151 & (load_3i(&s[18..21]) >> 3);
+    let mut s8: i64 = 2097151 & load_3i(&s[21..24]);
+    let mut s9: i64 = 2097151 & (load_4i(&s[23..27]) >> 5);
+    let mut s10: i64 = 2097151 & (load_3i(&s[26..29]) >> 2);
+    let mut s11: i64 = 2097151 & (load_4i(&s[28..32]) >> 7);
+    let mut s12: i64 = 2097151 & (load_4i(&s[31..35]) >> 4);
+    let mut s13: i64 = 2097151 & (load_3i(&s[34..37]) >> 1);
+    let mut s14: i64 = 2097151 & (load_4i(&s[36..40]) >> 6);
+    let mut s15: i64 = 2097151 & (load_3i(&s[39..42]) >> 3);
+    let mut s16: i64 = 2097151 & load_3i(&s[42..45]);
+    let mut s17: i64 = 2097151 & (load_4i(&s[44..48]) >> 5);
+    let s18: i64 = 2097151 & (load_3i(&s[47..50]) >> 2);
+    let s19: i64 = 2097151 & (load_4i(&s[49..53]) >> 7);
+    let s20: i64 = 2097151 & (load_4i(&s[52..56]) >> 4);
+    let s21: i64 = 2097151 & (load_3i(&s[55..58]) >> 1);
+    let s22: i64 = 2097151 & (load_4i(&s[57..61]) >> 6);
+    let s23: i64 = load_4i(&s[60..64]) >> 3;
     let mut carry0: i64;
     let mut carry1: i64;
     let mut carry2: i64;
@@ -1769,42 +1761,42 @@ Output:
     where l = 2^252 + 27742317777372353535851937790883648493.
 */
 pub fn sc_muladd(s: &mut[u8], a: &[u8], b: &[u8], c: &[u8]) {
-    let a0 = 2097151 & load_3i(a.slice(0, 3));
-    let a1 = 2097151 & (load_4i(a.slice(2, 6)) >> 5);
-    let a2 = 2097151 & (load_3i(a.slice(5, 8)) >> 2);
-    let a3 = 2097151 & (load_4i(a.slice(7, 11)) >> 7);
-    let a4 = 2097151 & (load_4i(a.slice(10, 14)) >> 4);
-    let a5 = 2097151 & (load_3i(a.slice(13, 16)) >> 1);
-    let a6 = 2097151 & (load_4i(a.slice(15, 19)) >> 6);
-    let a7 = 2097151 & (load_3i(a.slice(18, 21)) >> 3);
-    let a8 = 2097151 & load_3i(a.slice(21, 24));
-    let a9 = 2097151 & (load_4i(a.slice(23, 27)) >> 5);
-    let a10 = 2097151 & (load_3i(a.slice(26, 29)) >> 2);
-    let a11 = load_4i(a.slice(28, 32)) >> 7;
-    let b0 = 2097151 & load_3i(b.slice(0, 3));
-    let b1 = 2097151 & (load_4i(b.slice(2, 6)) >> 5);
-    let b2 = 2097151 & (load_3i(b.slice(5, 8)) >> 2);
-    let b3 = 2097151 & (load_4i(b.slice(7, 11)) >> 7);
-    let b4 = 2097151 & (load_4i(b.slice(10, 14)) >> 4);
-    let b5 = 2097151 & (load_3i(b.slice(13, 16)) >> 1);
-    let b6 = 2097151 & (load_4i(b.slice(15, 19)) >> 6);
-    let b7 = 2097151 & (load_3i(b.slice(18, 21)) >> 3);
-    let b8 = 2097151 & load_3i(b.slice(21, 24));
-    let b9 = 2097151 & (load_4i(b.slice(23, 27)) >> 5);
-    let b10 = 2097151 & (load_3i(b.slice(26, 29)) >> 2);
-    let b11 = load_4i(b.slice(28, 32)) >> 7;
-    let c0 = 2097151 & load_3i(c.slice(0, 3));
-    let c1 = 2097151 & (load_4i(c.slice(2, 6)) >> 5);
-    let c2 = 2097151 & (load_3i(c.slice(5, 8)) >> 2);
-    let c3 = 2097151 & (load_4i(c.slice(7, 11)) >> 7);
-    let c4 = 2097151 & (load_4i(c.slice(10, 14)) >> 4);
-    let c5 = 2097151 & (load_3i(c.slice(13, 16)) >> 1);
-    let c6 = 2097151 & (load_4i(c.slice(15, 19)) >> 6);
-    let c7 = 2097151 & (load_3i(c.slice(18, 21)) >> 3);
-    let c8 = 2097151 & load_3i(c.slice(21, 24));
-    let c9 = 2097151 & (load_4i(c.slice(23, 27)) >> 5);
-    let c10 = 2097151 & (load_3i(c.slice(26, 29)) >> 2);
-    let c11 = load_4i(c.slice(28, 32)) >> 7;
+    let a0 = 2097151 & load_3i(&a[0..3]);
+    let a1 = 2097151 & (load_4i(&a[2..6]) >> 5);
+    let a2 = 2097151 & (load_3i(&a[5..8]) >> 2);
+    let a3 = 2097151 & (load_4i(&a[7..11]) >> 7);
+    let a4 = 2097151 & (load_4i(&a[10..14]) >> 4);
+    let a5 = 2097151 & (load_3i(&a[13..16]) >> 1);
+    let a6 = 2097151 & (load_4i(&a[15..19]) >> 6);
+    let a7 = 2097151 & (load_3i(&a[18..21]) >> 3);
+    let a8 = 2097151 & load_3i(&a[21..24]);
+    let a9 = 2097151 & (load_4i(&a[23..27]) >> 5);
+    let a10 = 2097151 & (load_3i(&a[26..29]) >> 2);
+    let a11 = load_4i(&a[28..32]) >> 7;
+    let b0 = 2097151 & load_3i(&b[0..3]);
+    let b1 = 2097151 & (load_4i(&b[2..6]) >> 5);
+    let b2 = 2097151 & (load_3i(&b[5..8]) >> 2);
+    let b3 = 2097151 & (load_4i(&b[7..11]) >> 7);
+    let b4 = 2097151 & (load_4i(&b[10..14]) >> 4);
+    let b5 = 2097151 & (load_3i(&b[13..16]) >> 1);
+    let b6 = 2097151 & (load_4i(&b[15..19]) >> 6);
+    let b7 = 2097151 & (load_3i(&b[18..21]) >> 3);
+    let b8 = 2097151 & load_3i(&b[21..24]);
+    let b9 = 2097151 & (load_4i(&b[23..27]) >> 5);
+    let b10 = 2097151 & (load_3i(&b[26..29]) >> 2);
+    let b11 = load_4i(&b[28..32]) >> 7;
+    let c0 = 2097151 & load_3i(&c[0..3]);
+    let c1 = 2097151 & (load_4i(&c[2..6]) >> 5);
+    let c2 = 2097151 & (load_3i(&c[5..8]) >> 2);
+    let c3 = 2097151 & (load_4i(&c[7..11]) >> 7);
+    let c4 = 2097151 & (load_4i(&c[10..14]) >> 4);
+    let c5 = 2097151 & (load_3i(&c[13..16]) >> 1);
+    let c6 = 2097151 & (load_4i(&c[15..19]) >> 6);
+    let c7 = 2097151 & (load_3i(&c[18..21]) >> 3);
+    let c8 = 2097151 & load_3i(&c[21..24]);
+    let c9 = 2097151 & (load_4i(&c[23..27]) >> 5);
+    let c10 = 2097151 & (load_3i(&c[26..29]) >> 2);
+    let c11 = load_4i(&c[28..32]) >> 7;
     let mut s0: i64;
     let mut s1: i64;
     let mut s2: i64;
@@ -2184,7 +2176,7 @@ mod tests {
             e.as_mut_slice()[31] |= 64;
             let fe = Fe::from_bytes(e.as_slice());
             let e_preserved = fe.to_bytes();
-            assert_eq!(e, e_preserved.to_vec());
+            assert!(e == e_preserved.to_vec());
         }
     }
 
@@ -2195,12 +2187,12 @@ mod tests {
         let f_initial = f;
         let g_initial = g;
         f.maybe_swap_with(&mut g, 0);
-        assert_eq!(f, f_initial);
-        assert_eq!(g, g_initial);
+        assert!(f == f_initial);
+        assert!(g == g_initial);
 
         f.maybe_swap_with(&mut g, 1);
-        assert_eq!(f, g_initial);
-        assert_eq!(g, f_initial);
+        assert!(f == g_initial);
+        assert!(g == f_initial);
     }
 
     struct CurveGen {
@@ -2226,28 +2218,28 @@ mod tests {
     #[test]
     fn mul_commutes() {
        for (x,y) in CurveGen::new(1).zip(CurveGen::new(2)).take(40) {
-          assert_eq!(x*y, y*x);
+          assert!(x*y == y*x);
        };
     }
 
     #[test]
     fn mul_assoc() {
        for (x,(y,z)) in CurveGen::new(1).zip(CurveGen::new(2).zip(CurveGen::new(3))).take(40) {
-          assert_eq!((x*y)*z, x*(y*z));
+          assert!((x*y)*z == x*(y*z));
        };
     }
 
     #[test]
     fn invert_inverts() {
        for x in CurveGen::new(1).take(40) {
-          assert_eq!(x.invert().invert(), x);
+          assert!(x.invert().invert() == x);
        };
     }
 
     #[test]
     fn square_by_mul() {
        for x in CurveGen::new(1).take(40) {
-          assert_eq!(x*x, x.square());
+          assert!(x*x == x.square());
        };
     }
 
