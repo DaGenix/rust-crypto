@@ -256,11 +256,11 @@ pub trait FixedBuffer {
 
     /// Zero the buffer up until the specified index. The buffer position currently must not be
     /// greater than that index.
-    fn zero_until(&mut self, idx: uint);
+    fn zero_until(&mut self, idx: usize);
 
     /// Get a slice of the buffer of the specified size. There must be at least that many bytes
     /// remaining in the buffer.
-    fn next<'s>(&'s mut self, len: uint) -> &'s mut [u8];
+    fn next<'s>(&'s mut self, len: usize) -> &'s mut [u8];
 
     /// Get the current buffer. The buffer must already be full. This clears the buffer as well.
     fn full_buffer<'s>(&'s mut self) -> &'s [u8];
@@ -269,13 +269,13 @@ pub trait FixedBuffer {
     fn current_buffer<'s>(&'s mut self) -> &'s [u8];
 
     /// Get the current position of the buffer.
-    fn position(&self) -> uint;
+    fn position(&self) -> usize;
 
     /// Get the number of bytes remaining in the buffer until it is full.
-    fn remaining(&self) -> uint;
+    fn remaining(&self) -> usize;
 
     /// Get the size of the buffer
-    fn size(&self) -> uint;
+    fn size(&self) -> usize;
 }
 
 macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
@@ -327,13 +327,13 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             self.buffer_idx = 0;
         }
 
-        fn zero_until(&mut self, idx: uint) {
+        fn zero_until(&mut self, idx: usize) {
             assert!(idx >= self.buffer_idx);
             &mut self.buffer[self.buffer_idx..idx].set_memory(0);
             self.buffer_idx = idx;
         }
 
-        fn next<'s>(&'s mut self, len: uint) -> &'s mut [u8] {
+        fn next<'s>(&'s mut self, len: usize) -> &'s mut [u8] {
             self.buffer_idx += len;
             &mut self.buffer[self.buffer_idx - len..self.buffer_idx]
         }
@@ -350,11 +350,11 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             &self.buffer[..tmp]
         }
 
-        fn position(&self) -> uint { self.buffer_idx }
+        fn position(&self) -> usize { self.buffer_idx }
 
-        fn remaining(&self) -> uint { $size - self.buffer_idx }
+        fn remaining(&self) -> usize { $size - self.buffer_idx }
 
-        fn size(&self) -> uint { $size }
+        fn size(&self) -> usize { $size }
     }
 ));
 
@@ -362,7 +362,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
 #[derive(Copy)]
 pub struct FixedBuffer64 {
     buffer: [u8; 64],
-    buffer_idx: uint,
+    buffer_idx: usize,
 }
 
 impl FixedBuffer64 {
@@ -380,7 +380,7 @@ impl_fixed_buffer!(FixedBuffer64, 64);
 /// A fixed size buffer of 128 bytes useful for cryptographic operations.
 pub struct FixedBuffer128 {
     buffer: [u8; 128],
-    buffer_idx: uint,
+    buffer_idx: usize,
 }
 
 impl FixedBuffer128 {
@@ -403,11 +403,11 @@ pub trait StandardPadding {
     /// and is guaranteed to have exactly rem remaining bytes when it returns. If there are not at
     /// least rem bytes available, the buffer will be zero padded, processed, cleared, and then
     /// filled with zeros again until only rem bytes are remaining.
-    fn standard_padding<F: FnMut(&[u8])>(&mut self, rem: uint, func: F);
+    fn standard_padding<F: FnMut(&[u8])>(&mut self, rem: usize, func: F);
 }
 
 impl <T: FixedBuffer> StandardPadding for T {
-    fn standard_padding<F: FnMut(&[u8])>(&mut self, rem: uint, mut func: F) {
+    fn standard_padding<F: FnMut(&[u8])>(&mut self, rem: usize, mut func: F) {
         let size = self.size();
 
         self.next(1)[0] = 128;
@@ -435,7 +435,7 @@ pub mod test {
 
     /// Feed 1,000,000 'a's into the digest with varying input sizes and check that the result is
     /// correct.
-    pub fn test_digest_1million_random<D: Digest>(digest: &mut D, blocksize: uint, expected: &str) {
+    pub fn test_digest_1million_random<D: Digest>(digest: &mut D, blocksize: usize, expected: &str) {
         let total_size = 1000000;
         let buffer: Vec<u8> = repeat('a' as u8).take(blocksize * 2).collect();
         let mut rng = IsaacRng::new_unseeded();
