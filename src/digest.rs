@@ -42,19 +42,19 @@ pub trait Digest {
     /**
      * Get the output size in bits.
      */
-    fn output_bits(&self) -> uint;
+    fn output_bits(&self) -> usize;
 
     /**
      * Get the output size in bytes.
      */
-    fn output_bytes(&self) -> uint {
+    fn output_bytes(&self) -> usize {
         (self.output_bits() + 7) / 8
     }
 
     /**
      * Get the block size in bytes.
      */
-    fn block_size(&self) -> uint;
+    fn block_size(&self) -> usize;
 
     /**
      * Convenience function that feeds a string into a digest.
