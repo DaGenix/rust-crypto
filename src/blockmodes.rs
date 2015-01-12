@@ -59,7 +59,7 @@ enum BlockEngineState {
 /// calling the appropriate methods on the Processor object.
 struct BlockEngine<P, X> {
     /// The block sized expected by the Processor
-    block_size: uint,
+    block_size: usize,
 
     /// in_hist and out_hist keep track of data that was input to and output from the last
     /// invocation of the process_block() method of the Processor. Depending on the mode, these may
@@ -108,7 +108,7 @@ fn update_history(in_hist: &mut [u8], out_hist: &mut [u8], last_in: &[u8], last_
 impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
     /// Create a new BlockProcessor instance with the given processor and block_size. No history
     /// will be saved.
-    fn new(processor: P, padding: X, block_size: uint) -> BlockEngine<P, X> {
+    fn new(processor: P, padding: X, block_size: usize) -> BlockEngine<P, X> {
         BlockEngine {
             block_size: block_size,
             in_hist: Vec::new(),
@@ -127,7 +127,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
     fn new_with_history(
             processor: P,
             padding: X,
-            block_size: uint,
+            block_size: usize,
             in_hist: Vec<u8>,
             out_hist: Vec<u8>) -> BlockEngine<P, X> {
         BlockEngine {
@@ -147,14 +147,14 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
         fn has_next<R: ReadBuffer, W: WriteBuffer>(
                 input: &mut R,
                 output: &mut W,
-                block_size: uint) -> bool {
+                block_size: usize) -> bool {
             // Not the greater than - very important since this method must never process the last
             // block.
             let enough_input = input.remaining() > block_size;
             let enough_output = output.remaining() >= block_size;
             enough_input && enough_output
         };
-        fn split_at<'a>(vec: &'a [u8], at: uint) -> (&'a [u8], &'a [u8]) {
+        fn split_at<'a>(vec: &'a [u8], at: usize) -> (&'a [u8], &'a [u8]) {
             (&vec[..at], &vec[at..])
         }
 
@@ -450,13 +450,13 @@ impl PaddingProcessor for PkcsPadding {
         {
             let data = output_buffer.peek_remaining();
             last_byte = *data.last().unwrap();
-            for &x in data.iter().rev().take(last_byte as uint) {
+            for &x in data.iter().rev().take(last_byte as usize) {
                 if x != last_byte {
                     return false;
                 }
             }
         }
-        output_buffer.truncate(last_byte as uint);
+        output_buffer.truncate(last_byte as usize);
         true
     }
 }
@@ -696,7 +696,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         assert!(input.len() == output.len());
         let len = input.len();
-        let mut i = 0u;
+        let mut i = 0;
         while i < len {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
@@ -769,7 +769,7 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
         // TODO - Can some of this be combined with regular CtrMode?
         assert!(input.len() == output.len());
         let len = input.len();
-        let mut i = 0u;
+        let mut i = 0;
         while i < len {
             if self.bytes.is_empty() {
                 let mut wb = self.bytes.borrow_write_buffer();
@@ -1033,19 +1033,19 @@ mod test {
             where
                 OpFunc: FnMut(&mut RefReadBuffer, &mut RefWriteBuffer, bool) ->
                     Result<BufferResult, SymmetricCipherError>,
-                NextInFunc: FnMut() -> uint,
-                NextOutFunc: FnMut() -> uint{
+                NextInFunc: FnMut() -> usize,
+                NextOutFunc: FnMut() -> usize {
         use std::cell::Cell;
 
         let in_len = input.len();
         let out_len = output.len();
 
         let mut state: Result<BufferResult, SymmetricCipherError> = Ok(BufferUnderflow);
-        let mut in_pos = 0u;
-        let mut out_pos = 0u;
+        let mut in_pos: usize = 0;
+        let mut out_pos: usize = 0;
         let eof = Cell::new(false);
 
-        let mut in_end = |&mut: in_pos: uint, primary: bool| {
+        let mut in_end = |&mut: in_pos: usize, primary: bool| {
             if eof.get() {
                 return in_len;
             }
@@ -1056,7 +1056,7 @@ mod test {
             cmp::min(in_len, in_pos + cmp::max(x, if primary { 1 } else { 0 }))
         };
 
-        let mut out_end = |&mut: out_pos: uint| {
+        let mut out_end = |&mut: out_pos: usize| {
             let x = next_out_len();
             cmp::min(out_len, out_pos + cmp::max(x, 1))
         };
@@ -1175,7 +1175,7 @@ mod test {
             rng2.gen_range(0, max_size)
         };
 
-        for _ in range(0u, 1000) {
+        for _ in range(0, 1000) {
             let mut enc = new_enc();
             let mut dec = new_dec();
 
