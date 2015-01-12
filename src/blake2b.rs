@@ -19,7 +19,7 @@ static IV : [u64; 8] = [
   0x1f83d9abfb41bd6b, 0x5be0cd19137e2179,
 ];
 
-static SIGMA : [[uint; 16]; 12] = [
+static SIGMA : [[usize; 16]; 12] = [
   [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 ],
   [ 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 ],
   [ 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 ],
@@ -34,11 +34,11 @@ static SIGMA : [[uint; 16]; 12] = [
   [ 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 ],
 ];
 
-const BLAKE2B_BLOCKBYTES : uint = 128;
-const BLAKE2B_OUTBYTES : uint = 64;
-const BLAKE2B_KEYBYTES : uint = 64;
-const BLAKE2B_SALTBYTES : uint = 16;
-const BLAKE2B_PERSONALBYTES : uint = 16;
+const BLAKE2B_BLOCKBYTES : usize = 128;
+const BLAKE2B_OUTBYTES : usize = 64;
+const BLAKE2B_KEYBYTES : usize = 64;
+const BLAKE2B_SALTBYTES : usize = 16;
+const BLAKE2B_PERSONALBYTES : usize = 16;
 
 #[derive(Copy)]
 pub struct Blake2b {
@@ -46,7 +46,7 @@ pub struct Blake2b {
     t: [u64; 2],
     f: [u64; 2],
     buf: [u8; 2*BLAKE2B_BLOCKBYTES],
-    buflen: uint,
+    buflen: usize,
     key: [u8; BLAKE2B_KEYBYTES],
     key_length: u8,
     last_node: u8,
@@ -175,21 +175,21 @@ impl Blake2b {
         }
     }
 
-    pub fn new( outlen: uint ) -> Blake2b {
+    pub fn new(outlen: usize) -> Blake2b {
         assert!(outlen > 0 && outlen <= BLAKE2B_OUTBYTES);
         Blake2b::init_param(&Blake2b::default_param(outlen as u8), &[])
     }
 
     fn apply_key(&mut self) {
         let mut block : [u8; BLAKE2B_BLOCKBYTES] = [0; BLAKE2B_BLOCKBYTES];
-        copy_memory(&mut block, &self.key[..self.key_length as uint]);
+        copy_memory(&mut block, &self.key[..self.key_length as usize]);
         self.update(&block);
         unsafe {
             volatile_set_memory(block.as_mut_ptr(), 0, block.len());
         }
     }
 
-    pub fn new_keyed( outlen: uint, key: &[u8] ) -> Blake2b {
+    pub fn new_keyed(outlen: usize, key: &[u8] ) -> Blake2b {
         assert!(outlen > 0 && outlen <= BLAKE2B_OUTBYTES);
         assert!(key.len() > 0 && key.len() <= BLAKE2B_KEYBYTES);
 
@@ -275,7 +275,7 @@ impl Blake2b {
     }
 
     fn finalize( &mut self, out: &mut [u8] ) {
-        assert!(out.len() == self.digest_length as uint);
+        assert!(out.len() == self.digest_length as usize);
         if !self.computed {
             if self.buflen > BLAKE2B_BLOCKBYTES {
                 self.increment_counter(BLAKE2B_BLOCKBYTES as u64);
@@ -335,8 +335,8 @@ impl Digest for Blake2b {
     }
     fn input(&mut self, msg: &[u8]) { self.update(msg); }
     fn result(&mut self, out: &mut [u8]) { self.finalize(out); }
-    fn output_bits(&self) -> uint { 8 * (self.digest_length as uint) }
-    fn block_size(&self) -> uint { 8 * BLAKE2B_BLOCKBYTES }
+    fn output_bits(&self) -> usize { 8 * (self.digest_length as usize) }
+    fn block_size(&self) -> usize { 8 * BLAKE2B_BLOCKBYTES }
 }
 
 impl Mac for Blake2b {
@@ -379,7 +379,7 @@ impl Mac for Blake2b {
      * Obtain the result of a Mac computation as a MacResult.
      */
     fn result(&mut self) -> MacResult {
-        let mut mac : Vec<u8> = repeat(0).take(self.digest_length as uint).collect();
+        let mut mac: Vec<u8> = repeat(0).take(self.digest_length as usize).collect();
         self.raw_result(mac.as_mut_slice());
         MacResult::new_from_owned(mac)
     }
@@ -396,7 +396,7 @@ impl Mac for Blake2b {
     /**
      * Get the size of the Mac code, in bytes.
      */
-    fn output_bytes(&self) -> uint { self.digest_length as uint }
+    fn output_bytes(&self) -> usize { self.digest_length as usize }
 }
 
 #[cfg(test)]
@@ -426,8 +426,8 @@ mod digest_tests {
         for t in tests.iter() {
             let len = t.input.len();
             let mut left = len;
-            while left > 0u {
-                let take = (left + 1u) / 2u;
+            while left > 0 {
+                let take = (left + 1) / 2;
                 sh.input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }
