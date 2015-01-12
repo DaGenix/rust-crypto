@@ -789,8 +789,8 @@ mod tests {
         for t in tests.iter() {
             let len = t.input.len();
             let mut left = len;
-            while left > 0u {
-                let take = (left + 1u) / 2u;
+            while left > 0 {
+                let take = (left + 1) / 2;
                 sh.input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }
