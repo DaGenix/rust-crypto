@@ -963,37 +963,37 @@ impl Fe {
         let z_5_0 = z9*z22;
 
         /* qhasm: z_10_5 = z_5_0^2^5 */
-        let z_10_5 = range(0u, 5).fold(z_5_0, |z_5_n, _| z_5_n.square());
+        let z_10_5 = range(0, 5).fold(z_5_0, |z_5_n, _| z_5_n.square());
 
         /* qhasm: z_10_0 = z_10_5*z_5_0 */
         let z_10_0 = z_10_5*z_5_0;
 
         /* qhasm: z_20_10 = z_10_0^2^10 */
-        let z_20_10 = range(0u, 10).fold(z_10_0, |x, _| x.square());
+        let z_20_10 = range(0, 10).fold(z_10_0, |x, _| x.square());
 
         /* qhasm: z_20_0 = z_20_10*z_10_0 */
         let z_20_0 = z_20_10*z_10_0;
 
         /* qhasm: z_40_20 = z_20_0^2^20 */
-        let z_40_20 = range(0u, 20).fold(z_20_0, |x, _| x.square());
+        let z_40_20 = range(0, 20).fold(z_20_0, |x, _| x.square());
 
         /* qhasm: z_40_0 = z_40_20*z_20_0 */
         let z_40_0 = z_40_20*z_20_0;
 
         /* qhasm: z_50_10 = z_40_0^2^10 */
-        let z_50_10 = range(0u, 10).fold(z_40_0, |x, _| x.square());
+        let z_50_10 = range(0, 10).fold(z_40_0, |x, _| x.square());
 
         /* qhasm: z_50_0 = z_50_10*z_10_0 */
         let z_50_0 = z_50_10*z_10_0;
 
         /* qhasm: z_100_50 = z_50_0^2^50 */
-        let z_100_50 = range(0u, 50).fold(z_50_0, |x, _| x.square());
+        let z_100_50 = range(0, 50).fold(z_50_0, |x, _| x.square());
 
         /* qhasm: z_100_0 = z_100_50*z_50_0 */
         let z_100_0 = z_100_50*z_50_0;
 
         /* qhasm: z_200_100 = z_100_0^2^100 */
-        let z_200_100 = range(0u, 100).fold(z_100_0, |x, _| x.square());
+        let z_200_100 = range(0, 100).fold(z_100_0, |x, _| x.square());
 
         /* qhasm: z_200_0 = z_200_100*z_100_0 */
         /* asm 1: fe_mul(>z_200_0=fe#3,<z_200_100=fe#4,<z_100_0=fe#3); */
@@ -1001,13 +1001,13 @@ impl Fe {
         let z_200_0 = z_200_100*z_100_0;
 
         /* qhasm: z_250_50 = z_200_0^2^50 */
-        let z_250_50 = range(0u, 50).fold(z_200_0, |x, _| x.square());
+        let z_250_50 = range(0, 50).fold(z_200_0, |x, _| x.square());
 
         /* qhasm: z_250_0 = z_250_50*z_50_0 */
         let z_250_0 = z_250_50*z_50_0;
 
         /* qhasm: z_255_5 = z_250_0^2^5 */
-        let z_255_5 = range(0u, 5).fold(z_250_0, |x, _| x.square());
+        let z_255_5 = range(0, 5).fold(z_250_0, |x, _| x.square());
 
         /* qhasm: z_255_21 = z_255_5*z11 */
         /* asm 1: fe_mul(>z_255_21=fe#12,<z_255_5=fe#2,<z11=fe#1); */
@@ -1036,26 +1036,26 @@ impl Fe {
 
     fn pow25523(&self) -> Fe {
         let z2 = self.square();
-        let z8 = range(0u, 2).fold(z2, |x, _| x.square());
+        let z8 = range(0, 2).fold(z2, |x, _| x.square());
         let z9 = *self * z8;
         let z11 = z2 * z9;
         let z22 = z11.square();
         let z_5_0 = z9 * z22;
-        let z_10_5 = range(0u, 5).fold(z_5_0, |x, _| x.square());
+        let z_10_5 = range(0, 5).fold(z_5_0, |x, _| x.square());
         let z_10_0 = z_10_5 * z_5_0;
-        let z_20_10 = range(0u, 10).fold(z_10_0, |x, _| x.square());
+        let z_20_10 = range(0, 10).fold(z_10_0, |x, _| x.square());
         let z_20_0 = z_20_10 * z_10_0;
-        let z_40_20 = range(0u, 20).fold(z_20_0, |x, _| x.square());
+        let z_40_20 = range(0, 20).fold(z_20_0, |x, _| x.square());
         let z_40_0 = z_40_20 * z_20_0;
-        let z_50_10 = range(0u, 10).fold(z_40_0, |x, _| x.square());
+        let z_50_10 = range(0, 10).fold(z_40_0, |x, _| x.square());
         let z_50_0 = z_50_10 * z_10_0;
-        let z_100_50 = range(0u, 50).fold(z_50_0, |x, _| x.square());
+        let z_100_50 = range(0, 50).fold(z_50_0, |x, _| x.square());
         let z_100_0 = z_100_50 * z_50_0;
-        let z_200_100 = range(0u, 100).fold(z_100_0, |x, _| x.square());
+        let z_200_100 = range(0, 100).fold(z_100_0, |x, _| x.square());
         let z_200_0 = z_200_100 * z_100_0;
-        let z_250_50 = range(0u, 50).fold(z_200_0, |x, _| x.square());
+        let z_250_50 = range(0, 50).fold(z_200_0, |x, _| x.square());
         let z_250_0 = z_250_50 * z_50_0;
-        let z_252_2 = range(0u, 2).fold(z_250_0, |x, _| x.square());
+        let z_252_2 = range(0, 2).fold(z_250_0, |x, _| x.square());
         let z_252_3 = z_252_2 * *self;
 
         z_252_3
@@ -1207,7 +1207,7 @@ impl GeP2 {
 
         let mut r = GeP2::zero();
 
-        let mut i: uint = 255;
+        let mut i: usize = 255;
         loop {
             if aslide[i]!=0 || bslide[i]!=0 {
                 break;
@@ -1221,15 +1221,15 @@ impl GeP2 {
         loop {
             let mut t = r.dbl();
             if aslide[i] > 0 {
-                t = t.to_p3() + ai[(aslide[i]/2) as uint];
+                t = t.to_p3() + ai[(aslide[i]/2) as usize];
             } else if aslide[i] < 0 {
-                t = t.to_p3() - ai[(-aslide[i]/2) as uint];
+                t = t.to_p3() - ai[(-aslide[i]/2) as usize];
             }
 
             if bslide[i] > 0 {
-                t = t.to_p3() + BI[(bslide[i]/2) as uint];
+                t = t.to_p3() + BI[(bslide[i]/2) as usize];
             } else if bslide[i] < 0 {
-                t = t.to_p3() - BI[(-bslide[i]/2) as uint];
+                t = t.to_p3() - BI[(-bslide[i]/2) as usize];
             }
 
             r = t.to_p2();
@@ -1426,7 +1426,7 @@ impl GePrecomp {
         self.xy2d.maybe_set(&other.xy2d, do_swap);
     }
 
-    pub fn select(pos: uint, b: i8) -> GePrecomp {
+    pub fn select(pos: usize, b: i8) -> GePrecomp {
        let bnegative: u8 = negative(b);
        let babs: u8 = (b - (((-(bnegative as i8)) & b) << 1)) as u8;
        let mut t = GePrecomp::zero();
@@ -2100,7 +2100,6 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
     let mut z2;
     let mut x3;
     let mut z3;
-    let mut pos: int;
     let mut swap: i32;
     let mut b: i32;
 
@@ -2117,9 +2116,9 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
     z3 = FE_ONE;
 
     swap = 0;
-    pos = 254;
-    while pos >= 0 {
-        b = (e[(pos as uint) / 8] >> ((pos as uint) & 7)) as i32;
+    // pos starts at 254 and goes down to 0
+    for pos in (0..255).rev() {
+        b = (e[pos / 8] >> (pos & 7)) as i32;
         b &= 1;
         swap ^= b;
         x2.maybe_swap_with(&mut x3, swap);
@@ -2149,7 +2148,6 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
         z3 = z5;
         x2 = x4;
         x3 = x5;
-        pos -= 1;
     }
     x2.maybe_swap_with(&mut x3, swap);
     z2.maybe_swap_with(&mut z3, swap);
@@ -2169,8 +2167,8 @@ mod tests {
 
     #[test]
     fn from_to_bytes_preserves() {
-        for i in range(0u, 50) {
-            let mut e: Vec<u8> = range(0, 32).map(|idx| (idx*(1289+i*761)) as u8).collect();
+        for i in range(0, 50) {
+            let mut e: Vec<u8> = range(0u32, 32).map(|idx| (idx*(1289+i*761)) as u8).collect();
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;
@@ -2196,10 +2194,10 @@ mod tests {
     }
 
     struct CurveGen {
-        which: uint
+        which: u32
     }
     impl CurveGen {
-        fn new(seed: uint) -> CurveGen {
+        fn new(seed: u32) -> CurveGen {
             CurveGen{which: seed}
         }
     }
