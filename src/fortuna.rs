@@ -56,17 +56,17 @@ use symmetriccipher::BlockEncryptor;
 /// Length in bytes that the first pool must be before a "catastrophic
 /// reseed" is allowed to happen. (A direct reseed through the
 /// `SeedableRng` API is not affected by this limit.)
-pub const MIN_POOL_SIZE: uint = 64;
+pub const MIN_POOL_SIZE: usize = 64;
 /// Maximum number of bytes to generate before rekeying
-const MAX_GEN_SIZE: uint = (1 << 20);
+const MAX_GEN_SIZE: usize = (1 << 20);
 /// Length in bytes of the AES key
-const KEY_LEN: uint = 32;
+const KEY_LEN: usize = 32;
 /// Length in bytes of the AES counter
-const CTR_LEN: uint = 16;
+const CTR_LEN: usize = 16;
 /// Length in bytes of the AES block
-const AES_BLOCK_SIZE: uint = 16;
+const AES_BLOCK_SIZE: usize = 16;
 /// Number of pools used to accumulate entropy
-const NUM_POOLS: uint = 32;
+const NUM_POOLS: usize = 32;
 
 /// The underlying PRNG (PC 9.4)
 struct FortunaGenerator {
@@ -110,7 +110,7 @@ impl FortunaGenerator {
 
     /// Generates some `k` 16-byte blocks of random output (PC 9.4.3)
     /// This should never be used directly, except by `generate_random_data`.
-    fn generate_blocks(&mut self, k: uint, out: &mut [u8]) {
+    fn generate_blocks(&mut self, k: usize, out: &mut [u8]) {
         assert!(self.ctr[] != [0; CTR_LEN][]);
 
         // Setup AES encryptor
@@ -148,7 +148,7 @@ impl FortunaGenerator {
 #[derive(Copy)]
 struct Pool {
     state: Sha256,
-    count: uint
+    count: usize
 }
 
 impl Pool {
@@ -193,7 +193,7 @@ impl Fortuna {
     }
 
     /// Adds a random event `e` from source `s` to entropy pool `i` (PC 9.5.6) 
-    pub fn add_random_event(&mut self, s: u8, i: uint, e: &[u8]) {
+    pub fn add_random_event(&mut self, s: u8, i: usize, e: &[u8]) {
         assert!(i <= NUM_POOLS);
         // These restrictions (and `s` in [0, 255]) are part of the Fortuna spec.
         assert!(e.len() > 0);
