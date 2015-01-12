@@ -43,7 +43,7 @@ pub trait Mac {
     /**
      * Get the size of the Mac code, in bytes.
      */
-    fn output_bytes(&self) -> uint;
+    fn output_bytes(&self) -> usize;
 }
 
 /**
