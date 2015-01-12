@@ -168,7 +168,7 @@ macro_rules! define_aes_impl(
                 };
                 let mut tmp = [[0u32; 4]; ($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
-                for i in range(0u, $rounds + 1) {
+                for i in range(0, $rounds + 1) {
                     a.sk[i] = bit_slice_4x4_with_u16(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
                 }
                 a
@@ -183,7 +183,7 @@ macro_rules! define_aes_enc(
         $rounds:expr
     ) => (
         impl BlockEncryptor for $name {
-            fn block_size(&self) -> uint { 16 }
+            fn block_size(&self) -> usize { 16 }
             fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
                 let mut bs = bit_slice_1x16_with_u16(input);
                 bs = encrypt_core(&bs, &self.sk);
@@ -199,7 +199,7 @@ macro_rules! define_aes_dec(
         $rounds:expr
     ) => (
         impl BlockDecryptor for $name {
-            fn block_size(&self) -> uint { 16 }
+            fn block_size(&self) -> usize { 16 }
             fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
                 let mut bs = bit_slice_1x16_with_u16(input);
                 bs = decrypt_core(&bs, &self.sk);
@@ -266,7 +266,7 @@ macro_rules! define_aes_impl_x8(
                 };
                 let mut tmp = [[0u32; 4]; ($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
-                for i in range(0u, $rounds + 1) {
+                for i in range(0, $rounds + 1) {
                     a.sk[i] = bit_slice_fill_4x4_with_u32x4(
                         tmp[i][0],
                         tmp[i][1],
@@ -285,7 +285,7 @@ macro_rules! define_aes_enc_x8(
         $rounds:expr
     ) => (
         impl BlockEncryptorX8 for $name {
-            fn block_size(&self) -> uint { 16 }
+            fn block_size(&self) -> usize { 16 }
             fn encrypt_block_x8(&self, input: &[u8], output: &mut [u8]) {
                 let bs = bit_slice_1x128_with_u32x4(input);
                 let bs2 = encrypt_core(&bs, &self.sk);
@@ -301,7 +301,7 @@ macro_rules! define_aes_dec_x8(
         $rounds:expr
     ) => (
         impl BlockDecryptorX8 for $name {
-            fn block_size(&self) -> uint { 16 }
+            fn block_size(&self) -> usize { 16 }
             fn decrypt_block_x8(&self, input: &[u8], output: &mut [u8]) {
                 let bs = bit_slice_1x128_with_u32x4(input);
                 let bs2 = decrypt_core(&bs, &self.sk);
@@ -367,15 +367,15 @@ static RCON: [u32; 10] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 
 // derived from the BouncyCastle AES implementation.
 fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]]) {
     let (key_words, rounds) = match key.len() {
-        16 => (4, 10u),
-        24 => (6, 12u),
-        32 => (8, 14u),
+        16 => (4, 10),
+        24 => (6, 12),
+        32 => (8, 14),
         _ => panic!("Invalid AES key size.")
     };
 
     // The key is copied directly into the first few round keys
     let mut j = 0;
-    for i in range_step(0u, key.len(), 4) {
+    for i in range_step(0, key.len(), 4) {
         round_keys[j / 4][j % 4] =
             (key[i] as u32) |
             ((key[i+1] as u32) << 8) |
@@ -399,8 +399,8 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]])
     // Decryption round keys require extra processing
     match key_type {
         KeyType::Decryption => {
-            for j in range(1u, rounds) {
-                for i in range(0u, 4) {
+            for j in range(1, rounds) {
+                for i in range(0, 4) {
                     round_keys[j][i] = inv_mcol(round_keys[j][i]);
                 }
             }
@@ -692,11 +692,11 @@ impl <T: BitXor<Output = T> + Copy> Bs2State<T> {
 
 // Bit Slice data in the form of 4 u32s in column-major order
 fn bit_slice_4x4_with_u16(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u16> {
-    fn pb(x: u32, bit: uint, shift: uint) -> u16 {
+    fn pb(x: u32, bit: u32, shift: u32) -> u16 {
         (((x >> bit) & 1) as u16) << shift
     }
 
-    fn construct(a: u32, b: u32, c: u32, d: u32, bit: uint) -> u16 {
+    fn construct(a: u32, b: u32, c: u32, d: u32, bit: u32) -> u16 {
         pb(a, bit, 0)       | pb(b, bit, 1)       | pb(c, bit, 2)       | pb(d, bit, 3)       |
         pb(a, bit + 8, 4)   | pb(b, bit + 8, 5)   | pb(c, bit + 8, 6)   | pb(d, bit + 8, 7)   |
         pb(a, bit + 16, 8)  | pb(b, bit + 16, 9)  | pb(c, bit + 16, 10) | pb(d, bit + 16, 11) |
@@ -736,11 +736,11 @@ fn bit_slice_1x16_with_u16(data: &[u8]) -> Bs8State<u16> {
 
 // Un Bit Slice into a set of 4 u32s
 fn un_bit_slice_4x4_with_u16(bs: &Bs8State<u16>) -> (u32, u32, u32, u32) {
-    fn pb(x: u16, bit: uint, shift: uint) -> u32 {
+    fn pb(x: u16, bit: u32, shift: u32) -> u32 {
         (((x >> bit) & 1) as u32) << shift
     }
 
-    fn deconstruct(bs: &Bs8State<u16>, bit: uint) -> u32 {
+    fn deconstruct(bs: &Bs8State<u16>, bit: u32) -> u32 {
         let Bs8State(x0, x1, x2, x3, x4, x5, x6, x7) = *bs;
 
         pb(x0, bit, 0) | pb(x1, bit, 1) | pb(x2, bit, 2) | pb(x3, bit, 3) |
@@ -844,7 +844,7 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
 // is used as part of bit slicing the round keys.
 fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32x4> {
     let mut tmp = [0u8; 128];
-    for i in range(0u, 8) {
+    for i in range(0, 8) {
         write_u32_le(&mut tmp[i * 16..i * 16 + 4], a);
         write_u32_le(&mut tmp[i * 16 + 4..i * 16 + 8], b);
         write_u32_le(&mut tmp[i * 16 + 8..i * 16 + 12], c);
@@ -1178,7 +1178,7 @@ impl AesBitValueOps for u16 {
 }
 
 impl u32x4 {
-    fn lsh(self, s: uint) -> u32x4 {
+    fn lsh(self, s: u32) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = self;
         u32x4(
             a0 << s,
@@ -1187,7 +1187,7 @@ impl u32x4 {
             (a3 << s) | (a2 >> (32 - s)))
     }
 
-    fn rsh(self, s: uint) -> u32x4 {
+    fn rsh(self, s: u32) -> u32x4 {
         let u32x4(a0, a1, a2, a3) = self;
         u32x4(
             (a0 >> s) | (a1 << (32 - s)),
