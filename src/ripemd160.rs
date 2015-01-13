@@ -28,8 +28,8 @@ use cryptoutil::{write_u32_le, read_u32v_le, add_bytes_to_bits, FixedBuffer,
 use digest::Digest;
 
 // Some unexported constants
-const DIGEST_BUF_LEN: uint = 5u;
-const WORK_BUF_LEN: uint = 16u;
+const DIGEST_BUF_LEN: usize = 5;
+const WORK_BUF_LEN: usize = 16;
 
 /// Structure representing the state of a Ripemd160 computation
 #[derive(Copy)]
@@ -41,7 +41,7 @@ pub struct Ripemd160 {
 }
 
 fn circular_shift(bits: u32, word: u32) -> u32 {
-    word << bits as uint | word >> (32u32 - bits) as uint
+    word << bits as usize | word >> (32u32 - bits) as usize
 }
 
 macro_rules! round(
@@ -402,12 +402,12 @@ impl Digest for Ripemd160 {
     /**
      * Returns the size of the digest in bits
      */
-    fn output_bits(&self) -> uint { 160 }
+    fn output_bits(&self) -> usize { 160 }
 
     /**
      * Returns the block size the hash operates on in bytes
      */
-    fn block_size(&self) -> uint { 64 }
+    fn block_size(&self) -> usize { 64 }
 }
 
 #[cfg(test)]
@@ -497,8 +497,8 @@ mod tests {
         for t in tests.iter() {
             let len = t.input.len();
             let mut left = len;
-            while left > 0u {
-                let take = (left + 1u) / 2u;
+            while left > 0 {
+                let take = (left + 1) / 2;
                 (*sh).input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }

@@ -15,8 +15,8 @@ use cryptoutil::symm_enc_or_dec;
 
 #[derive(Copy)]
 pub struct Rc4 {
-    i: uint,
-    j: uint,
+    i: u8,
+    j: u8,
     state: [u8; 256]
 }
 
@@ -28,17 +28,17 @@ impl Rc4 {
             *x = i as u8;
         }
         let mut j: u8 = 0;
-        for i in range(0u, 256) {
+        for i in range(0, 256) {
             j = j + rc4.state[i] + key[i % key.len()];
-            rc4.state.swap(i, j as uint);
+            rc4.state.swap(i, j as usize);
         }
         rc4
     }
     fn next(&mut self) -> u8 {
-        self.i = (self.i + 1) % 256;
-        self.j = (self.j + self.state[self.i] as uint) % 256;
-        self.state.swap(self.i, self.j);
-        let k = self.state[(self.state[self.i] + self.state[self.j]) as uint];
+        self.i = self.i + 1; // we want this to wrap after 255
+        self.j = self.j + self.state[self.i as usize]; // we want this to wrap after 255
+        self.state.swap(self.i as usize, self.j as usize);
+        let k = self.state[(self.state[self.i as usize] + self.state[self.j as usize]) as usize];
         k
     }
 }

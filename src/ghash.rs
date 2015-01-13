@@ -135,7 +135,7 @@ impl BitXor for Gf128 {
 pub struct Ghash {
     hs: [Gf128; 128],
     state: Gf128,
-    a_len: uint,
+    a_len: usize,
     rest: Option<[u8; 16]>,
     finished: bool
 }
@@ -145,12 +145,12 @@ pub struct Ghash {
 pub struct GhashWithC {
     hs: [Gf128; 128],
     state: Gf128,
-    a_len: uint,
-    c_len: uint,
+    a_len: usize,
+    c_len: usize,
     rest: Option<[u8; 16]>
 }
 
-fn update(state: &mut Gf128, len: &mut uint, data: &[u8], srest: &mut Option<[u8; 16]>,
+fn update(state: &mut Gf128, len: &mut usize, data: &[u8], srest: &mut Option<[u8; 16]>,
           hs: &[Gf128; 128]) {
     let rest_len = *len % 16;
     let data_len = data.len();
@@ -318,7 +318,7 @@ impl Mac for Ghash {
         copy_memory(output, &self.state.to_bytes());
     }
 
-    fn output_bytes(&self) -> uint { 16 }
+    fn output_bytes(&self) -> usize { 16 }
 }
 
 #[cfg(test)]

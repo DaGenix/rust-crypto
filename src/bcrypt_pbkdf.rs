@@ -14,7 +14,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     let mut bf = Blowfish::init_state();
     bf.salted_expand_key(hsalt, hpass);
 
-    for _ in range(0u, 64) {
+    for _ in range(0, 64) {
         bf.expand_key(hsalt);
         bf.expand_key(hpass);
     }
@@ -22,20 +22,20 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     let mut buf = [0u32; 8];
     read_u32v_be(&mut buf, b"OxychromaticBlowfishSwatDynamite");
 
-    for i in range_step(0u, 8, 2) {
-        for _ in range(0u, 64) {
+    for i in range_step(0, 8, 2) {
+        for _ in range(0, 64) {
             let (l, r) = bf.encrypt(buf[i], buf[i+1]);
             buf[i] = l;
             buf[i+1] = r;
         }
     }
 
-    for i in range(0u, 8) {
+    for i in range(0, 8) {
         write_u32_le(&mut output[i*4..(i+1)*4], buf[i]);
     }
 }
 
-pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8]) {
+pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: u32, output: &mut [u8]) {
     let mut hpass = [0u8; 64];
 
     assert!(password.len() > 0);
@@ -50,7 +50,7 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: uint, output: &mut [u8
     h.input(password);
     h.result(hpass.as_mut_slice());
 
-    for block in range(1u, (nblocks+1)) {
+    for block in range(1, (nblocks+1)) {
         let mut count = [0u8; 4];
         let mut hsalt = [0u8; 64];
         let mut out   = [0u8; 32];
@@ -170,7 +170,7 @@ mod test {
         struct Test{
             password: Vec<u8>,
             salt: Vec<u8>,
-            rounds: uint,
+            rounds: u32,
             out: Vec<u8>,
         }
 

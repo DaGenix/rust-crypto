@@ -21,7 +21,7 @@ struct ChaChaState {
 pub struct ChaCha20 {
     state  : ChaChaState,
     output : [u8; 64],
-    offset : uint,
+    offset : usize,
 }
 
 impl ChaCha20 {
@@ -103,7 +103,7 @@ impl ChaCha20 {
     fn update(&mut self) {
         let mut state = self.state;
 
-        for _ in range(0u, 10) {
+        for _ in range(0, 10) {
             ChaCha20::round(&mut state);
             let u32x4(b10, b11, b12, b13) = state.b;
             state.b = u32x4(b11, b12, b13, b10);

@@ -114,7 +114,7 @@ impl <D: Digest> Mac for Hmac<D> {
         self.digest.result(output);
     }
 
-    fn output_bytes(&self) -> uint { self.digest.output_bytes() }
+    fn output_bytes(&self) -> usize { self.digest.output_bytes() }
 }
 
 #[cfg(test)]

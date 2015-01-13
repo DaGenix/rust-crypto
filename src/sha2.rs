@@ -111,7 +111,7 @@ impl Engine512State {
 
         // Putting the message schedule inside the same loop as the round calculations allows for
         // the compiler to generate better code.
-        for t in range_step(0u, 64, 8) {
+        for t in range_step(0, 64, 8) {
             schedule_round!(t + 16);
             schedule_round!(t + 17);
             schedule_round!(t + 18);
@@ -131,7 +131,7 @@ impl Engine512State {
             sha2_round!(b, c, d, e, f, g, h, a, K64, t + 7);
         }
 
-        for t in range_step(64u, 80, 8) {
+        for t in range_step(64, 80, 8) {
             sha2_round!(a, b, c, d, e, f, g, h, K64, t);
             sha2_round!(h, a, b, c, d, e, f, g, K64, t + 1);
             sha2_round!(g, h, a, b, c, d, e, f, K64, t + 2);
@@ -270,9 +270,9 @@ impl Digest for Sha512 {
         self.engine.reset(&H512);
     }
 
-    fn output_bits(&self) -> uint { 512 }
+    fn output_bits(&self) -> usize { 512 }
 
-    fn block_size(&self) -> uint { 128 }
+    fn block_size(&self) -> usize { 128 }
 }
 
 static H512: [u64; 8] = [
@@ -323,9 +323,9 @@ impl Digest for Sha384 {
         self.engine.reset(&H384);
     }
 
-    fn output_bits(&self) -> uint { 384 }
+    fn output_bits(&self) -> usize { 384 }
 
-    fn block_size(&self) -> uint { 128 }
+    fn block_size(&self) -> usize { 128 }
 }
 
 static H384: [u64; 8] = [
@@ -374,9 +374,9 @@ impl Digest for Sha512Trunc256 {
         self.engine.reset(&H512_TRUNC_256);
     }
 
-    fn output_bits(&self) -> uint { 256 }
+    fn output_bits(&self) -> usize { 256 }
 
-    fn block_size(&self) -> uint { 128 }
+    fn block_size(&self) -> usize { 128 }
 }
 
 static H512_TRUNC_256: [u64; 8] = [
@@ -425,9 +425,9 @@ impl Digest for Sha512Trunc224 {
         self.engine.reset(&H512_TRUNC_224);
     }
 
-    fn output_bits(&self) -> uint { 224 }
+    fn output_bits(&self) -> usize { 224 }
 
-    fn block_size(&self) -> uint { 128 }
+    fn block_size(&self) -> usize { 128 }
 }
 
 static H512_TRUNC_224: [u64; 8] = [
@@ -540,7 +540,7 @@ impl Engine256State {
 
         // Putting the message schedule inside the same loop as the round calculations allows for
         // the compiler to generate better code.
-        for t in range_step(0u, 48, 8) {
+        for t in range_step(0, 48, 8) {
             schedule_round!(t + 16);
             schedule_round!(t + 17);
             schedule_round!(t + 18);
@@ -560,7 +560,7 @@ impl Engine256State {
             sha2_round!(b, c, d, e, f, g, h, a, K32, t + 7);
         }
 
-        for t in range_step(48u, 64, 8) {
+        for t in range_step(48, 64, 8) {
             sha2_round!(a, b, c, d, e, f, g, h, K32, t);
             sha2_round!(h, a, b, c, d, e, f, g, K32, t + 1);
             sha2_round!(g, h, a, b, c, d, e, f, K32, t + 2);
@@ -692,9 +692,9 @@ impl Digest for Sha256 {
         self.engine.reset(&H256);
     }
 
-    fn output_bits(&self) -> uint { 256 }
+    fn output_bits(&self) -> usize { 256 }
 
-    fn block_size(&self) -> uint { 64 }
+    fn block_size(&self) -> usize { 64 }
 }
 
 static H256: [u32; 8] = [
@@ -746,9 +746,9 @@ impl Digest for Sha224 {
         self.engine.reset(&H224);
     }
 
-    fn output_bits(&self) -> uint { 224 }
+    fn output_bits(&self) -> usize { 224 }
 
-    fn block_size(&self) -> uint { 64 }
+    fn block_size(&self) -> usize { 64 }
 }
 
 static H224: [u32; 8] = [
@@ -789,8 +789,8 @@ mod tests {
         for t in tests.iter() {
             let len = t.input.len();
             let mut left = len;
-            while left > 0u {
-                let take = (left + 1u) / 2u;
+            while left > 0 {
+                let take = (left + 1) / 2;
                 sh.input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }

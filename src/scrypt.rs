@@ -41,7 +41,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         } }
     );
 
-    for _ in range(0u, rounds / 2) {
+    for _ in range(0, rounds / 2) {
         run_round!(
             0x4, 0x0, 0xc, 7;
             0x8, 0x4, 0x0, 9;
@@ -78,7 +78,7 @@ fn salsa20_8(input: &[u8], output: &mut [u8]) {
         )
     }
 
-    for i in range(0u, 16) {
+    for i in range(0, 16) {
         write_u32_le(
             &mut output[i * 4..(i + 1) * 4],
             x[i] + read_u32_le(&input[i * 4..(i + 1) * 4]));
@@ -113,14 +113,14 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
 // v - a temporary variable to store the vector V
 // t - a temporary variable to store the result of the xor
 // n - the scrypt parameter N
-fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: uint) {
-    fn integerify(x: &[u8], n: uint) -> uint {
+fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: usize) {
+    fn integerify(x: &[u8], n: usize) -> usize {
         // n is a power of 2, so n - 1 gives us a bitmask that we can use to perform a calculation
         // mod n using a simple bitwise and.
         let mask = n - 1;
         // This cast is safe since we're going to get the value mod n (which is a power of 2), so we
         // don't have to care about truncating any of the high bits off
-        let result = (read_u32_le(&x[x.len() - 64..x.len() - 60]) as uint) & mask;
+        let result = (read_u32_le(&x[x.len() - 64..x.len() - 60]) as usize) & mask;
         result
     }
 
@@ -163,50 +163,46 @@ impl ScryptParams {
         assert!(r > 0);
         assert!(p > 0);
         assert!(log_n > 0);
-        assert!((log_n as uint) < size_of::<uint>() * 8);
+        assert!((log_n as usize) < size_of::<usize>() * 8);
 
-        let n = 1u32 << log_n as uint;
+        let r = r.to_uint().unwrap();
+        let p = p.to_uint().unwrap();
 
-        let rp = match r.checked_mul(p) {
+        let n: usize = 1 << log_n;
+
+        // check that r * 128 doesn't overflow
+        let r128 = match r.checked_mul(128) {
             Some(x) => x,
             None => panic!("Invalid Scrypt parameters.")
         };
 
-        let rp128 = match rp.checked_mul(128) {
-            Some(x) => x,
+        // check that n * r * 128 doesn't overflow
+        match r128.checked_mul(n) {
+            Some(_) => { },
             None => panic!("Invalid Scrypt parameters.")
         };
 
-        let nr128 = match n.checked_mul(r) {
-            Some(x) => match x.checked_mul(128) {
-                Some(y) => y,
-                None => panic!("Invalid Scrypt parameters.")
-            },
+        // check that p * r * 128 doesn't overflow
+        match r128.checked_mul(p) {
+            Some(_) => { },
             None => panic!("Invalid Scrypt parameters.")
         };
-
-        // Check that we won't attempt to allocate too much memory or get an integer overflow.
-        // These checks guarantee that we can cast these values safely to uints and perform all the
-        // math that we need to on them. This guarantees that the values r and p can both fit within
-        // a uint as well.
-        assert!(rp128.to_uint().is_some());
-        assert!(nr128.to_uint().is_some());
 
         // This check required by Scrypt:
         // check: n < 2^(128 * r / 8)
-        // r * 16 won't overflow since rp128 didn't above
-        assert!((log_n as u32) < r * 16);
+        // r * 16 won't overflow since r128 didn't
+        assert!((log_n as usize) < r * 16);
 
         // This check required by Scrypt:
         // check: p <= ((2^32-1) * 32) / (128 * r)
         // It takes a bit of re-arranging to get the check above into this form, but, it is indeed
         // the same.
-        assert!(rp < 0x40000000);
+        assert!(r * p < 0x40000000);
 
         ScryptParams {
             log_n: log_n,
-            r: r,
-            p: p
+            r: r as u32,
+            p: p as u32
         }
     }
 }
@@ -229,19 +225,20 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     assert!(output.len() / 32 <= 0xffffffff);
 
     // The checks in the ScryptParams constructor guarantee that the following is safe:
-    let n = 1u << params.log_n as uint;
-    let r = params.r as uint;
-    let p = params.p as uint;
+    let n = 1 << params.log_n;
+    let r128 = (params.r as usize) * 128;
+    let pr128 = (params.p as usize) * r128;
+    let nr128 = n * r128;
 
     let mut mac = Hmac::new(Sha256::new(), password);
 
-    let mut b: Vec<u8> = repeat(0).take(p * r * 128).collect();
+    let mut b: Vec<u8> = repeat(0).take(pr128).collect();
     pbkdf2(&mut mac, salt, 1, b.as_mut_slice());
 
-    let mut v: Vec<u8> = repeat(0).take(n * r * 128).collect();
-    let mut t: Vec<u8> = repeat(0).take(r * 128).collect();
+    let mut v: Vec<u8> = repeat(0).take(nr128).collect();
+    let mut t: Vec<u8> = repeat(0).take(r128).collect();
 
-    for chunk in b.as_mut_slice().chunks_mut(r * 128) {
+    for chunk in b.as_mut_slice().chunks_mut(r128) {
         scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
     }
 

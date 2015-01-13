@@ -34,8 +34,8 @@ use digest::Digest;
  */
 
 // Some unexported constants
-const DIGEST_BUF_LEN: uint = 5u;
-const WORK_BUF_LEN: uint = 80u;
+const DIGEST_BUF_LEN: usize = 5;
+const WORK_BUF_LEN: usize = 80;
 const K0: u32 = 0x5A827999u32;
 const K1: u32 = 0x6ED9EBA1u32;
 const K2: u32 = 0x8F1BBCDCu32;
@@ -59,15 +59,13 @@ fn add_input(st: &mut Sha1, msg: &[u8]) {
 }
 
 fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
-    let mut t: uint; // Loop counter
-
     let mut w = [0u32; WORK_BUF_LEN];
 
     // Initialize the first 16 words of the vector w
     read_u32v_be(&mut w[0..16], data);
 
     // Initialize the rest of vector w
-    t = 16u;
+    let mut t = 16; // loop counter
     while t < 80 {
         let val = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
         w[t] = circular_shift(1, val);
@@ -126,7 +124,7 @@ fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
 }
 
 fn circular_shift(bits: u32, word: u32) -> u32 {
-    word << bits as uint | word >> (32u32 - bits) as uint
+    word << bits as usize | word >> (32u32 - bits) as usize
 }
 
 fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
@@ -174,8 +172,8 @@ impl Digest for Sha1 {
     }
     fn input(&mut self, msg: &[u8]) { add_input(self, msg); }
     fn result(&mut self, out: &mut [u8]) { mk_result(self, out) }
-    fn output_bits(&self) -> uint { 160 }
-    fn block_size(&self) -> uint { 64 }
+    fn output_bits(&self) -> usize { 160 }
+    fn block_size(&self) -> usize { 64 }
 }
 
 #[cfg(test)]
@@ -265,8 +263,8 @@ mod tests {
         for t in tests.iter() {
             let len = t.input.len();
             let mut left = len;
-            while left > 0u {
-                let take = (left + 1u) / 2u;
+            while left > 0 {
+                let take = (left + 1) / 2;
                 (*sh).input_str(&t.input[len - left..take + len - left]);
                 left = left - take;
             }

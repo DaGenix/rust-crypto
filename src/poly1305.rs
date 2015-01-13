@@ -17,7 +17,7 @@ pub struct Poly1305 {
     r         : [u32; 5],
     h         : [u32; 5],
     pad       : [u32; 4],
-    leftover  : uint,
+    leftover  : usize,
     buffer    : [u8; 16],
     finalized : bool,
 }
@@ -218,7 +218,7 @@ impl Mac for Poly1305 {
         write_u32_le(&mut output[12..16], self.h[3]);
     }
 
-    fn output_bytes(&self) -> uint { 16 }
+    fn output_bytes(&self) -> usize { 16 }
 }
 
 #[cfg(test)]
@@ -324,7 +324,7 @@ mod test {
         ];
 
         let mut tpoly = Poly1305::new(&total_key);
-        for i in range(0u, 256) {
+        for i in range(0, 256) {
             let key: Vec<u8> = repeat(i as u8).take(32).collect();
             let msg: Vec<u8> = repeat(i as u8).take(256).collect();
             let mut mac = [0u8; 16];

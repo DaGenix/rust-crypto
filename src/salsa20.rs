@@ -16,7 +16,7 @@ pub struct Salsa20 {
     state: [u8; 64],
     output: [u8; 64],
     counter: u64,
-    offset: uint,
+    offset: usize,
 }
 
 fn doubleround(y: &mut [u32; 16]) {
@@ -135,10 +135,10 @@ impl Salsa20 {
         let mut z = [0u32; 16];
         read_u32v_le(x.as_mut_slice(), &self.state);
         read_u32v_le(z.as_mut_slice(), &self.state);
-        for _ in range(0u, 10) {
+        for _ in range(0, 10) {
             doubleround(&mut z);
         }
-        for i in range(0u, 16) {
+        for i in range(0, 16) {
             write_u32_le(&mut self.output[i*4..(i+1)*4], x[i] + z[i]);
         }
         
@@ -149,10 +149,10 @@ impl Salsa20 {
     fn hsalsa20_hash(&mut self) {
         let mut x = [0u32; 16];
         read_u32v_le(x.as_mut_slice(), &self.state);
-        for _ in range(0u, 10) {
+        for _ in range(0, 10) {
             doubleround(&mut x);
         }
-        for i in range(0u, 16) {
+        for i in range(0, 16) {
             write_u32_le(&mut self.output[i*4..(i+1)*4], x[i]);
         }
     }
