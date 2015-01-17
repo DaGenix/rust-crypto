@@ -29,6 +29,17 @@ pub fn write_u64_be(dst: &mut[u8], mut input: u64) {
     }
 }
 
+/// Write a u64 into a vector, which must be 8 bytes long. The value is written in little-endian
+/// format.
+pub fn write_u64_le(dst: &mut[u8], mut input: u64) {
+    assert!(dst.len() == 8);
+    input = input.to_le();
+    unsafe {
+        let tmp = &input as *const _ as *const u8;
+        ptr::copy_nonoverlapping_memory(dst.get_unchecked_mut(0), tmp, 8);
+    }
+}
+
 /// Write a vector of u64s into a vector of bytes. The values are written in little-endian format.
 pub fn write_u64v_le(dst: &mut[u8], input: &[u64]) {
     assert!(dst.len() == 8 * input.len());
