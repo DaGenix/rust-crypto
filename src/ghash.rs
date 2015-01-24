@@ -160,13 +160,13 @@ fn update(state: &mut Gf128, len: &mut usize, data: &[u8], srest: &mut Option<[u
         None => data,
         Some(mut rest) => {
             if 16 - rest_len > data_len {
-                copy_memory(rest.slice_from_mut(rest_len), data);
+                copy_memory(&mut rest[rest_len..], data);
                 *srest = Some(rest);
                 return;
             }
 
             let (fill, data) = data.split_at(16 - rest_len);
-            copy_memory(rest.slice_from_mut(rest_len), fill);
+            copy_memory(&mut rest[rest_len..], fill);
             state.add_and_mul(Gf128::from_bytes(&rest), hs);
             data
         }

@@ -42,7 +42,7 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     } else {
         let output_size = digest.output_bytes();
         digest.input(key);
-        digest.result(expanded_key.slice_to_mut(output_size));
+        digest.result(&mut expanded_key[..output_size]);
         digest.reset();
     }
     expanded_key

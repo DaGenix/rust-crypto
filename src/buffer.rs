@@ -175,7 +175,7 @@ impl <'a> WriteBuffer for RefWriteBuffer<'a> {
     fn reset(&mut self) { self.pos = 0; }
 
     fn peek_read_buffer(&mut self) -> RefReadBuffer {
-        RefReadBuffer::new(self.buff.slice_to_mut(self.pos))
+        RefReadBuffer::new(&mut self.buff[..self.pos])
     }
 
     fn take_next(&mut self, count: usize) -> &mut [u8] {
@@ -184,7 +184,7 @@ impl <'a> WriteBuffer for RefWriteBuffer<'a> {
         r
     }
     fn take_read_buffer(&mut self) -> RefReadBuffer {
-        let r = RefReadBuffer::new(self.buff.slice_to_mut(self.pos));
+        let r = RefReadBuffer::new(&mut self.buff[..self.pos]);
         self.pos = 0;
         r
     }

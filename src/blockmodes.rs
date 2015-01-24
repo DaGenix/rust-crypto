@@ -706,7 +706,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
             let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input[i..].iter();
-            let out_it = output.slice_from_mut(i).iter_mut();
+            let out_it = output[i..].iter_mut();
             for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
                 *o = x ^ y;
             }
@@ -781,8 +781,8 @@ impl <A: BlockEncryptorX8> CtrModeX8<A> {
             let count = cmp::min(self.bytes.remaining(), len - i);
             let bytes_it = self.bytes.take_next(count).iter();
             let in_it = input[i..].iter();
-            let out_it = output.slice_from_mut(i).iter_mut();
-            for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
+            let out_it = &mut output[i..];
+            for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it.iter_mut()) {
                 *o = x ^ y;
             }
             i += count;
