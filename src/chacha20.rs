@@ -24,6 +24,63 @@ pub struct ChaCha20 {
     offset : usize,
 }
 
+macro_rules! swizzle{
+    ($b: expr, $c: expr, $d: expr) => {{
+        let u32x4(b10, b11, b12, b13) = $b;
+        $b = u32x4(b11, b12, b13, b10);
+        let u32x4(c10, c11, c12, c13) = $c;
+        $c = u32x4(c12, c13,c10, c11);
+        let u32x4(d10, d11, d12, d13) = $d;
+        $d = u32x4(d13, d10, d11, d12);
+    }}
+}
+
+macro_rules! state_to_buffer {
+    ($state: expr, $output: expr) => {{
+        let u32x4(a1, a2, a3, a4) = $state.a;
+        let u32x4(b1, b2, b3, b4) = $state.b;
+        let u32x4(c1, c2, c3, c4) = $state.c;
+        let u32x4(d1, d2, d3, d4) = $state.d;
+        let lens = [
+            a1,a2,a3,a4,
+            b1,b2,b3,b4,
+            c1,c2,c3,c4,
+            d1,d2,d3,d4
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(&mut $output[i*4..(i+1)*4], lens[i]);
+        }
+    }}
+}
+
+macro_rules! round{
+    ($state: expr) => {{
+      $state.a += $state.b;
+      rotate!($state.d, $state.a, S16);
+      $state.c += $state.d;
+      rotate!($state.b, $state.c, S12);
+      $state.a += $state.b;
+      rotate!($state.d, $state.a, S8);
+      $state.c += $state.d;
+      rotate!($state.b, $state.c, S7);
+    }}
+}
+
+macro_rules! rotate {
+    ($a: expr, $b: expr, $c:expr) => {{
+      let v = $a ^ $b; 
+      let r = S32 - $c;
+      let right = v >> r;
+      $a = (v << $c) ^ right
+    }}
+}
+
+static S32:u32x4 = u32x4(32, 32, 32, 32);
+static S16:u32x4 = u32x4(16, 16, 16, 16);
+static S12:u32x4 = u32x4(12, 12, 12, 12);
+static S8:u32x4 = u32x4(8, 8, 8, 8);
+static S7:u32x4 = u32x4(7, 7, 7, 7);
+
 impl ChaCha20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> ChaCha20 {
         assert!(key.len() == 16 || key.len() == 32);
@@ -76,62 +133,22 @@ impl ChaCha20 {
         }
     }
 
-    fn rotate(v:u32x4, c: u32x4) -> u32x4{
-      let s32 = u32x4(32, 32, 32, 32);
-      let r = s32 - c;
-      let right = v >> r;
-      (v << c) ^ right
-    }
-
-    fn round(state: &mut ChaChaState) -> () {
-          let s16 = u32x4(16, 16, 16, 16);
-          let s12 = u32x4(12, 12, 12, 12);
-          let s8 = u32x4(8, 8, 8, 8);
-          let s7 = u32x4(7, 7, 7, 7);
-          
-          state.a = state.a + state.b;
-          state.d = ChaCha20::rotate(state.d ^ state.a, s16);
-          state.c = state.c + state.d;
-          state.b = ChaCha20::rotate(state.b ^ state.c, s12);
-          state.a = state.a + state.b;
-          state.d = ChaCha20::rotate(state.d ^ state.a, s8);
-          state.c = state.c + state.d;
-          state.b = ChaCha20::rotate(state.b ^ state.c, s7);
-    }
-
     // put the the next 64 keystream bytes into self.output
     fn update(&mut self) {
         let mut state = self.state;
 
         for _ in range(0, 10) {
-            ChaCha20::round(&mut state);
-            let u32x4(b10, b11, b12, b13) = state.b;
-            state.b = u32x4(b11, b12, b13, b10);
-            let u32x4(c10, c11, c12, c13) = state.c;
-            state.c = u32x4(c12, c13,c10, c11);
-            let u32x4(d10, d11, d12, d13) = state.d;
-            state.d = u32x4(d13, d10, d11, d12);
-            ChaCha20::round(&mut state);
-            let u32x4(b20, b21, b22, b23) = state.b;
-            state.b = u32x4(b23, b20, b21, b22);
-            let u32x4(c20, c21, c22, c23) = state.c;
-            state.c = u32x4(c22, c23, c20, c21);
-            let u32x4(d20, d21, d22, d23) = state.d;
-            state.d = u32x4(d21, d22, d23, d20);
+            round!(state);
+            swizzle!(state.b, state.c, state.d);
+            round!(state);
+            swizzle!(state.d, state.c, state.b);
         }
-        let u32x4(a1, a2, a3, a4) = self.state.a + state.a;
-        let u32x4(b1, b2, b3, b4) = self.state.b + state.b;
-        let u32x4(c1, c2, c3, c4) = self.state.c + state.c;
-        let u32x4(d1, d2, d3, d4) = self.state.d + state.d;
-        let lens = [
-            a1,a2,a3,a4,
-            b1,b2,b3,b4,
-            c1,c2,c3,c4,
-            d1,d2,d3,d4
-        ];
-        for i in range(0, lens.len()) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
-        }
+        state.a += self.state.a;
+        state.b += self.state.b;
+        state.c += self.state.c;
+        state.d += self.state.d;
+
+        state_to_buffer!(state, self.output);
 
         self.state.d += u32x4(1, 0, 0, 0);
         let u32x4(c12, _, _, _) = self.state.d;
