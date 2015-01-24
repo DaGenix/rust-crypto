@@ -129,11 +129,11 @@ impl FortunaGenerator {
         assert!(n <= MAX_GEN_SIZE);
 
         // Generate output
-        self.generate_blocks(n, out.slice_to_mut(n * AES_BLOCK_SIZE));
+        self.generate_blocks(n, &mut out[..(n * AES_BLOCK_SIZE)]);
         if rem > 0 {
             let mut buf = [0; AES_BLOCK_SIZE];
             self.generate_blocks(1, buf.as_mut_slice());
-            out.slice_from_mut(n * AES_BLOCK_SIZE).clone_from_slice(&buf[..rem]);
+            out[(n * AES_BLOCK_SIZE)..].clone_from_slice(&buf[..rem]);
         }
 
         // Rekey

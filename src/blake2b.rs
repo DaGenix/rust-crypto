@@ -254,7 +254,7 @@ impl Blake2b {
             let fill = 2 * BLAKE2B_BLOCKBYTES - left;
 
             if input.len() > fill {
-                copy_memory( self.buf.slice_from_mut(left), &input[0..fill] ); // Fill buffer
+                copy_memory( &mut self.buf[left..], &input[0..fill] ); // Fill buffer
                 self.buflen += fill;
                 self.increment_counter( BLAKE2B_BLOCKBYTES as u64);
                 self.compress();
@@ -267,7 +267,7 @@ impl Blake2b {
                 self.buflen -= BLAKE2B_BLOCKBYTES;
                 input = &input[fill..input.len()];
             } else { // inlen <= fill
-                copy_memory(self.buf.slice_from_mut(left), input);
+                copy_memory(&mut self.buf[left..], input);
                 self.buflen += input.len();
                 break;
             }
@@ -291,8 +291,9 @@ impl Blake2b {
             let incby = self.buflen as u64;
             self.increment_counter(incby);
             self.set_lastblock();
-
-            for b in self.buf.slice_from_mut(self.buflen).iter_mut() {
+            let mut temp_buf = self.buf;
+            let buf_slice = &mut temp_buf[self.buflen..];
+            for b in buf_slice.iter_mut() {
                 *b = 0;
             }
             self.compress();
