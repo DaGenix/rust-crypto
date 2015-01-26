@@ -9,23 +9,10 @@
 
 use std::iter::repeat;
 use std::num::Int;
-use std::slice::bytes::copy_memory;
 
 use digest::Digest;
 use hmac::Hmac;
 use mac::Mac;
-
-fn calculate_block<M: Mac>(mac: &mut M, info: &[u8], n: u8, scratch: &mut [u8], output: &mut [u8]) {
-    if n != 1 {
-        mac.input(scratch);
-    }
-    let nbuf = [n];
-    mac.input(info);
-    mac.input(&nbuf);
-    mac.raw_result(scratch);
-    mac.reset();
-    copy_memory(output, scratch); // Sigh. :(
-}
 
 /// Execute the HKDF-Extract function.  Applications MUST NOT use this for
 /// password hashing.
@@ -51,7 +38,7 @@ pub fn hkdf_extract<D: Digest>(mut digest: D, salt: &[u8], ikm: &[u8], prk: &mut
 ///
 /// # Arguments
 /// * digest - The digest function to use.
-/// * prk - The  pseudorandom key of at least digest.output_bytes() octets.
+/// * prk - The pseudorandom key of at least digest.output_bytes() octets.
 /// * info - The optional context and application specific information to use.
 /// * okm - The output buffer to fill with the derived key value.
 pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut [u8]) {
@@ -59,20 +46,22 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
 
     let mut mac = Hmac::new(digest, prk);
     let os = mac.output_bytes();
-    let mut scratch: Vec<u8> = repeat(0).take(os).collect();
-    let mut idx: u8 = 0;
+    let mut t: Vec<u8> = repeat(0).take(os).collect();
+    let mut n: u8 = 0;
 
     for chunk in okm.chunks_mut(os) {
         // The block index starts at 1. So, this is supposed to run on the first execution.
-        idx = idx.checked_add(1).expect("HKDF size limit exceeded.");
+        n = n.checked_add(1).expect("HKDF size limit exceeded.");
 
-        if chunk.len() == os {
-            calculate_block(&mut mac, info, idx, scratch.as_mut_slice(), chunk);
-        } else {
-            let mut tmp: Vec<u8> = repeat(0).take(os).collect();
-            calculate_block(&mut mac, info, idx, scratch.as_mut_slice(), &mut tmp[]);
-            chunk.clone_from_slice(&tmp[]);
+        if n != 1 {
+            mac.input(&t[]);
         }
+        let nbuf = [n];
+        mac.input(info);
+        mac.input(&nbuf);
+        mac.raw_result(t.as_mut_slice());
+        mac.reset();
+        chunk.clone_from_slice(&t[]);
     }
 }
 
