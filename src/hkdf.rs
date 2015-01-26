@@ -4,10 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/*!
- * This module implements the HMAC-based Extract-and-Expand Key
- * Derivation Function as specified by  https://tools.ietf.org/html/rfc5869.
- */
+//! This module implements the HMAC-based Extract-and-Expand Key
+//! Derivation Function as specified by  https://tools.ietf.org/html/rfc5869.
 
 use std::iter::repeat;
 use std::num::Int;
@@ -29,18 +27,15 @@ fn calculate_block<M: Mac>(mac: &mut M, info: &[u8], n: u8, scratch: &mut [u8], 
     copy_memory(output, scratch); // Sigh. :(
 }
 
-/**
- * Execute the HKDF-Extract function.  Applications MUST NOT use this for
- * password hashing.
- *
- * # Arguments
- * * digest - The digest function to use.
- * * salt - The optional salt value (a non-secret random value) to use.
- * * ikm - The input keying material to use.
- * * prk - The output buffer to fill with a digest.output_bytes() length
- *         pseudo random key.
- *
- */
+/// Execute the HKDF-Extract function.  Applications MUST NOT use this for
+/// password hashing.
+///
+/// # Arguments
+/// * digest - The digest function to use.
+/// * salt - The optional salt value (a non-secret random value) to use.
+/// * ikm - The input keying material to use.
+/// * prk - The output buffer to fill with a digest.output_bytes() length
+///         pseudo random key.
 pub fn hkdf_extract<D: Digest>(mut digest: D, salt: &[u8], ikm: &[u8], prk: &mut [u8]) {
     assert!(prk.len() == digest.output_bytes());
     digest.reset();
@@ -51,17 +46,14 @@ pub fn hkdf_extract<D: Digest>(mut digest: D, salt: &[u8], ikm: &[u8], prk: &mut
     mac.reset();
 }
 
-/**
- * Execute the HKDF-Expand function.  Applications MUST NOT use this for
- * password hashing.
- *
- * # Arguments
- * * digest - The digest function to use.
- * * prk - The  pseudorandom key of at least digest.output_bytes() octets.
- * * info - The optional context and application specific information to use.
- * * okm - The output buffer to fill with the derived key value.
- *
- */
+/// Execute the HKDF-Expand function.  Applications MUST NOT use this for
+/// password hashing.
+///
+/// # Arguments
+/// * digest - The digest function to use.
+/// * prk - The  pseudorandom key of at least digest.output_bytes() octets.
+/// * info - The optional context and application specific information to use.
+/// * okm - The output buffer to fill with the derived key value.
 pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut [u8]) {
     digest.reset();
 
