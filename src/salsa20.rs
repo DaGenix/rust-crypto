@@ -8,6 +8,7 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32v_le, symm_enc_or_dec, write_u32_le};
 
+use std::cmp;
 use std::num::Int;
 use std::slice::bytes::copy_memory;
 
@@ -156,22 +157,28 @@ impl Salsa20 {
             write_u32_le(&mut self.output[i*4..(i+1)*4], x[i]);
         }
     }
-
-    fn next(&mut self) -> u8 {
-        if self.offset == 64 {
-            self.hash();
-        }
-        let ret = self.output[self.offset];
-        self.offset += 1;
-        ret
-    }
 }
 
 impl SynchronousStreamCipher for Salsa20 {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         assert!(input.len() == output.len());
-        for (x, y) in input.iter().zip(output.iter_mut()) {
-            *y = *x ^ self.next();
+        let len = input.len();
+        let mut i = 0;
+        while i < len {
+            // If there is no keystream available in the output buffer,
+            // generate the next block.
+            if self.offset == 64 {
+                self.hash();
+            }
+
+            // Process the min(available keystream, remaining input length).
+            let count = cmp::min(64 - self.offset, len - i);
+            for j in range(0, count) {
+            // j-th byte of the keystream, starting from offset.
+                output[i + j] = input[i + j] ^ self.output[self.offset + j];
+            }
+            i += count;
+            self.offset += count;
         }
     }
 }
