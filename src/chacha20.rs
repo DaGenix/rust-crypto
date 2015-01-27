@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::simd::u32x4;
-use std::slice::bytes::copy_memory;
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
@@ -36,20 +35,30 @@ impl ChaCha20 {
     pub fn new_xchacha20(key: &[u8], nonce: &[u8]) -> ChaCha20 {
         assert!(key.len() == 32);
         assert!(nonce.len() == 24);
-        let mut xchacha20 = ChaCha20::new(key, &nonce[0..8]);
 
+        // HChaCha20 produces a 256-bit output block starting from a 512 bit
+        // input block where (x0,x1,...,x15) where
+        //
+        //  * (x0, x1, x2, x3) is the ChaCha20 constant.
+        //  * (x4, x5, ... x11) is a 256 bit key.
+        //  * (x12, x13, x14, x15) is a 128 bit nonce.
+        //
+        // The only differences between the HChaCha20 input block and the
+        // initial ChaCha20 matrix is the nonce fields, so use the ChaCha20
+        // ctor to initialize the common portions, and fix up the nonce
+        // fields.
+        let mut new_key = [0; 32];
+        let mut xchacha20 = ChaCha20::new(key, &nonce[0..8]);
         xchacha20.state.d = u32x4(
             read_u32_le(&nonce[0..4]),
             read_u32_le(&nonce[4..8]),
             read_u32_le(&nonce[8..12]),
             read_u32_le(&nonce[12..16])
         );
-        xchacha20.hchacha20_update();
 
-        let mut new_key = [0; 32];
-        copy_memory(&mut new_key[0..16], &xchacha20.output[0..16]);
-        copy_memory(&mut new_key[16..32], &xchacha20.output[48..64]);
-
+        // Use HChaCha to derive the subkey, and initialize a ChaCha20 instance
+        // with the subkey and the remaining 8 bytes of the nonce.
+        xchacha20.hchacha20(&mut new_key);
         xchacha20.state = ChaCha20::expand(&new_key, &nonce[16..24]);
 
         xchacha20
@@ -99,9 +108,11 @@ impl ChaCha20 {
         }
     }
 
-    fn hchacha20_update(&mut self) -> () {
+    fn hchacha20(&mut self, out: &mut [u8]) -> () {
         let mut state = self.state;
 
+        // Apply r/2 iterations of the same "double-round" function,
+        // obtaining (z0, z1, ... z15) = doubleround r/2 (x0, x1, ... x15).
         for _ in range(0, 10) {
             ChaCha20::round(&mut state);
             let u32x4(b10, b11, b12, b13) = state.b;
@@ -118,18 +129,18 @@ impl ChaCha20 {
             let u32x4(d20, d21, d22, d23) = state.d;
             state.d = u32x4(d21, d22, d23, d20);
         }
+
+        // HChaCha20 then outputs the 256-bit block (z0, z1, z2, z3, z12, z13,
+        // z14, z15).  These correspond to the constant and input positions in
+        // the ChaCha matrix.
         let u32x4(a1, a2, a3, a4) = state.a;
-        let u32x4(b1, b2, b3, b4) = state.b;
-        let u32x4(c1, c2, c3, c4) = state.c;
         let u32x4(d1, d2, d3, d4) = state.d;
         let lens = [
             a1,a2,a3,a4,
-            b1,b2,b3,b4,
-            c1,c2,c3,c4,
             d1,d2,d3,d4
         ];
         for i in range(0, lens.len()) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
+            write_u32_le(&mut out[i*4..(i+1)*4], lens[i]);
         }
     }
 
