@@ -10,7 +10,7 @@
  */
 
 use std::iter::repeat;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use std::rand::{OsRng, Rng};
 use std::num::Int;
 
