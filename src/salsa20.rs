@@ -9,157 +9,202 @@ use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCi
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
 
 use std::cmp;
-use std::num::Int;
+use std::simd::u32x4;
+
+#[derive(Copy)]
+struct SalsaState {
+  a: u32x4,
+  b: u32x4,
+  c: u32x4,
+  d: u32x4
+}
 
 #[derive(Copy)]
 pub struct Salsa20 {
-    state: [u32; 16],
+    state: SalsaState,
     output: [u8; 64],
-    counter: u64,
     offset: usize,
 }
 
-fn doubleround(y: &mut [u32; 16]) {
-    y[ 4] = y[ 4] ^ (y[ 0]+y[12]).rotate_left( 7);
-    y[ 8] = y[ 8] ^ (y[ 4]+y[ 0]).rotate_left( 9);
-    y[12] = y[12] ^ (y[ 8]+y[ 4]).rotate_left(13);
-    y[ 0] = y[ 0] ^ (y[12]+y[ 8]).rotate_left(18);
-    
-    y[ 9] = y[ 9] ^ (y[ 5]+y[ 1]).rotate_left( 7);
-    y[13] = y[13] ^ (y[ 9]+y[ 5]).rotate_left( 9);
-    y[ 1] = y[ 1] ^ (y[13]+y[ 9]).rotate_left(13);
-    y[ 5] = y[ 5] ^ (y[ 1]+y[13]).rotate_left(18);
+static S7:u32x4 = u32x4(7, 7, 7, 7);
+static S9:u32x4 = u32x4(9, 9, 9, 9);
+static S13:u32x4 = u32x4(13, 13, 13, 13);
+static S18:u32x4 = u32x4(18, 18, 18, 18);
+static S32:u32x4 = u32x4(32, 32, 32, 32);
 
-    y[14] = y[14] ^ (y[10]+y[ 6]).rotate_left( 7);
-    y[ 2] = y[ 2] ^ (y[14]+y[10]).rotate_left( 9);
-    y[ 6] = y[ 6] ^ (y[ 2]+y[14]).rotate_left(13);
-    y[10] = y[10] ^ (y[ 6]+y[ 2]).rotate_left(18);
+macro_rules! swizzle_fw {
+    ($a: expr, $b: expr, $c: expr) => {{
+        let u32x4(a10, a11, a12, a13) = $a;
+        $a = u32x4(a13, a10, a11, a12);
+        let u32x4(b10, b11, b12, b13) = $b;
+        $b = u32x4(b12, b13, b10, b11);
+        let u32x4(c10, c11, c12, c13) = $c;
+        $c = u32x4(c11, c12, c13, c10);
+    }}
+}
 
-    y[ 3] = y[ 3] ^ (y[15]+y[11]).rotate_left( 7);
-    y[ 7] = y[ 7] ^ (y[ 3]+y[15]).rotate_left( 9);
-    y[11] = y[11] ^ (y[ 7]+y[ 3]).rotate_left(13);
-    y[15] = y[15] ^ (y[11]+y[ 7]).rotate_left(18);
+macro_rules! swizzle_bk {
+    ($a: expr, $b: expr, $c: expr) => {{
+        let u32x4(a13, a10, a11, a12) = $a;
+        $a = u32x4(a10, a11, a12, a13);
+        let u32x4(b12, b13, b10, b11) = $b;
+        $b = u32x4(b10, b11, b12, b13);
+        let u32x4(c11, c12, c13, c10) = $c;
+        $c = u32x4(c10, c11, c12, c13);
+    }}
+}
 
-    y[1] = y[1] ^ (y[0]+y[3]).rotate_left( 7);
-    y[2] = y[2] ^ (y[1]+y[0]).rotate_left( 9);
-    y[3] = y[3] ^ (y[2]+y[1]).rotate_left(13);
-    y[0] = y[0] ^ (y[3]+y[2]).rotate_left(18);
+macro_rules! add_rotate_xor {
+    ($dst: expr, $a: expr, $b: expr, $shift: expr) => {{
+        let v = $a + $b;
+        let r = S32 - $shift;
+        let right = v >> r;
+        $dst ^= (v << $shift) ^ right
+    }}
+}
 
-    y[6] = y[6] ^ (y[5]+y[4]).rotate_left( 7);
-    y[7] = y[7] ^ (y[6]+y[5]).rotate_left( 9);
-    y[4] = y[4] ^ (y[7]+y[6]).rotate_left(13);
-    y[5] = y[5] ^ (y[4]+y[7]).rotate_left(18);
+fn quarterround_a(state: &mut SalsaState) -> () {
+    add_rotate_xor!(state.a, state.d, state.c, S7);
+    add_rotate_xor!(state.b, state.a, state.d, S9);
+    add_rotate_xor!(state.c, state.b, state.a, S13);
+    add_rotate_xor!(state.d, state.c, state.b, S18);
+}
 
-    y[11] = y[11] ^ (y[10]+y[ 9]).rotate_left( 7);
-    y[ 8] = y[ 8] ^ (y[11]+y[10]).rotate_left( 9);
-    y[ 9] = y[ 9] ^ (y[ 8]+y[11]).rotate_left(13);
-    y[10] = y[10] ^ (y[ 9]+y[ 8]).rotate_left(18);
-
-    y[12] = y[12] ^ (y[15]+y[14]).rotate_left( 7);
-    y[13] = y[13] ^ (y[12]+y[15]).rotate_left( 9);
-    y[14] = y[14] ^ (y[13]+y[12]).rotate_left(13);
-    y[15] = y[15] ^ (y[14]+y[13]).rotate_left(18);
+fn quarterround_b(state: &mut SalsaState) -> () {
+    add_rotate_xor!(state.c, state.d, state.a, S7);
+    add_rotate_xor!(state.b, state.c, state.d, S9);
+    add_rotate_xor!(state.a, state.c, state.b, S13);
+    add_rotate_xor!(state.d, state.a, state.b, S18);
 }
 
 impl Salsa20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> Salsa20 {
-        let mut salsa20 = Salsa20 { state: [0; 16], output: [0; 64], counter: 0, offset: 64 };
-
         assert!(key.len() == 16 || key.len() == 32);
         assert!(nonce.len() == 8);
-
-        salsa20.expand(key, nonce);
-
-        salsa20
+        Salsa20 { state: Salsa20::expand(key, nonce), output: [0; 64], offset: 64 }
     }
 
     pub fn new_xsalsa20(key: &[u8], nonce: &[u8]) -> Salsa20 {
         assert!(key.len() == 32);
         assert!(nonce.len() == 24);
-        let mut xsalsa20 = Salsa20 { state: [0; 16], output: [0; 64], counter: 0, offset: 64 };
+        let mut xsalsa20 = Salsa20 { state: Salsa20::expand(key, &nonce[0..16]), output: [0; 64], offset: 64 };
 
-        xsalsa20.expand(key, &nonce[0..16]);
         let mut new_key = [0; 32];
         xsalsa20.hsalsa20_hash(&mut new_key);
-        xsalsa20.expand(&new_key, &nonce[16..24]);
+        xsalsa20.state = Salsa20::expand(&new_key, &nonce[16..24]);
 
         xsalsa20
     }
 
-    fn expand(&mut self, key: &[u8], nonce: &[u8]) {
+    fn expand(key: &[u8], nonce: &[u8]) -> SalsaState {
         let constant = match key.len() {
             16 => b"expand 16-byte k",
             32 => b"expand 32-byte k",
             _  => unreachable!(),
         };
 
-        // Constant (x0, x5, x10, x15)
-        self.state[0] = read_u32_le(&constant[0..4]);
-        self.state[5] = read_u32_le(&constant[4..8]);
-        self.state[10] = read_u32_le(&constant[8..12]);
-        self.state[15] = read_u32_le(&constant[12..16]);
+        // The state vectors are laid out to facilitate SIMD operation,
+        // instead of the natural matrix ordering.
+        //
+        //  * Constant (x0, x5, x10, x15)
+        //  * Key (x1, x2, x3, x4, x11, x12, x13, x14)
+        //  * Input (x6, x7, x8, x9)
 
-        // Key (x1, x2, x3, x4, x11, x12, x13, x14)
-        self.state[1] = read_u32_le(&key[0..4]);
-        self.state[2] = read_u32_le(&key[4..8]);
-        self.state[3] = read_u32_le(&key[8..12]);
-        self.state[4] = read_u32_le(&key[12..16]);
+        let key_tail; // (x11, x12, x13, x14)
         if key.len() == 16 {
-            self.state[11] = read_u32_le(&key[0..4]);
-            self.state[12] = read_u32_le(&key[4..8]);
-            self.state[13] = read_u32_le(&key[8..12]);
-            self.state[14] = read_u32_le(&key[12..16]);
+            key_tail = key;
         } else {
-            self.state[11] = read_u32_le(&key[16..20]);
-            self.state[12] = read_u32_le(&key[20..24]);
-            self.state[13] = read_u32_le(&key[24..28]);
-            self.state[14] = read_u32_le(&key[28..32]);
+            key_tail = &key[16..32];
         }
 
-        // Input (x6, x7, x8, x9)
+        let x8; let x9; // (x8, x9)
         if nonce.len() == 16 {
-            // HSalsa20
-            self.state[6] = read_u32_le(&nonce[0..4]);
-            self.state[7] = read_u32_le(&nonce[4..8]);
-            self.state[8] = read_u32_le(&nonce[8..12]);
-            self.state[9] = read_u32_le(&nonce[12..16]);
+            // HChaCha uses the full 16 byte nonce.
+            x8 = read_u32_le(&nonce[8..12]);
+            x9 = read_u32_le(&nonce[12..16]);
         } else {
-            self.state[6] = read_u32_le(&nonce[0..4]);
-            self.state[7] = read_u32_le(&nonce[4..8]);
-            self.state[8] = 0;
-            self.state[9] = 0;
+            x8 = 0;
+            x9 = 0;
+        }
+
+        SalsaState {
+            a: u32x4(
+                read_u32_le(&key[12..16]),      // x4
+                x9,                             // x9
+                read_u32_le(&key_tail[12..16]), // x14
+                read_u32_le(&key[8..12]),       // x3
+            ),
+            b: u32x4(
+                x8,                             // x8
+                read_u32_le(&key_tail[8..12]),  // x13
+                read_u32_le(&key[4..8]),        // x2
+                read_u32_le(&nonce[4..8])       // x7
+            ),
+            c: u32x4(
+                read_u32_le(&key_tail[4..8]),   // x12
+                read_u32_le(&key[0..4]),        // x1
+                read_u32_le(&nonce[0..4]),      // x6
+                read_u32_le(&key_tail[0..4])    // x11
+            ),
+            d: u32x4(
+                read_u32_le(&constant[0..4]),   // x0
+                read_u32_le(&constant[4..8]),   // x5
+                read_u32_le(&constant[8..12]),  // x10
+                read_u32_le(&constant[12..16]), // x15
+            )
         }
     }
 
     fn hash(&mut self) {
-        self.state[8] = self.counter as u32;
-        self.state[9] = (self.counter >> 32) as u32;
-
-        let mut x = self.state;
+        let mut state = self.state;
         for _ in range(0, 10) {
-            doubleround(&mut x);
+            quarterround_a(&mut state);
+            swizzle_fw!(state.a, state.b, state.c);
+            quarterround_b(&mut state);
+            swizzle_bk!(state.a, state.b, state.c);
         }
-        for i in range(0, 16) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], self.state[i] + x[i]);
+        let u32x4(x4, x9, x14, x3) = self.state.a + state.a;
+        let u32x4(x8, x13, x2, x7) = self.state.b + state.b;
+        let u32x4(x12, x1, x6, x11) = self.state.c + state.c;
+        let u32x4(x0, x5, x10, x15) = self.state.d + state.d;
+        let lens = [
+             x0,  x1,  x2,  x3,
+             x4,  x5,  x6,  x7,
+             x8,  x9, x10, x11,
+            x12, x13, x14, x15
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
         }
-        
-        self.counter += 1;
+
+        self.state.b += u32x4(1, 0, 0, 0);
+        let u32x4(_, _, _, ctr_lo) = self.state.b;
+        if ctr_lo == 0 {
+            self.state.a += u32x4(0, 1, 0, 0);
+        }
+
         self.offset = 0;
     }
 
     fn hsalsa20_hash(&mut self, out: &mut [u8]) {
-        let mut x = self.state;
+        let mut state = self.state;
         for _ in range(0, 10) {
-            doubleround(&mut x);
+            quarterround_a(&mut state);
+            swizzle_fw!(state.a, state.b, state.c);
+            quarterround_b(&mut state);
+            swizzle_bk!(state.a, state.b, state.c);
         }
-        write_u32_le(&mut out[0..4], x[0]);
-        write_u32_le(&mut out[4..8], x[5]);
-        write_u32_le(&mut out[8..12], x[10]);
-        write_u32_le(&mut out[12..16], x[15]);
-        write_u32_le(&mut out[16..20], x[6]);
-        write_u32_le(&mut out[20..24], x[7]);
-        write_u32_le(&mut out[24..28], x[8]);
-        write_u32_le(&mut out[28..32], x[9]);
+        let u32x4(_, x9, _, _) = state.a;
+        let u32x4(x8, _, _, x7) = state.b;
+        let u32x4(_, _, x6, _) = state.c;
+        let u32x4(x0, x5, x10, x15) = state.d;
+        let lens = [
+            x0, x5, x10, x15,
+            x6, x7, x8, x9
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(&mut out[i*4..(i+1)*4], lens[i]);
+        }
     }
 }
 
@@ -178,7 +223,7 @@ impl SynchronousStreamCipher for Salsa20 {
             // Process the min(available keystream, remaining input length).
             let count = cmp::min(64 - self.offset, len - i);
             for j in range(0, count) {
-            // j-th byte of the keystream, starting from offset.
+                // j-th byte of the keystream, starting from offset.
                 output[i + j] = input[i + j] ^ self.output[self.offset + j];
             }
             i += count;
