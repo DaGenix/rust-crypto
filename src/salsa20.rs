@@ -6,15 +6,14 @@
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
-use cryptoutil::{read_u32v_le, symm_enc_or_dec, write_u32_le};
+use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
 
 use std::cmp;
 use std::num::Int;
-use std::slice::bytes::copy_memory;
 
 #[derive(Copy)]
 pub struct Salsa20 {
-    state: [u8; 64],
+    state: [u32; 16],
     output: [u8; 64],
     counter: u64,
     offset: usize,
@@ -64,16 +63,12 @@ fn doubleround(y: &mut [u32; 16]) {
 
 impl Salsa20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> Salsa20 {
-        let mut salsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
+        let mut salsa20 = Salsa20 { state: [0; 16], output: [0; 64], counter: 0, offset: 64 };
 
         assert!(key.len() == 16 || key.len() == 32);
         assert!(nonce.len() == 8);
-        
-        if key.len() == 16 {
-            salsa20.expand16(key, nonce);
-        } else {
-            salsa20.expand32(key, nonce);
-        }
+
+        salsa20.expand(key, nonce);
 
         salsa20
     }
@@ -81,81 +76,90 @@ impl Salsa20 {
     pub fn new_xsalsa20(key: &[u8], nonce: &[u8]) -> Salsa20 {
         assert!(key.len() == 32);
         assert!(nonce.len() == 24);
-        let mut xsalsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
+        let mut xsalsa20 = Salsa20 { state: [0; 16], output: [0; 64], counter: 0, offset: 64 };
 
-        xsalsa20.hsalsa20_expand(key, &nonce[0..16]);
-        xsalsa20.hsalsa20_hash();
-
+        xsalsa20.expand(key, &nonce[0..16]);
         let mut new_key = [0; 32];
-        copy_memory(&mut new_key[0..4], &xsalsa20.output[0..4]);
-        copy_memory(&mut new_key[4..8], &xsalsa20.output[20..24]);
-        copy_memory(&mut new_key[8..12], &xsalsa20.output[40..44]);
-        copy_memory(&mut new_key[12..16], &xsalsa20.output[60..64]);
-        copy_memory(&mut new_key[16..32], &xsalsa20.output[24..40]);
-
-        xsalsa20.expand32(&new_key, &nonce[16..24]);
+        xsalsa20.hsalsa20_hash(&mut new_key);
+        xsalsa20.expand(&new_key, &nonce[16..24]);
 
         xsalsa20
     }
 
-    fn expand16(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
-        copy_memory(&mut self.state[4..20], key);
-        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 49]);
-        copy_memory(&mut self.state[24..32], nonce);
-        copy_memory(&mut self.state[40..44], &[54u8, 45, 98, 121]);
-        copy_memory(&mut self.state[44..60], key);
-        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
-    }
+    fn expand(&mut self, key: &[u8], nonce: &[u8]) {
+        let constant = match key.len() {
+            16 => b"expand 16-byte k",
+            32 => b"expand 32-byte k",
+            _  => unreachable!(),
+        };
 
-    fn expand32(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
-        copy_memory(&mut self.state[4..20], &key[0..16]);
-        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 51]);
-        copy_memory(&mut self.state[24..32], nonce);
-        copy_memory(&mut self.state[40..44], &[50u8, 45, 98, 121]);
-        copy_memory(&mut self.state[44..60], &key[16..32]);
-        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
-    }
+        // Constant (x0, x5, x10, x15)
+        self.state[0] = read_u32_le(&constant[0..4]);
+        self.state[5] = read_u32_le(&constant[4..8]);
+        self.state[10] = read_u32_le(&constant[8..12]);
+        self.state[15] = read_u32_le(&constant[12..16]);
 
-    fn hsalsa20_expand(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
-        copy_memory(&mut self.state[4..20], &key[0..16]);
-        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 51]);
-        copy_memory(&mut self.state[24..40], nonce);
-        copy_memory(&mut self.state[40..44], &[50u8, 45, 98, 121]);
-        copy_memory(&mut self.state[44..60], &key[16..32]);
-        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
+        // Key (x1, x2, x3, x4, x11, x12, x13, x14)
+        self.state[1] = read_u32_le(&key[0..4]);
+        self.state[2] = read_u32_le(&key[4..8]);
+        self.state[3] = read_u32_le(&key[8..12]);
+        self.state[4] = read_u32_le(&key[12..16]);
+        if key.len() == 16 {
+            self.state[11] = read_u32_le(&key[0..4]);
+            self.state[12] = read_u32_le(&key[4..8]);
+            self.state[13] = read_u32_le(&key[8..12]);
+            self.state[14] = read_u32_le(&key[12..16]);
+        } else {
+            self.state[11] = read_u32_le(&key[16..20]);
+            self.state[12] = read_u32_le(&key[20..24]);
+            self.state[13] = read_u32_le(&key[24..28]);
+            self.state[14] = read_u32_le(&key[28..32]);
+        }
+
+        // Input (x6, x7, x8, x9)
+        if nonce.len() == 16 {
+            // HSalsa20
+            self.state[6] = read_u32_le(&nonce[0..4]);
+            self.state[7] = read_u32_le(&nonce[4..8]);
+            self.state[8] = read_u32_le(&nonce[8..12]);
+            self.state[9] = read_u32_le(&nonce[12..16]);
+        } else {
+            self.state[6] = read_u32_le(&nonce[0..4]);
+            self.state[7] = read_u32_le(&nonce[4..8]);
+            self.state[8] = 0;
+            self.state[9] = 0;
+        }
     }
 
     fn hash(&mut self) {
-        write_u32_le(&mut self.state[32..36], self.counter as u32);
-        write_u32_le(&mut self.state[36..40], (self.counter >> 32) as u32);
-        
-        let mut x = [0u32; 16];
-        let mut z = [0u32; 16];
-        read_u32v_le(x.as_mut_slice(), &self.state);
-        read_u32v_le(z.as_mut_slice(), &self.state);
+        self.state[8] = self.counter as u32;
+        self.state[9] = (self.counter >> 32) as u32;
+
+        let mut x = self.state;
         for _ in range(0, 10) {
-            doubleround(&mut z);
+            doubleround(&mut x);
         }
         for i in range(0, 16) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], x[i] + z[i]);
+            write_u32_le(&mut self.output[i*4..(i+1)*4], self.state[i] + x[i]);
         }
         
         self.counter += 1;
         self.offset = 0;
     }
 
-    fn hsalsa20_hash(&mut self) {
-        let mut x = [0u32; 16];
-        read_u32v_le(x.as_mut_slice(), &self.state);
+    fn hsalsa20_hash(&mut self, out: &mut [u8]) {
+        let mut x = self.state;
         for _ in range(0, 10) {
             doubleround(&mut x);
         }
-        for i in range(0, 16) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], x[i]);
-        }
+        write_u32_le(&mut out[0..4], x[0]);
+        write_u32_le(&mut out[4..8], x[5]);
+        write_u32_le(&mut out[8..12], x[10]);
+        write_u32_le(&mut out[12..16], x[15]);
+        write_u32_le(&mut out[16..20], x[6]);
+        write_u32_le(&mut out[20..24], x[7]);
+        write_u32_le(&mut out[24..28], x[8]);
+        write_u32_le(&mut out[28..32], x[9]);
     }
 }
 
@@ -199,8 +203,13 @@ impl Decryptor for Salsa20 {
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use salsa20::Salsa20;
     use symmetriccipher::SynchronousStreamCipher;
+
+    use digest::Digest;
+    use sha2::Sha256;
 
     #[test]
     fn test_salsa20_128bit_ecrypt_set_1_vector_0() {
@@ -244,6 +253,30 @@ mod test {
         let mut salsa20 = Salsa20::new(&key, &nonce);
         salsa20.process(&input, &mut stream);
         assert!(stream[] == result[]);
+    }
+
+    #[test]
+    fn test_salsa20_256bit_nacl_vector_2() {
+        let key = [
+            0xdc,0x90,0x8d,0xda,0x0b,0x93,0x44,0xa9,
+            0x53,0x62,0x9b,0x73,0x38,0x20,0x77,0x88,
+            0x80,0xf3,0xce,0xb4,0x21,0xbb,0x61,0xb9,
+            0x1c,0xbd,0x4c,0x3e,0x66,0x25,0x6c,0xe4
+        ];
+        let nonce = [
+            0x82,0x19,0xe0,0x03,0x6b,0x7a,0x0b,0x37
+        ];
+        let input: Vec<u8> = repeat(0).take(4194304).collect();
+        let mut stream: Vec<u8> = repeat(0).take(input.len()).collect();
+        let output_str = "662b9d0e3463029156069b12f918691a98f7dfb2ca0393c96bbfc6b1fbd630a2";
+
+        let mut salsa20 = Salsa20::new(&key, &nonce);
+        salsa20.process(input.as_slice(), stream.as_mut_slice());
+
+        let mut sh = Sha256::new();
+        sh.input(stream.as_slice());
+        let out_str = sh.result_str();
+        assert!(&out_str[] == output_str);
     }
 
     #[test]
