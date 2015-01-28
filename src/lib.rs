@@ -34,6 +34,7 @@ pub mod ed25519;
 pub mod fortuna;
 pub mod ghash;
 pub mod hmac;
+pub mod hkdf;
 pub mod mac;
 pub mod md5;
 pub mod pbkdf2;
