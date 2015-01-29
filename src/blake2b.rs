@@ -127,7 +127,7 @@ impl Blake2b {
     }
 
     fn apply_param(&mut self, p: &Blake2bParam) {
-        use std::io::BufWriter;
+        use std::old_io::BufWriter;
 
         let mut param_bytes : [u8; 64] = [0; 64];
         {
@@ -140,9 +140,9 @@ impl Blake2b {
             writer.write_le_u64(p.node_offset).unwrap();
             writer.write_u8(p.node_depth).unwrap();
             writer.write_u8(p.inner_length).unwrap();
-            writer.write(&p.reserved).unwrap();
-            writer.write(&p.salt).unwrap();
-            writer.write(&p.personal).unwrap();
+            writer.write_all(&p.reserved).unwrap();
+            writer.write_all(&p.salt).unwrap();
+            writer.write_all(&p.personal).unwrap();
         }
         let mut param_words : [u64; 8] = [0; 8];
         read_u64v_le(&mut param_words, &param_bytes);

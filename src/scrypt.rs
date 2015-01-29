@@ -13,7 +13,7 @@
  */
 
 use std::iter::repeat;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
 use std::rand::{OsRng, Rng};
