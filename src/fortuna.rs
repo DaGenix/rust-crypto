@@ -266,7 +266,7 @@ impl<'a> SeedableRng<&'a [u8]> for Fortuna {
 mod tests {
     use std::rand::{SeedableRng, Rng};
     use std::time::Duration;
-    use std::io::timer;
+    use std::old_io::timer;
 
     use super::{Fortuna, Pool, NUM_POOLS};
 
