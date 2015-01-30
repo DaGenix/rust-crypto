@@ -119,7 +119,7 @@ impl Salsa20 {
 
         let x8; let x9; // (x8, x9)
         if nonce.len() == 16 {
-            // HChaCha uses the full 16 byte nonce.
+            // HSalsa uses the full 16 byte nonce.
             x8 = read_u32_le(&nonce[8..12]);
             x9 = read_u32_le(&nonce[12..16]);
         } else {
