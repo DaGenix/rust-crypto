@@ -32,7 +32,7 @@ static S13:u32x4 = u32x4(13, 13, 13, 13);
 static S18:u32x4 = u32x4(18, 18, 18, 18);
 static S32:u32x4 = u32x4(32, 32, 32, 32);
 
-macro_rules! swizzle_fw {
+macro_rules! prepare_rowround {
     ($a: expr, $b: expr, $c: expr) => {{
         let u32x4(a10, a11, a12, a13) = $a;
         $a = u32x4(a13, a10, a11, a12);
@@ -43,7 +43,7 @@ macro_rules! swizzle_fw {
     }}
 }
 
-macro_rules! swizzle_bk {
+macro_rules! prepare_columnround {
     ($a: expr, $b: expr, $c: expr) => {{
         let u32x4(a13, a10, a11, a12) = $a;
         $a = u32x4(a10, a11, a12, a13);
@@ -63,14 +63,14 @@ macro_rules! add_rotate_xor {
     }}
 }
 
-fn quarterround_a(state: &mut SalsaState) -> () {
+fn columnround(state: &mut SalsaState) -> () {
     add_rotate_xor!(state.a, state.d, state.c, S7);
     add_rotate_xor!(state.b, state.a, state.d, S9);
     add_rotate_xor!(state.c, state.b, state.a, S13);
     add_rotate_xor!(state.d, state.c, state.b, S18);
 }
 
-fn quarterround_b(state: &mut SalsaState) -> () {
+fn rowround(state: &mut SalsaState) -> () {
     add_rotate_xor!(state.c, state.d, state.a, S7);
     add_rotate_xor!(state.b, state.c, state.d, S9);
     add_rotate_xor!(state.a, state.c, state.b, S13);
@@ -158,10 +158,10 @@ impl Salsa20 {
     fn hash(&mut self) {
         let mut state = self.state;
         for _ in range(0, 10) {
-            quarterround_a(&mut state);
-            swizzle_fw!(state.a, state.b, state.c);
-            quarterround_b(&mut state);
-            swizzle_bk!(state.a, state.b, state.c);
+            columnround(&mut state);
+            prepare_rowround!(state.a, state.b, state.c);
+            rowround(&mut state);
+            prepare_columnround!(state.a, state.b, state.c);
         }
         let u32x4(x4, x9, x14, x3) = self.state.a + state.a;
         let u32x4(x8, x13, x2, x7) = self.state.b + state.b;
@@ -189,10 +189,10 @@ impl Salsa20 {
     fn hsalsa20_hash(&mut self, out: &mut [u8]) {
         let mut state = self.state;
         for _ in range(0, 10) {
-            quarterround_a(&mut state);
-            swizzle_fw!(state.a, state.b, state.c);
-            quarterround_b(&mut state);
-            swizzle_bk!(state.a, state.b, state.c);
+            columnround(&mut state);
+            prepare_rowround!(state.a, state.b, state.c);
+            rowround(&mut state);
+            prepare_columnround!(state.a, state.b, state.c);
         }
         let u32x4(_, x9, _, _) = state.a;
         let u32x4(x8, _, _, x7) = state.b;
