@@ -42,22 +42,11 @@ impl ChaCha20 {
         //  * (x0, x1, x2, x3) is the ChaCha20 constant.
         //  * (x4, x5, ... x11) is a 256 bit key.
         //  * (x12, x13, x14, x15) is a 128 bit nonce.
-        //
-        // The only differences between the HChaCha20 input block and the
-        // initial ChaCha20 matrix is the nonce fields, so use the ChaCha20
-        // ctor to initialize the common portions, and fix up the nonce
-        // fields.
-        let mut new_key = [0; 32];
-        let mut xchacha20 = ChaCha20::new(key, &nonce[0..8]);
-        xchacha20.state.d = u32x4(
-            read_u32_le(&nonce[0..4]),
-            read_u32_le(&nonce[4..8]),
-            read_u32_le(&nonce[8..12]),
-            read_u32_le(&nonce[12..16])
-        );
+        let mut xchacha20 = ChaCha20{ state: ChaCha20::expand(key, &nonce[0..16]), output: [0u8; 64], offset: 64 };
 
         // Use HChaCha to derive the subkey, and initialize a ChaCha20 instance
         // with the subkey and the remaining 8 bytes of the nonce.
+        let mut new_key = [0; 32];
         xchacha20.hchacha20(&mut new_key);
         xchacha20.state = ChaCha20::expand(&new_key, &nonce[16..24]);
 
@@ -99,12 +88,21 @@ impl ChaCha20 {
                         read_u32_le(&key[28..32])
                     )
                 },
-            d: u32x4(
-                0,
-                0,
-                read_u32_le(&nonce[0..4]),
-                read_u32_le(&nonce[4..8])
-            )
+            d: if nonce.len() == 16 {
+                   u32x4(
+                        read_u32_le(&nonce[0..4]),
+                        read_u32_le(&nonce[4..8]),
+                        read_u32_le(&nonce[8..12]),
+                        read_u32_le(&nonce[12..16])
+                    )
+               } else {
+                   u32x4(
+                        0,
+                        0,
+                        read_u32_le(&nonce[0..4]),
+                        read_u32_le(&nonce[4..8])
+                    )
+               }
         }
     }
 
