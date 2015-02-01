@@ -33,6 +33,27 @@ impl ChaCha20 {
         ChaCha20{ state: ChaCha20::expand(key, nonce), output: [0u8; 64], offset: 64 }
     }
 
+    pub fn new_xchacha20(key: &[u8], nonce: &[u8]) -> ChaCha20 {
+        assert!(key.len() == 32);
+        assert!(nonce.len() == 24);
+
+        // HChaCha20 produces a 256-bit output block starting from a 512 bit
+        // input block where (x0,x1,...,x15) where
+        //
+        //  * (x0, x1, x2, x3) is the ChaCha20 constant.
+        //  * (x4, x5, ... x11) is a 256 bit key.
+        //  * (x12, x13, x14, x15) is a 128 bit nonce.
+        let mut xchacha20 = ChaCha20{ state: ChaCha20::expand(key, &nonce[0..16]), output: [0u8; 64], offset: 64 };
+
+        // Use HChaCha to derive the subkey, and initialize a ChaCha20 instance
+        // with the subkey and the remaining 8 bytes of the nonce.
+        let mut new_key = [0; 32];
+        xchacha20.hchacha20(&mut new_key);
+        xchacha20.state = ChaCha20::expand(&new_key, &nonce[16..24]);
+
+        xchacha20
+    }
+
     fn expand(key: &[u8], nonce: &[u8]) -> ChaChaState {
         
         let constant = match key.len() {
@@ -68,12 +89,57 @@ impl ChaCha20 {
                         read_u32_le(&key[28..32])
                     )
                 },
-            d: u32x4(
-                0,
-                0,
-                read_u32_le(&nonce[0..4]),
-                read_u32_le(&nonce[4..8])
-            )
+            d: if nonce.len() == 16 {
+                   u32x4(
+                        read_u32_le(&nonce[0..4]),
+                        read_u32_le(&nonce[4..8]),
+                        read_u32_le(&nonce[8..12]),
+                        read_u32_le(&nonce[12..16])
+                    )
+               } else {
+                   u32x4(
+                        0,
+                        0,
+                        read_u32_le(&nonce[0..4]),
+                        read_u32_le(&nonce[4..8])
+                    )
+               }
+        }
+    }
+
+    fn hchacha20(&mut self, out: &mut [u8]) -> () {
+        let mut state = self.state;
+
+        // Apply r/2 iterations of the same "double-round" function,
+        // obtaining (z0, z1, ... z15) = doubleround r/2 (x0, x1, ... x15).
+        for _ in range(0, 10) {
+            ChaCha20::round(&mut state);
+            let u32x4(b10, b11, b12, b13) = state.b;
+            state.b = u32x4(b11, b12, b13, b10);
+            let u32x4(c10, c11, c12, c13) = state.c;
+            state.c = u32x4(c12, c13,c10, c11);
+            let u32x4(d10, d11, d12, d13) = state.d;
+            state.d = u32x4(d13, d10, d11, d12);
+            ChaCha20::round(&mut state);
+            let u32x4(b20, b21, b22, b23) = state.b;
+            state.b = u32x4(b23, b20, b21, b22);
+            let u32x4(c20, c21, c22, c23) = state.c;
+            state.c = u32x4(c22, c23, c20, c21);
+            let u32x4(d20, d21, d22, d23) = state.d;
+            state.d = u32x4(d21, d22, d23, d20);
+        }
+
+        // HChaCha20 then outputs the 256-bit block (z0, z1, z2, z3, z12, z13,
+        // z14, z15).  These correspond to the constant and input positions in
+        // the ChaCha matrix.
+        let u32x4(a1, a2, a3, a4) = state.a;
+        let u32x4(d1, d2, d3, d4) = state.d;
+        let lens = [
+            a1,a2,a3,a4,
+            d1,d2,d3,d4
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(&mut out[i*4..(i+1)*4], lens[i]);
         }
     }
 
@@ -322,6 +388,47 @@ mod test {
             c.process(&input[], &mut output[]);
             assert_eq!(output, tv.keystream);
         }
+    }
+
+    #[test]
+    fn test_xchacha20_basic() {
+        // There aren't any convenient test vectors for XChaCha/20,
+        // so, a simple test case was generated using Andrew Moon's
+        // chacha-opt library, with the key/nonce from test_salsa20_cryptopp().
+        let key =
+            [0x1b, 0x27, 0x55, 0x64, 0x73, 0xe9, 0x85, 0xd4,
+             0x62, 0xcd, 0x51, 0x19, 0x7a, 0x9a, 0x46, 0xc7,
+             0x60, 0x09, 0x54, 0x9e, 0xac, 0x64, 0x74, 0xf2,
+             0x06, 0xc4, 0xee, 0x08, 0x44, 0xf6, 0x83, 0x89];
+        let nonce =
+            [0x69, 0x69, 0x6e, 0xe9, 0x55, 0xb6, 0x2b, 0x73,
+             0xcd, 0x62, 0xbd, 0xa8, 0x75, 0xfc, 0x73, 0xd6,
+             0x82, 0x19, 0xe0, 0x03, 0x6b, 0x7a, 0x0b, 0x37];
+        let input = [0u8; 139];
+        let mut stream = [0u8; 139];
+        let result =
+            [0x4f, 0xeb, 0xf2, 0xfe, 0x4b, 0x35, 0x9c, 0x50,
+             0x8d, 0xc5, 0xe8, 0xb5, 0x98, 0x0c, 0x88, 0xe3,
+             0x89, 0x46, 0xd8, 0xf1, 0x8f, 0x31, 0x34, 0x65,
+             0xc8, 0x62, 0xa0, 0x87, 0x82, 0x64, 0x82, 0x48,
+             0x01, 0x8d, 0xac, 0xdc, 0xb9, 0x04, 0x17, 0x88,
+             0x53, 0xa4, 0x6d, 0xca, 0x3a, 0x0e, 0xaa, 0xee,
+             0x74, 0x7c, 0xba, 0x97, 0x43, 0x4e, 0xaf, 0xfa,
+             0xd5, 0x8f, 0xea, 0x82, 0x22, 0x04, 0x7e, 0x0d,
+             0xe6, 0xc3, 0xa6, 0x77, 0x51, 0x06, 0xe0, 0x33,
+             0x1a, 0xd7, 0x14, 0xd2, 0xf2, 0x7a, 0x55, 0x64,
+             0x13, 0x40, 0xa1, 0xf1, 0xdd, 0x9f, 0x94, 0x53,
+             0x2e, 0x68, 0xcb, 0x24, 0x1c, 0xbd, 0xd1, 0x50,
+             0x97, 0x0d, 0x14, 0xe0, 0x5c, 0x5b, 0x17, 0x31,
+             0x93, 0xfb, 0x14, 0xf5, 0x1c, 0x41, 0xf3, 0x93,
+             0x83, 0x5b, 0xf7, 0xf4, 0x16, 0xa7, 0xe0, 0xbb,
+             0xa8, 0x1f, 0xfb, 0x8b, 0x13, 0xaf, 0x0e, 0x21,
+             0x69, 0x1d, 0x7e, 0xce, 0xc9, 0x3b, 0x75, 0xe6,
+             0xe4, 0x18, 0x3a];
+
+        let mut xchacha20 = ChaCha20::new_xchacha20(&key, &nonce);
+        xchacha20.process(&input, &mut stream);
+        assert!(stream[] == result[]);
     }
 }
 
