@@ -161,6 +161,33 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
     }
 }
 
+/// XOR plaintext and keystream, storing the result in dst.
+pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
+    assert!(dst.len() == plaintext.len());
+    assert!(plaintext.len() <= keystream.len());
+
+    let count = plaintext.len();
+    let mut idx = 0;
+
+    // Process as much data in 4 byte blocks as possible.
+    //
+    // Note: As tempting as it may be to use a bunch of gnarly typecasts to
+    // make this go even faster, that will break horribly on platforms that
+    // don't allow unaligned memory access.  The byte-swapping endianness
+    // is arbitrary (and could be removed entirely).
+    for i in range (0, count >> 2) {
+        let p = read_u32_le(&plaintext[i*4..(i+1)*4]);
+        let k = read_u32_le(&keystream[i*4..(i+1)*4]);
+        write_u32_le(&mut dst[i*4..(i+1)*4], p ^ k);
+    }
+    idx += (count >> 2) * 4;
+
+    // Process the leftover.
+    for i in range(idx, count) {
+        dst[i] = plaintext[i] ^ keystream[i];
+    }
+}
+
 
 /// symm_enc_or_dec() implements the necessary functionality to turn a SynchronousStreamCipher into
 /// an Encryptor or Decryptor
