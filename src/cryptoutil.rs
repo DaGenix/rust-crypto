@@ -166,25 +166,12 @@ pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
     assert!(dst.len() == plaintext.len());
     assert!(plaintext.len() <= keystream.len());
 
-    let count = plaintext.len();
-    let mut idx = 0;
-
-    // Process as much data in 4 byte blocks as possible.
-    //
-    // Note: As tempting as it may be to use a bunch of gnarly typecasts to
-    // make this go even faster, that will break horribly on platforms that
-    // don't allow unaligned memory access.  The byte-swapping endianness
-    // is arbitrary (and could be removed entirely).
-    for i in range (0, count >> 2) {
-        let p = read_u32_le(&plaintext[i*4..(i+1)*4]);
-        let k = read_u32_le(&keystream[i*4..(i+1)*4]);
-        write_u32_le(&mut dst[i*4..(i+1)*4], p ^ k);
-    }
-    idx += (count >> 2) * 4;
-
-    // Process the leftover.
-    for i in range(idx, count) {
-        dst[i] = plaintext[i] ^ keystream[i];
+    // Do one byte at a time, using unsafe to skip bounds checking.
+    let p = plaintext.as_ptr();
+    let k = keystream.as_ptr();
+    let d = dst.as_mut_ptr();
+    for i in range(0is, plaintext.len() as isize) {
+        unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
     }
 }
 
