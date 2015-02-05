@@ -6,7 +6,7 @@
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
-use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
+use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
 
 use std::cmp;
 use std::simd::u32x4;
@@ -222,10 +222,7 @@ impl SynchronousStreamCipher for Salsa20 {
 
             // Process the min(available keystream, remaining input length).
             let count = cmp::min(64 - self.offset, len - i);
-            for j in range(0, count) {
-                // j-th byte of the keystream, starting from offset.
-                output[i + j] = input[i + j] ^ self.output[self.offset + j];
-            }
+            xor_keystream(&mut output[i..i+count], &input[i..i+count], &self.output[self.offset..]);
             i += count;
             self.offset += count;
         }
