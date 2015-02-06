@@ -14,6 +14,7 @@
 #![cfg_attr(test, feature(std_misc))]
 #![cfg_attr(test, feature(test))]
 
+extern crate rand;
 extern crate "rustc-serialize" as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;

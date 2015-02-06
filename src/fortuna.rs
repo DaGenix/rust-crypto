@@ -44,7 +44,7 @@
  * say) then you need to EXPLICITLY RESEED THE RNG AFTER FORKING.
  */
 
-use std::rand::{Rng, SeedableRng};
+use rand::{Rng, SeedableRng};
 use time::precise_time_s;
 
 use aessafe::AesSafe256Encryptor;
@@ -250,7 +250,7 @@ impl Rng for Fortuna {
 
 impl<'a> SeedableRng<&'a [u8]> for Fortuna {
     fn from_seed(seed: &'a [u8]) -> Fortuna {
-        let mut ret = Fortuna::new_unseeded(); 
+        let mut ret = Fortuna::new_unseeded();
         ret.reseed(seed);
         ret
     }
@@ -264,9 +264,9 @@ impl<'a> SeedableRng<&'a [u8]> for Fortuna {
 
 #[cfg(test)]
 mod tests {
-    use std::rand::{SeedableRng, Rng};
     use std::time::Duration;
     use std::old_io::timer;
+    use rand::{SeedableRng, Rng};
 
     use super::{Fortuna, Pool, NUM_POOLS};
 
@@ -465,7 +465,7 @@ mod tests {
 
 #[cfg(test)]
 mod bench {
-    use std::rand::{SeedableRng, Rng};
+    use rand::{SeedableRng, Rng};
     use test::Bencher;
 
     use super::Fortuna;

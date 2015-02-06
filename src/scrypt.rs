@@ -16,8 +16,8 @@ use std::iter::repeat;
 use std::old_io::IoResult;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
-use std::rand::{OsRng, Rng};
 
+use rand::{OsRng, Rng};
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
 

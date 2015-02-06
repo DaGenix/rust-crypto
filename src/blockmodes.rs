@@ -1159,8 +1159,8 @@ mod test {
                 D: Decryptor,
                 NewEncFunc: FnMut() -> E,
                 NewDecFunc: FnMut() -> D{
-        use std::rand;
-        use std::rand::Rng;
+        use rand;
+        use rand::Rng;
 
         let tmp : &[_] = &[1, 2, 3, 4];
         let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(tmp);

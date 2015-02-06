@@ -17,4 +17,5 @@ opt-level = 2
 
 [dependencies]
 time = "*"
+rand = "*"
 rustc-serialize = "*"
