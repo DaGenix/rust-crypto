@@ -1045,7 +1045,7 @@ mod test {
         let mut out_pos: usize = 0;
         let eof = Cell::new(false);
 
-        let mut in_end = |&mut: in_pos: usize, primary: bool| {
+        let mut in_end = |in_pos: usize, primary: bool| {
             if eof.get() {
                 return in_len;
             }
@@ -1056,7 +1056,7 @@ mod test {
             cmp::min(in_len, in_pos + cmp::max(x, if primary { 1 } else { 0 }))
         };
 
-        let mut out_end = |&mut: out_pos: usize| {
+        let mut out_end = |out_pos: usize| {
             let x = next_out_len();
             cmp::min(out_len, out_pos + cmp::max(x, 1))
         };
@@ -1168,10 +1168,10 @@ mod test {
         let mut rng3: rand::StdRng = rand::SeedableRng::from_seed(tmp);
         let max_size = cmp::max(test.get_plain().len(), test.get_cipher().len());
 
-        let mut r1 = |&mut:| {
+        let mut r1 = || {
             rng1.gen_range(0, max_size)
         };
-        let mut r2 = |&mut:| {
+        let mut r2 = || {
             rng2.gen_range(0, max_size)
         };
 
