@@ -127,7 +127,7 @@ impl Blake2b {
     }
 
     fn apply_param(&mut self, p: &Blake2bParam) {
-        use std::io::BufWriter;
+        use std::old_io::BufWriter;
 
         let mut param_bytes : [u8; 64] = [0; 64];
         {
@@ -140,9 +140,9 @@ impl Blake2b {
             writer.write_le_u64(p.node_offset).unwrap();
             writer.write_u8(p.node_depth).unwrap();
             writer.write_u8(p.inner_length).unwrap();
-            writer.write(&p.reserved).unwrap();
-            writer.write(&p.salt).unwrap();
-            writer.write(&p.personal).unwrap();
+            writer.write_all(&p.reserved).unwrap();
+            writer.write_all(&p.salt).unwrap();
+            writer.write_all(&p.personal).unwrap();
         }
         let mut param_words : [u64; 8] = [0; 8];
         read_u64v_le(&mut param_words, &param_bytes);
@@ -254,7 +254,7 @@ impl Blake2b {
             let fill = 2 * BLAKE2B_BLOCKBYTES - left;
 
             if input.len() > fill {
-                copy_memory( self.buf.slice_from_mut(left), &input[0..fill] ); // Fill buffer
+                copy_memory( &mut self.buf[left..], &input[0..fill] ); // Fill buffer
                 self.buflen += fill;
                 self.increment_counter( BLAKE2B_BLOCKBYTES as u64);
                 self.compress();
@@ -267,7 +267,7 @@ impl Blake2b {
                 self.buflen -= BLAKE2B_BLOCKBYTES;
                 input = &input[fill..input.len()];
             } else { // inlen <= fill
-                copy_memory(self.buf.slice_from_mut(left), input);
+                copy_memory(&mut self.buf[left..], input);
                 self.buflen += input.len();
                 break;
             }
@@ -291,8 +291,9 @@ impl Blake2b {
             let incby = self.buflen as u64;
             self.increment_counter(incby);
             self.set_lastblock();
-
-            for b in self.buf.slice_from_mut(self.buflen).iter_mut() {
+            let mut temp_buf = self.buf;
+            let buf_slice = &mut temp_buf[self.buflen..];
+            for b in buf_slice.iter_mut() {
                 *b = 0;
             }
             self.compress();

@@ -6,16 +6,22 @@
 
 #![feature(asm)]
 #![feature(box_syntax)]
+#![feature(collections)]
+#![feature(core)]
+#![feature(io)]
 #![feature(simd)]
 #![feature(slicing_syntax)]
+#![cfg_attr(test, feature(std_misc))]
+#![cfg_attr(test, feature(test))]
 
-#![allow(unstable)]
-
+extern crate rand;
 extern crate "rustc-serialize" as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;
 
+pub mod aead;
 pub mod aes;
+pub mod aes_gcm;
 pub mod aessafe;
 pub mod bcrypt;
 pub mod bcrypt_pbkdf;
@@ -24,6 +30,7 @@ pub mod blockmodes;
 pub mod blowfish;
 pub mod buffer;
 pub mod chacha20;
+pub mod chacha20poly1305;
 mod cryptoutil;
 pub mod curve25519;
 pub mod digest;
@@ -31,6 +38,7 @@ pub mod ed25519;
 pub mod fortuna;
 pub mod ghash;
 pub mod hmac;
+pub mod hkdf;
 pub mod mac;
 pub mod md5;
 pub mod pbkdf2;

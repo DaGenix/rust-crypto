@@ -6,172 +6,225 @@
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
-use cryptoutil::{read_u32v_le, symm_enc_or_dec, write_u32_le};
+use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
 
-use std::num::Int;
-use std::slice::bytes::copy_memory;
+use std::cmp;
+use std::simd::u32x4;
+
+#[derive(Copy)]
+struct SalsaState {
+  a: u32x4,
+  b: u32x4,
+  c: u32x4,
+  d: u32x4
+}
 
 #[derive(Copy)]
 pub struct Salsa20 {
-    state: [u8; 64],
+    state: SalsaState,
     output: [u8; 64],
-    counter: u64,
     offset: usize,
 }
 
-fn doubleround(y: &mut [u32; 16]) {
-    y[ 4] = y[ 4] ^ (y[ 0]+y[12]).rotate_left( 7);
-    y[ 8] = y[ 8] ^ (y[ 4]+y[ 0]).rotate_left( 9);
-    y[12] = y[12] ^ (y[ 8]+y[ 4]).rotate_left(13);
-    y[ 0] = y[ 0] ^ (y[12]+y[ 8]).rotate_left(18);
-    
-    y[ 9] = y[ 9] ^ (y[ 5]+y[ 1]).rotate_left( 7);
-    y[13] = y[13] ^ (y[ 9]+y[ 5]).rotate_left( 9);
-    y[ 1] = y[ 1] ^ (y[13]+y[ 9]).rotate_left(13);
-    y[ 5] = y[ 5] ^ (y[ 1]+y[13]).rotate_left(18);
+static S7:u32x4 = u32x4(7, 7, 7, 7);
+static S9:u32x4 = u32x4(9, 9, 9, 9);
+static S13:u32x4 = u32x4(13, 13, 13, 13);
+static S18:u32x4 = u32x4(18, 18, 18, 18);
+static S32:u32x4 = u32x4(32, 32, 32, 32);
 
-    y[14] = y[14] ^ (y[10]+y[ 6]).rotate_left( 7);
-    y[ 2] = y[ 2] ^ (y[14]+y[10]).rotate_left( 9);
-    y[ 6] = y[ 6] ^ (y[ 2]+y[14]).rotate_left(13);
-    y[10] = y[10] ^ (y[ 6]+y[ 2]).rotate_left(18);
+macro_rules! prepare_rowround {
+    ($a: expr, $b: expr, $c: expr) => {{
+        let u32x4(a10, a11, a12, a13) = $a;
+        $a = u32x4(a13, a10, a11, a12);
+        let u32x4(b10, b11, b12, b13) = $b;
+        $b = u32x4(b12, b13, b10, b11);
+        let u32x4(c10, c11, c12, c13) = $c;
+        $c = u32x4(c11, c12, c13, c10);
+    }}
+}
 
-    y[ 3] = y[ 3] ^ (y[15]+y[11]).rotate_left( 7);
-    y[ 7] = y[ 7] ^ (y[ 3]+y[15]).rotate_left( 9);
-    y[11] = y[11] ^ (y[ 7]+y[ 3]).rotate_left(13);
-    y[15] = y[15] ^ (y[11]+y[ 7]).rotate_left(18);
+macro_rules! prepare_columnround {
+    ($a: expr, $b: expr, $c: expr) => {{
+        let u32x4(a13, a10, a11, a12) = $a;
+        $a = u32x4(a10, a11, a12, a13);
+        let u32x4(b12, b13, b10, b11) = $b;
+        $b = u32x4(b10, b11, b12, b13);
+        let u32x4(c11, c12, c13, c10) = $c;
+        $c = u32x4(c10, c11, c12, c13);
+    }}
+}
 
-    y[1] = y[1] ^ (y[0]+y[3]).rotate_left( 7);
-    y[2] = y[2] ^ (y[1]+y[0]).rotate_left( 9);
-    y[3] = y[3] ^ (y[2]+y[1]).rotate_left(13);
-    y[0] = y[0] ^ (y[3]+y[2]).rotate_left(18);
+macro_rules! add_rotate_xor {
+    ($dst: expr, $a: expr, $b: expr, $shift: expr) => {{
+        let v = $a + $b;
+        let r = S32 - $shift;
+        let right = v >> r;
+        $dst ^= (v << $shift) ^ right
+    }}
+}
 
-    y[6] = y[6] ^ (y[5]+y[4]).rotate_left( 7);
-    y[7] = y[7] ^ (y[6]+y[5]).rotate_left( 9);
-    y[4] = y[4] ^ (y[7]+y[6]).rotate_left(13);
-    y[5] = y[5] ^ (y[4]+y[7]).rotate_left(18);
+fn columnround(state: &mut SalsaState) -> () {
+    add_rotate_xor!(state.a, state.d, state.c, S7);
+    add_rotate_xor!(state.b, state.a, state.d, S9);
+    add_rotate_xor!(state.c, state.b, state.a, S13);
+    add_rotate_xor!(state.d, state.c, state.b, S18);
+}
 
-    y[11] = y[11] ^ (y[10]+y[ 9]).rotate_left( 7);
-    y[ 8] = y[ 8] ^ (y[11]+y[10]).rotate_left( 9);
-    y[ 9] = y[ 9] ^ (y[ 8]+y[11]).rotate_left(13);
-    y[10] = y[10] ^ (y[ 9]+y[ 8]).rotate_left(18);
-
-    y[12] = y[12] ^ (y[15]+y[14]).rotate_left( 7);
-    y[13] = y[13] ^ (y[12]+y[15]).rotate_left( 9);
-    y[14] = y[14] ^ (y[13]+y[12]).rotate_left(13);
-    y[15] = y[15] ^ (y[14]+y[13]).rotate_left(18);
+fn rowround(state: &mut SalsaState) -> () {
+    add_rotate_xor!(state.c, state.d, state.a, S7);
+    add_rotate_xor!(state.b, state.c, state.d, S9);
+    add_rotate_xor!(state.a, state.c, state.b, S13);
+    add_rotate_xor!(state.d, state.a, state.b, S18);
 }
 
 impl Salsa20 {
     pub fn new(key: &[u8], nonce: &[u8]) -> Salsa20 {
-        let mut salsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
-
         assert!(key.len() == 16 || key.len() == 32);
         assert!(nonce.len() == 8);
-        
-        if key.len() == 16 {
-            salsa20.expand16(key, nonce);
-        } else {
-            salsa20.expand32(key, nonce);
-        }
-
-        salsa20
+        Salsa20 { state: Salsa20::expand(key, nonce), output: [0; 64], offset: 64 }
     }
 
     pub fn new_xsalsa20(key: &[u8], nonce: &[u8]) -> Salsa20 {
         assert!(key.len() == 32);
         assert!(nonce.len() == 24);
-        let mut xsalsa20 = Salsa20 { state: [0; 64], output: [0; 64], counter: 0, offset: 64 };
-
-        xsalsa20.hsalsa20_expand(key, &nonce[0..16]);
-        xsalsa20.hsalsa20_hash();
+        let mut xsalsa20 = Salsa20 { state: Salsa20::expand(key, &nonce[0..16]), output: [0; 64], offset: 64 };
 
         let mut new_key = [0; 32];
-        copy_memory(&mut new_key[0..4], &xsalsa20.output[0..4]);
-        copy_memory(&mut new_key[4..8], &xsalsa20.output[20..24]);
-        copy_memory(&mut new_key[8..12], &xsalsa20.output[40..44]);
-        copy_memory(&mut new_key[12..16], &xsalsa20.output[60..64]);
-        copy_memory(&mut new_key[16..32], &xsalsa20.output[24..40]);
-
-        xsalsa20.expand32(&new_key, &nonce[16..24]);
+        xsalsa20.hsalsa20_hash(&mut new_key);
+        xsalsa20.state = Salsa20::expand(&new_key, &nonce[16..24]);
 
         xsalsa20
     }
 
-    fn expand16(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
-        copy_memory(&mut self.state[4..20], key);
-        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 49]);
-        copy_memory(&mut self.state[24..32], nonce);
-        copy_memory(&mut self.state[40..44], &[54u8, 45, 98, 121]);
-        copy_memory(&mut self.state[44..60], key);
-        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
-    }
+    fn expand(key: &[u8], nonce: &[u8]) -> SalsaState {
+        let constant = match key.len() {
+            16 => b"expand 16-byte k",
+            32 => b"expand 32-byte k",
+            _  => unreachable!(),
+        };
 
-    fn expand32(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
-        copy_memory(&mut self.state[4..20], &key[0..16]);
-        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 51]);
-        copy_memory(&mut self.state[24..32], nonce);
-        copy_memory(&mut self.state[40..44], &[50u8, 45, 98, 121]);
-        copy_memory(&mut self.state[44..60], &key[16..32]);
-        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
-    }
+        // The state vectors are laid out to facilitate SIMD operation,
+        // instead of the natural matrix ordering.
+        //
+        //  * Constant (x0, x5, x10, x15)
+        //  * Key (x1, x2, x3, x4, x11, x12, x13, x14)
+        //  * Input (x6, x7, x8, x9)
 
-    fn hsalsa20_expand(&mut self, key: &[u8], nonce: &[u8]) {
-        copy_memory(&mut self.state[0..4], &[101u8, 120, 112, 97]);
-        copy_memory(&mut self.state[4..20], &key[0..16]);
-        copy_memory(&mut self.state[20..24], &[110u8, 100, 32, 51]);
-        copy_memory(&mut self.state[24..40], nonce);
-        copy_memory(&mut self.state[40..44], &[50u8, 45, 98, 121]);
-        copy_memory(&mut self.state[44..60], &key[16..32]);
-        copy_memory(&mut self.state[60..64], &[116u8, 101, 32, 107]);
+        let key_tail; // (x11, x12, x13, x14)
+        if key.len() == 16 {
+            key_tail = key;
+        } else {
+            key_tail = &key[16..32];
+        }
+
+        let x8; let x9; // (x8, x9)
+        if nonce.len() == 16 {
+            // HSalsa uses the full 16 byte nonce.
+            x8 = read_u32_le(&nonce[8..12]);
+            x9 = read_u32_le(&nonce[12..16]);
+        } else {
+            x8 = 0;
+            x9 = 0;
+        }
+
+        SalsaState {
+            a: u32x4(
+                read_u32_le(&key[12..16]),      // x4
+                x9,                             // x9
+                read_u32_le(&key_tail[12..16]), // x14
+                read_u32_le(&key[8..12]),       // x3
+            ),
+            b: u32x4(
+                x8,                             // x8
+                read_u32_le(&key_tail[8..12]),  // x13
+                read_u32_le(&key[4..8]),        // x2
+                read_u32_le(&nonce[4..8])       // x7
+            ),
+            c: u32x4(
+                read_u32_le(&key_tail[4..8]),   // x12
+                read_u32_le(&key[0..4]),        // x1
+                read_u32_le(&nonce[0..4]),      // x6
+                read_u32_le(&key_tail[0..4])    // x11
+            ),
+            d: u32x4(
+                read_u32_le(&constant[0..4]),   // x0
+                read_u32_le(&constant[4..8]),   // x5
+                read_u32_le(&constant[8..12]),  // x10
+                read_u32_le(&constant[12..16]), // x15
+            )
+        }
     }
 
     fn hash(&mut self) {
-        write_u32_le(&mut self.state[32..36], self.counter as u32);
-        write_u32_le(&mut self.state[36..40], (self.counter >> 32) as u32);
-        
-        let mut x = [0u32; 16];
-        let mut z = [0u32; 16];
-        read_u32v_le(x.as_mut_slice(), &self.state);
-        read_u32v_le(z.as_mut_slice(), &self.state);
+        let mut state = self.state;
         for _ in range(0, 10) {
-            doubleround(&mut z);
+            columnround(&mut state);
+            prepare_rowround!(state.a, state.b, state.c);
+            rowround(&mut state);
+            prepare_columnround!(state.a, state.b, state.c);
         }
-        for i in range(0, 16) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], x[i] + z[i]);
+        let u32x4(x4, x9, x14, x3) = self.state.a + state.a;
+        let u32x4(x8, x13, x2, x7) = self.state.b + state.b;
+        let u32x4(x12, x1, x6, x11) = self.state.c + state.c;
+        let u32x4(x0, x5, x10, x15) = self.state.d + state.d;
+        let lens = [
+             x0,  x1,  x2,  x3,
+             x4,  x5,  x6,  x7,
+             x8,  x9, x10, x11,
+            x12, x13, x14, x15
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
         }
-        
-        self.counter += 1;
+
+        self.state.b += u32x4(1, 0, 0, 0);
+        let u32x4(_, _, _, ctr_lo) = self.state.b;
+        if ctr_lo == 0 {
+            self.state.a += u32x4(0, 1, 0, 0);
+        }
+
         self.offset = 0;
     }
 
-    fn hsalsa20_hash(&mut self) {
-        let mut x = [0u32; 16];
-        read_u32v_le(x.as_mut_slice(), &self.state);
+    fn hsalsa20_hash(&mut self, out: &mut [u8]) {
+        let mut state = self.state;
         for _ in range(0, 10) {
-            doubleround(&mut x);
+            columnround(&mut state);
+            prepare_rowround!(state.a, state.b, state.c);
+            rowround(&mut state);
+            prepare_columnround!(state.a, state.b, state.c);
         }
-        for i in range(0, 16) {
-            write_u32_le(&mut self.output[i*4..(i+1)*4], x[i]);
+        let u32x4(_, x9, _, _) = state.a;
+        let u32x4(x8, _, _, x7) = state.b;
+        let u32x4(_, _, x6, _) = state.c;
+        let u32x4(x0, x5, x10, x15) = state.d;
+        let lens = [
+            x0, x5, x10, x15,
+            x6, x7, x8, x9
+        ];
+        for i in range(0, lens.len()) {
+            write_u32_le(&mut out[i*4..(i+1)*4], lens[i]);
         }
-    }
-
-    fn next(&mut self) -> u8 {
-        if self.offset == 64 {
-            self.hash();
-        }
-        let ret = self.output[self.offset];
-        self.offset += 1;
-        ret
     }
 }
 
 impl SynchronousStreamCipher for Salsa20 {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         assert!(input.len() == output.len());
-        for (x, y) in input.iter().zip(output.iter_mut()) {
-            *y = *x ^ self.next();
+        let len = input.len();
+        let mut i = 0;
+        while i < len {
+            // If there is no keystream available in the output buffer,
+            // generate the next block.
+            if self.offset == 64 {
+                self.hash();
+            }
+
+            // Process the min(available keystream, remaining input length).
+            let count = cmp::min(64 - self.offset, len - i);
+            xor_keystream(&mut output[i..i+count], &input[i..i+count], &self.output[self.offset..]);
+            i += count;
+            self.offset += count;
         }
     }
 }
@@ -192,8 +245,13 @@ impl Decryptor for Salsa20 {
 
 #[cfg(test)]
 mod test {
+    use std::iter::repeat;
+
     use salsa20::Salsa20;
     use symmetriccipher::SynchronousStreamCipher;
+
+    use digest::Digest;
+    use sha2::Sha256;
 
     #[test]
     fn test_salsa20_128bit_ecrypt_set_1_vector_0() {
@@ -237,6 +295,30 @@ mod test {
         let mut salsa20 = Salsa20::new(&key, &nonce);
         salsa20.process(&input, &mut stream);
         assert!(stream[] == result[]);
+    }
+
+    #[test]
+    fn test_salsa20_256bit_nacl_vector_2() {
+        let key = [
+            0xdc,0x90,0x8d,0xda,0x0b,0x93,0x44,0xa9,
+            0x53,0x62,0x9b,0x73,0x38,0x20,0x77,0x88,
+            0x80,0xf3,0xce,0xb4,0x21,0xbb,0x61,0xb9,
+            0x1c,0xbd,0x4c,0x3e,0x66,0x25,0x6c,0xe4
+        ];
+        let nonce = [
+            0x82,0x19,0xe0,0x03,0x6b,0x7a,0x0b,0x37
+        ];
+        let input: Vec<u8> = repeat(0).take(4194304).collect();
+        let mut stream: Vec<u8> = repeat(0).take(input.len()).collect();
+        let output_str = "662b9d0e3463029156069b12f918691a98f7dfb2ca0393c96bbfc6b1fbd630a2";
+
+        let mut salsa20 = Salsa20::new(&key, &nonce);
+        salsa20.process(input.as_slice(), stream.as_mut_slice());
+
+        let mut sh = Sha256::new();
+        sh.input(stream.as_slice());
+        let out_str = sh.result_str();
+        assert!(&out_str[] == output_str);
     }
 
     #[test]

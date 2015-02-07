@@ -10,10 +10,10 @@
  */
 
 use std::iter::repeat;
-use std::io::IoResult;
-use std::rand::{OsRng, Rng};
+use std::old_io::IoResult;
 use std::num::Int;
 
+use rand::{OsRng, Rng};
 use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
 

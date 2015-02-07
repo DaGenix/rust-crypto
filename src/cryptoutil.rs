@@ -29,6 +29,17 @@ pub fn write_u64_be(dst: &mut[u8], mut input: u64) {
     }
 }
 
+/// Write a u64 into a vector, which must be 8 bytes long. The value is written in little-endian
+/// format.
+pub fn write_u64_le(dst: &mut[u8], mut input: u64) {
+    assert!(dst.len() == 8);
+    input = input.to_le();
+    unsafe {
+        let tmp = &input as *const _ as *const u8;
+        ptr::copy_nonoverlapping_memory(dst.get_unchecked_mut(0), tmp, 8);
+    }
+}
+
 /// Write a vector of u64s into a vector of bytes. The values are written in little-endian format.
 pub fn write_u64v_le(dst: &mut[u8], input: &[u64]) {
     assert!(dst.len() == 8 * input.len());
@@ -147,6 +158,20 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
         let mut tmp: u32 = mem::uninitialized();
         ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, input.get_unchecked(0), 4);
         Int::from_be(tmp)
+    }
+}
+
+/// XOR plaintext and keystream, storing the result in dst.
+pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
+    assert!(dst.len() == plaintext.len());
+    assert!(plaintext.len() <= keystream.len());
+
+    // Do one byte at a time, using unsafe to skip bounds checking.
+    let p = plaintext.as_ptr();
+    let k = keystream.as_ptr();
+    let d = dst.as_mut_ptr();
+    for i in range(0is, plaintext.len() as isize) {
+        unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
     }
 }
 
@@ -427,8 +452,8 @@ pub mod test {
     use std::iter::repeat;
     use std::num::Int;
 
-    use std::rand::IsaacRng;
-    use std::rand::distributions::{IndependentSample, Range};
+    use rand::IsaacRng;
+    use rand::distributions::{IndependentSample, Range};
 
     use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple};
     use digest::Digest;
