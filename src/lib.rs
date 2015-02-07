@@ -6,11 +6,15 @@
 
 #![feature(asm)]
 #![feature(box_syntax)]
+#![feature(collections)]
+#![feature(core)]
+#![feature(io)]
 #![feature(simd)]
 #![feature(slicing_syntax)]
+#![cfg_attr(test, feature(std_misc))]
+#![cfg_attr(test, feature(test))]
 
-#![allow(unstable)]
-
+extern crate rand;
 extern crate "rustc-serialize" as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;

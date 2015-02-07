@@ -455,6 +455,7 @@ mod test {
         assert!(stream[] == result[]);
     }
 
+    #[test]
     fn test_chacha20_256_tls_vectors_96_nonce() {
         struct TestVector {
             key:   [u8; 32],

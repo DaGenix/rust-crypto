@@ -4,14 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(unstable)]
+#![feature(collections)]
 
 extern crate crypto;
+extern crate rand;
 
 use crypto::{ symmetriccipher, buffer, aes, blockmodes };
 use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
 
-use std::rand::{ Rng, OsRng };
+use rand::{ Rng, OsRng };
 
 // Encrypt a buffer with the given key and iv using
 // AES-256/CBC/Pkcs encryption.

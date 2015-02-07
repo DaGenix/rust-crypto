@@ -452,8 +452,8 @@ pub mod test {
     use std::iter::repeat;
     use std::num::Int;
 
-    use std::rand::IsaacRng;
-    use std::rand::distributions::{IndependentSample, Range};
+    use rand::IsaacRng;
+    use rand::distributions::{IndependentSample, Range};
 
     use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple};
     use digest::Digest;
