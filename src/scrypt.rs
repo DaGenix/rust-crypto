@@ -16,6 +16,7 @@ use std::iter::repeat;
 use std::old_io::IoResult;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
+use std::simd::u32x4;
 
 use rand::{OsRng, Rng};
 use serialize::base64;
@@ -26,6 +27,116 @@ use hmac::Hmac;
 use pbkdf2::pbkdf2;
 use sha2::Sha256;
 use util::fixed_time_eq;
+
+#[derive(Copy)]
+struct SalsaState {
+  a: u32x4,
+  b: u32x4,
+  c: u32x4,
+  d: u32x4
+}
+
+static S7:u32x4 = u32x4(7, 7, 7, 7);
+static S9:u32x4 = u32x4(9, 9, 9, 9);
+static S13:u32x4 = u32x4(13, 13, 13, 13);
+static S18:u32x4 = u32x4(18, 18, 18, 18);
+static S32:u32x4 = u32x4(32, 32, 32, 32);
+
+macro_rules! prepare_rowround {
+    ($a: expr, $b: expr, $c: expr) => {{
+        let u32x4(a10, a11, a12, a13) = $a;
+        $a = u32x4(a13, a10, a11, a12);
+        let u32x4(b10, b11, b12, b13) = $b;
+        $b = u32x4(b12, b13, b10, b11);
+        let u32x4(c10, c11, c12, c13) = $c;
+        $c = u32x4(c11, c12, c13, c10);
+    }}
+}
+
+macro_rules! prepare_columnround {
+    ($a: expr, $b: expr, $c: expr) => {{
+        let u32x4(a13, a10, a11, a12) = $a;
+        $a = u32x4(a10, a11, a12, a13);
+        let u32x4(b12, b13, b10, b11) = $b;
+        $b = u32x4(b10, b11, b12, b13);
+        let u32x4(c11, c12, c13, c10) = $c;
+        $c = u32x4(c10, c11, c12, c13);
+    }}
+}
+
+macro_rules! add_rotate_xor {
+    ($dst: expr, $a: expr, $b: expr, $shift: expr) => {{
+        let v = $a + $b;
+        let r = S32 - $shift;
+        let right = v >> r;
+        $dst ^= (v << $shift) ^ right
+    }}
+}
+
+fn columnround(state: &mut SalsaState) -> () {
+    add_rotate_xor!(state.a, state.d, state.c, S7);
+    add_rotate_xor!(state.b, state.a, state.d, S9);
+    add_rotate_xor!(state.c, state.b, state.a, S13);
+    add_rotate_xor!(state.d, state.c, state.b, S18);
+}
+
+fn rowround(state: &mut SalsaState) -> () {
+    add_rotate_xor!(state.c, state.d, state.a, S7);
+    add_rotate_xor!(state.b, state.c, state.d, S9);
+    add_rotate_xor!(state.a, state.c, state.b, S13);
+    add_rotate_xor!(state.d, state.a, state.b, S18);
+}
+
+fn salsa20_8_simd(input: &[u8], output: &mut [u8]) {
+    //
+    let len = input.len();
+    let len_u32 = len / 4;
+
+    let input_u32 = [0u32; 16];
+    read_u32v_le(&mut input_u32, &input);
+
+    unsafe {
+        let input_ptr = transmute::<&[u32], &[u32x4]>(input_u32);
+    }
+
+    let state = SalsaState {
+        a: input_ptr[0],
+        b: input_ptr[1],
+        c: input_ptr[2],
+        d: input_ptr[3]
+    };
+
+    let state_orig = state;
+
+    // let state = SalsaState {
+    //     a: u32x4(input_u32[0], input_u32[1], input_u32[2], input_u32[3]),
+    //     b: u32x4(input_u32[4], input_u32[5], input_u32[6], input_u32[7]),
+    //     c: u32x4(input_u32[8], input_u32[9], input_u32[10], input_u32[11]),
+    //     d: u32x4(input_u32[12], input_u32[13], input_u32[14], input_u32[15])
+    // };
+
+    for _ in range(0, 4) {
+        columnround(&mut state);
+        prepare_rowround!(a, b, c);
+        rowround(&mut state);
+        prepare_columnround!(a, b, c);
+    }
+
+    let u32x4(x4, x9, x14, x3) = state.a + state_orig.a;
+    let u32x4(x8, x13, x2, x7) = state.b + state_orig.b;
+    let u32x4(x12, x1, x6, x11) = state.c + state_orig.c;
+    let u32x4(x0, x5, x10, x15) = state.d + state_orig.d;
+    let lens = [
+         x0,  x1,  x2,  x3,
+         x4,  x5,  x6,  x7,
+         x8,  x9, x10, x11,
+        x12, x13, x14, x15
+    ];
+
+    for i in range(0, lens.len()) {
+        write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
+    }
+}
 
 // The salsa20/8 core function.
 fn salsa20_8(input: &[u8], output: &mut [u8]) {
