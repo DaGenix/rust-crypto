@@ -1,6 +1,6 @@
 use digest::Digest;
 use sha2::{Sha512};
-use curve25519::{GeP2, GeP3, ge_scalarmult_base, sc_reduce, sc_muladd};
+use curve25519::{GeP2, GeP3, ge_scalarmult_base, sc_reduce, sc_muladd, curve25519, Fe};
 use util::{fixed_time_eq};
 use std::iter::range_step;
 
@@ -119,6 +119,33 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
     let rcheck = r.to_bytes();
 
     fixed_time_eq(rcheck.as_slice(), &signature[0..32])
+}
+
+pub fn exchange(public_key: &[u8], private_key: &[u8]) -> [u8; 32] {
+    let ed_y = Fe::from_bytes(&public_key);
+    let ed_z = Fe([1,0,0,0,0,0,0,0,0,0]);
+    // Produce public key in Montgomery form.
+    let mont_x = edwards_to_montgomery_x(&ed_y, &ed_z);
+    // Produce private key from seed component (bytes 0 to 32) 
+    // of extended secret key (64 bytes).
+    let mut hasher = Sha512::new();
+    hasher.input(&private_key[0..32]);
+    let mut hash: [u8; 64] = [0; 64];
+    hasher.result(&mut hash);
+
+    let shared_mont_x : [u8; 32] = curve25519::curve25519(&hash, &mont_x); // priv., pub.
+    /* Normally need to clamp this produced private key (hash), 
+       but this is done by curve25519 function proior to processing. */
+    shared_mont_x
+    // For NaCl compatibility, subsequent step required: HSalsa20 hashing.
+}
+
+fn edwards_to_montgomery_x(ed_y: Fe, ed_z: Fe) -> Fe {
+    let temp_x = ed_z.add(ed_y);
+    let temp_z = ed_z.sub(ed_y);
+    temp_z = temp_z.invert();
+    let mont_x = temp_x.mul(temp_z);
+    mont_x
 }
 
 #[cfg(test)]
