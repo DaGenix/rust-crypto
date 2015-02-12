@@ -9,10 +9,647 @@
 // except according to those terms.
 
 use std::iter::range_step;
-
-use cryptoutil::{write_u64_be, write_u32_be, read_u64v_be, read_u32v_be, add_bytes_to_bits,
-    add_bytes_to_bits_tuple, FixedBuffer, FixedBuffer128, FixedBuffer64, StandardPadding};
+use std::simd::{u32x4, u64x2};
+use std::num::Int;
 use digest::Digest;
+use cryptoutil::{write_u64_be, write_u32_be, add_bytes_to_bits, add_bytes_to_bits_tuple,
+                 FixedBuffer, FixedBuffer128, FixedBuffer64, StandardPadding};
+
+const STATE_LEN: usize = 8;
+const BLOCK_LEN: usize = 16;
+
+/// Not an intrinsic, but works like an unaligned load.
+#[inline]
+fn sha256load(v2: u32x4, v3: u32x4) -> u32x4 {
+
+    // Emulates `pblendd` intrinsic.
+    #[inline]
+    fn pblendd_0x7(a: u32x4, b: u32x4) -> u32x4 {
+        let u32x4(a3, _, _, _) = a;
+        let u32x4(_, b2, b1, b0) = b;
+        u32x4(a3, b2, b1, b0)
+    }
+
+    // Emulates `pshufd` intrinsic.
+    #[inline]
+    fn pshufd_0x39(a: u32x4) -> u32x4 {
+        let u32x4(a3, a2, a1, a0) = a;
+        u32x4(a0, a3, a2, a1)
+    }
+
+    pblendd_0x7(pshufd_0x39(v3), pshufd_0x39(v2))
+}
+
+/// Not an intrinsic, but useful for swapping vectors.
+#[inline]
+fn sha256swap(v0: u32x4) -> u32x4 {
+
+    // Emulates `pshufd` intrinsic.
+    #[inline]
+    fn pshufd_0x4e(a: u32x4) -> u32x4 {
+        let u32x4(a3, a2, a1, a0) = a;
+        u32x4(a1, a0, a3, a2)
+    }
+
+    pshufd_0x4e(v0)
+}
+
+/// Emulates `llvm.x86.sha256msg1` intrinsic.
+#[inline]
+pub fn sha256msg1(v0: u32x4, v1: u32x4) -> u32x4 {
+
+    // sigma 0 on vectors
+    #[inline]
+    fn sigma0x4(x: u32x4) -> u32x4 {
+        ((x >> u32x4( 7,  7,  7,  7)) | (x << u32x4(25, 25, 25, 25))) ^
+        ((x >> u32x4(18, 18, 18, 18)) | (x << u32x4(14, 14, 14, 14))) ^
+         (x >> u32x4( 3,  3,  3,  3))
+    }
+
+    v0 + sigma0x4(sha256load(v0, v1))
+}
+
+/// Emulates `llvm.x86.sha256msg2` intrinsic.
+#[inline]
+pub fn sha256msg2(v4: u32x4, v3: u32x4) -> u32x4 {
+
+    // sigma 1 on scalars
+    #[inline]
+    fn sigma1(x: u32) -> u32 {
+        ((x >> 17) | (x << 15)) ^ ((x >> 19) | (x << 13)) ^ (x >> 10)
+    }
+
+    let u32x4(x3, x2, x1, x0) = v4;
+    let u32x4(w15, w14, _, _) = v3;
+
+    let w16 = x0 + sigma1(w14);
+    let w17 = x1 + sigma1(w15);
+    let w18 = x2 + sigma1(w16);
+    let w19 = x3 + sigma1(w17);
+
+    u32x4(w19, w18, w17, w16)
+}
+
+/// Emulates `llvm.x86.sha256rnds2` intrinsic.
+#[inline]
+pub fn sha256rnds2(cdgh: u32x4, abef: u32x4, wk: u32x4) -> u32x4 {
+
+    macro_rules! big_sigma0 {
+        ($a:expr) => (($a.rotate_right(2) ^ $a.rotate_right(13) ^ $a.rotate_right(22)))
+    }
+    macro_rules! big_sigma1 {
+        ($a:expr) => (($a.rotate_right(6) ^ $a.rotate_right(11) ^ $a.rotate_right(25)))
+    } 
+    macro_rules! bool3ary_202 {
+        ($a:expr, $b:expr, $c:expr) => (($c ^ ($a & ($b ^ $c))))
+    } // Choose, MD5F, SHA1C
+    macro_rules! bool3ary_232 {
+        ($a:expr, $b:expr, $c:expr) => (($a & $b) ^ ($a & $c) ^ ($b & $c))
+    } // Majority, SHA1M
+
+    let u32x4(_, _, wk1, wk0) = wk;
+    let u32x4(a0, b0, e0, f0) = abef;
+    let u32x4(c0, d0, g0, h0) = cdgh;
+
+    // a round
+    let x0 = big_sigma1!(e0) + bool3ary_202!(e0, f0, g0) + wk0 + h0;
+    let y0 = big_sigma0!(a0) + bool3ary_232!(a0, b0, c0);
+    let (a1, b1, c1, d1, e1, f1, g1, h1) = (
+        x0 + y0, a0, b0, c0,
+        x0 + d0, e0, f0, g0);
+
+    // a round
+    let x1 = big_sigma1!(e1) + bool3ary_202!(e1, f1, g1) + wk1 + h1;
+    let y1 = big_sigma0!(a1) + bool3ary_232!(a1, b1, c1);
+    let (a2, b2, _, _, e2, f2, _, _) = (
+        x1 + y1, a1, b1, c1,
+        x1 + d1, e1, f1, g1);
+
+    u32x4(a2, b2, e2, f2)
+}
+
+/// Process a block with the SHA-2 SHA-256 algorithm.
+///
+/// Internally, this uses functions which resemble the new Intel SHA instruction sets,
+/// and so it's data locality properties may improve performance. However, to benefit
+/// the most from this implementation, replace these functions with x86 intrinsics to
+/// get a possible speed boost.
+#[inline]
+pub fn sha256_digest_block_u32(state: &mut [u32/*; 8*/], block: &[u32/*; 16*/]) {
+    let k = &K32X4;
+
+    let mut abef = u32x4(state[0],
+                         state[1],
+                         state[4],
+                         state[5]);
+    let mut cdgh = u32x4(state[2],
+                         state[3],
+                         state[6],
+                         state[7]);
+
+    macro_rules! schedule {
+        ($v0:expr, $v1:expr, $v2:expr, $v3:expr) => (
+            sha256msg2(sha256msg1($v0, $v1) + sha256load($v2, $v3), $v3)
+        )
+    }
+
+    macro_rules! rounds4 {
+        ($abef:ident, $cdgh:ident, $rest:expr) => {
+            {
+                $cdgh = sha256rnds2($cdgh, $abef, $rest);
+                $abef = sha256rnds2($abef, $cdgh, sha256swap($rest));
+            }
+        }
+    }
+
+    // Rounds 0..64
+    let mut w0 = u32x4(block[3].to_be(),
+                       block[2].to_be(),
+                       block[1].to_be(),
+                       block[0].to_be());
+    rounds4!(abef, cdgh, k[0] + w0);
+    let mut w1 = u32x4(block[7].to_be(),
+                       block[6].to_be(),
+                       block[5].to_be(),
+                       block[4].to_be());
+    rounds4!(abef, cdgh, k[1] + w1);
+    let mut w2 = u32x4(block[11].to_be(),
+                       block[10].to_be(),
+                       block[9].to_be(),
+                       block[8].to_be());
+    rounds4!(abef, cdgh, k[2] + w2);
+    let mut w3 = u32x4(block[15].to_be(),
+                       block[14].to_be(),
+                       block[13].to_be(),
+                       block[12].to_be());
+    rounds4!(abef, cdgh, k[3] + w3);
+    let mut w4 = schedule!(w0, w1, w2, w3);
+    rounds4!(abef, cdgh, k[4] + w4);
+    w0 = schedule!(w1, w2, w3, w4);
+    rounds4!(abef, cdgh, k[5] + w0);
+    w1 = schedule!(w2, w3, w4, w0);
+    rounds4!(abef, cdgh, k[6] + w1);
+    w2 = schedule!(w3, w4, w0, w1);
+    rounds4!(abef, cdgh, k[7] + w2);
+    w3 = schedule!(w4, w0, w1, w2);
+    rounds4!(abef, cdgh, k[8] + w3);
+    w4 = schedule!(w0, w1, w2, w3);
+    rounds4!(abef, cdgh, k[9] + w4);
+    w0 = schedule!(w1, w2, w3, w4);
+    rounds4!(abef, cdgh, k[10] + w0);
+    w1 = schedule!(w2, w3, w4, w0);
+    rounds4!(abef, cdgh, k[11] + w1);
+    w2 = schedule!(w3, w4, w0, w1);
+    rounds4!(abef, cdgh, k[12] + w2);
+    w3 = schedule!(w4, w0, w1, w2);
+    rounds4!(abef, cdgh, k[13] + w3);
+    w4 = schedule!(w0, w1, w2, w3);
+    rounds4!(abef, cdgh, k[14] + w4);
+    w0 = schedule!(w1, w2, w3, w4);
+    rounds4!(abef, cdgh, k[15] + w0);
+
+    let u32x4(a, b, e, f) = abef;
+    let u32x4(c, d, g, h) = cdgh;
+
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+    state[5] += f;
+    state[6] += g;
+    state[7] += h;
+}
+
+/// Process a block with the SHA-2 SHA-256 algorithm.
+///
+/// The original safe implementation.
+#[inline]
+pub fn sha256_digest_block_u32_safe(state: &mut [u32/*; 8*/], block: &[u32/*; 16*/]) {
+
+    fn ch(x: u32, y: u32, z: u32) -> u32 {
+        ((x & y) ^ ((!x) & z))
+    }
+
+    fn maj(x: u32, y: u32, z: u32) -> u32 {
+        ((x & y) ^ (x & z) ^ (y & z))
+    }
+
+    fn sum0(x: u32) -> u32 {
+        ((x >> 2) | (x << 30)) ^ ((x >> 13) | (x << 19)) ^ ((x >> 22) | (x << 10))
+    }
+
+    fn sum1(x: u32) -> u32 {
+        ((x >> 6) | (x << 26)) ^ ((x >> 11) | (x << 21)) ^ ((x >> 25) | (x << 7))
+    }
+
+    fn sigma0(x: u32) -> u32 {
+        ((x >> 7) | (x << 25)) ^ ((x >> 18) | (x << 14)) ^ (x >> 3)
+    }
+
+    fn sigma1(x: u32) -> u32 {
+        ((x >> 17) | (x << 15)) ^ ((x >> 19) | (x << 13)) ^ (x >> 10)
+    }
+
+    let mut a = state[0];
+    let mut b = state[1];
+    let mut c = state[2];
+    let mut d = state[3];
+    let mut e = state[4];
+    let mut f = state[5];
+    let mut g = state[6];
+    let mut h = state[7];
+
+    let mut w = [0u32; 64];
+
+    // Sha-512 and Sha-256 use basically the same calculations which are implemented
+    // by these macros. Inlining the calculations seems to result in better generated code.
+    macro_rules! schedule {
+        ($t:expr) => (
+            w[$t] = sigma1(w[$t - 2]) + w[$t - 7] + sigma0(w[$t - 15]) + w[$t - 16];
+        )
+    }
+
+    macro_rules! round {
+        ($A:ident, $B:ident, $C:ident, $D:ident,
+         $E:ident, $F:ident, $G:ident, $H:ident, $K:ident, $t:expr) => {
+            {
+                $H += sum1($E) + ch($E, $F, $G) + $K[$t] + w[$t];
+                $D += $H;
+                $H += sum0($A) + maj($A, $B, $C);
+            }
+        }
+    }
+
+    for t in 0..16 {
+        w[t] = block[t].to_be();
+    }
+
+    // Putting the message schedule inside the same loop as the round calculations allows for
+    // the compiler to generate better code.
+    for t in range_step(0, 48, 8) {
+        schedule!(t + 16);
+        schedule!(t + 17);
+        schedule!(t + 18);
+        schedule!(t + 19);
+        schedule!(t + 20);
+        schedule!(t + 21);
+        schedule!(t + 22);
+        schedule!(t + 23);
+
+        round!(a, b, c, d, e, f, g, h, K32, t);
+        round!(h, a, b, c, d, e, f, g, K32, t + 1);
+        round!(g, h, a, b, c, d, e, f, K32, t + 2);
+        round!(f, g, h, a, b, c, d, e, K32, t + 3);
+        round!(e, f, g, h, a, b, c, d, K32, t + 4);
+        round!(d, e, f, g, h, a, b, c, K32, t + 5);
+        round!(c, d, e, f, g, h, a, b, K32, t + 6);
+        round!(b, c, d, e, f, g, h, a, K32, t + 7);
+    }
+
+    for t in range_step(48, 64, 8) {
+        round!(a, b, c, d, e, f, g, h, K32, t);
+        round!(h, a, b, c, d, e, f, g, K32, t + 1);
+        round!(g, h, a, b, c, d, e, f, K32, t + 2);
+        round!(f, g, h, a, b, c, d, e, K32, t + 3);
+        round!(e, f, g, h, a, b, c, d, K32, t + 4);
+        round!(d, e, f, g, h, a, b, c, K32, t + 5);
+        round!(c, d, e, f, g, h, a, b, K32, t + 6);
+        round!(b, c, d, e, f, g, h, a, K32, t + 7);
+    }
+
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+    state[5] += f;
+    state[6] += g;
+    state[7] += h;
+}
+
+/// Process a block with the SHA-2 SHA-256 algorithm.
+///
+/// Chooses an implementation based on architecture,
+/// and whether or not the architecture supports SHA
+/// instruction set extensions.
+pub fn sha256_digest_block(state: &mut [u32/*; 8*/], bytes: &[u8/*; 64*/]) {
+    assert_eq!(state.len(), STATE_LEN);
+    assert_eq!(bytes.len(), BLOCK_LEN*4);
+    let (words, _): (&[u32; 16], usize) = unsafe {
+        ::std::mem::transmute(bytes)
+    };
+    sha256_digest_block_u32_safe(state, &words[]);
+}
+
+/// Not an intrinsic, but works like an unaligned load.
+#[inline]
+fn sha512load(v0: u64x2, v1: u64x2) -> u64x2 {
+    let u64x2(w1, _) 	= v0;
+    let u64x2(_, w2) 	= v1;
+
+    u64x2(w2, w1)
+}
+
+/// Not an intrinsic, but performs two SHA-512 work schedules.
+#[inline]
+pub fn sha512msg(v0: u64x2, v1: u64x2, v4to5: u64x2, v7: u64x2) -> u64x2 {
+
+    // sigma 0
+    fn sigma0(x: u64) -> u64 {
+        ((x << 63) | (x >> 1)) ^ ((x << 56) | (x >> 8)) ^ (x >> 7)
+    }
+
+    // sigma 1
+    fn sigma1(x: u64) -> u64 {
+        ((x << 45) | (x >> 19)) ^ ((x << 3) | (x >> 61)) ^ (x >> 6)
+    }
+
+    let u64x2(w1, w0) 	= v0;
+    let u64x2(_, w2) 	= v1;
+    let u64x2(w10, w9) 	= v4to5;
+    let u64x2(w15, w14) = v7;
+
+    let w16 = sigma1(w14) + w9  + sigma0(w1) + w0;
+    let w17 = sigma1(w15) + w10 + sigma0(w2) + w1;
+
+    u64x2(w17, w16)
+}
+
+/// Not an intrinsic, but performs one round of SHA-512.
+#[inline]
+pub fn sha512rnd(ae: u64x2, bf: u64x2, cg: u64x2, dh: u64x2, wk0: u64) -> u64x2 {
+
+    macro_rules! big_sigma0 {
+        ($a:expr) => (($a.rotate_right(28) ^ $a.rotate_right(34) ^ $a.rotate_right(39)))
+    }
+    macro_rules! big_sigma1 {
+        ($a:expr) => (($a.rotate_right(14) ^ $a.rotate_right(18) ^ $a.rotate_right(41)))
+    } 
+    macro_rules! bool3ary_202 {
+        ($a:expr, $b:expr, $c:expr) => (($c ^ ($a & ($b ^ $c))))
+    } // Choose, MD5F, SHA1C
+    macro_rules! bool3ary_232 {
+        ($a:expr, $b:expr, $c:expr) => (($a & $b) ^ ($a & $c) ^ ($b & $c))
+    } // Majority, SHA1M
+
+    let u64x2(a0, e0) = ae;
+    let u64x2(b0, f0) = bf;
+    let u64x2(c0, g0) = cg;
+    let u64x2(d0, h0) = dh;
+
+    // a round
+    let x0 = big_sigma1!(e0) + bool3ary_202!(e0, f0, g0) + wk0 + h0;
+    let y0 = big_sigma0!(a0) + bool3ary_232!(a0, b0, c0);
+    let (a1, _, _, _, e1, _, _, _) = (
+        x0 + y0, a0, b0, c0,
+        x0 + d0, e0, f0, g0);
+
+    u64x2(a1, e1)
+}
+
+/// Process a block with the SHA-2 SHA-512 algorithm.
+pub fn sha512_digest_block_u64(state: &mut [u64/*; 8*/], block: &[u64/*; 16*/]) {
+    let k = &K64X2;
+
+    let mut ae = u64x2(state[0],
+                       state[4]);
+    let mut bf = u64x2(state[1],
+                       state[5]);
+    let mut cg = u64x2(state[2],
+                       state[6]);
+    let mut dh = u64x2(state[3],
+                       state[7]);
+
+    macro_rules! schedule {
+        ($v0:expr, $v1:expr, $v4:expr, $v5:expr, $v7:expr) => (
+             sha512msg($v0, $v1, sha512load($v4, $v5), $v7)
+        )
+    }
+
+    macro_rules! rounds4 {
+        ($ae:ident, $bf:ident, $cg:ident, $dh:ident, $wk0:expr, $wk1:expr) => {
+            {
+                let u64x2(u, t) = $wk0;
+                let u64x2(w, v) = $wk1;
+
+                $dh = sha512rnd($ae, $bf, $cg, $dh, t);
+                $cg = sha512rnd($dh, $ae, $bf, $cg, u);
+                $bf = sha512rnd($cg, $dh, $ae, $bf, v);
+                $ae = sha512rnd($bf, $cg, $dh, $ae, w);
+            }
+        }
+    }
+
+    // Rounds 0..20
+    let (mut w1, mut w0) = (u64x2(block[3].to_be(),
+                                  block[2].to_be()),
+                            u64x2(block[1].to_be(),
+                                  block[0].to_be()));
+    rounds4!(ae, bf, cg, dh, k[0] + w0, k[1] + w1);
+    let (mut w3, mut w2) = (u64x2(block[7].to_be(),
+                                  block[6].to_be()),
+                            u64x2(block[5].to_be(),
+                                  block[4].to_be()));
+    rounds4!(ae, bf, cg, dh, k[2] + w2, k[3] + w3);
+    let (mut w5, mut w4) = (u64x2(block[11].to_be(),
+                                  block[10].to_be()),
+                            u64x2(block[9].to_be(),
+                                  block[8].to_be()));
+    rounds4!(ae, bf, cg, dh, k[4] + w4, k[5] + w5);
+    let (mut w7, mut w6) = (u64x2(block[15].to_be(),
+                                  block[14].to_be()),
+                            u64x2(block[13].to_be(),
+                                  block[12].to_be()));
+    rounds4!(ae, bf, cg, dh, k[6] + w6, k[7] + w7);
+    let mut w8 = schedule!(w0, w1, w4, w5, w7);
+    let mut w9 = schedule!(w1, w2, w5, w6, w8);
+    rounds4!(ae, bf, cg, dh, k[8] + w8, k[9] + w9);
+
+    // Rounds 20..40
+    w0 = schedule!(w2, w3, w6, w7, w9);
+    w1 = schedule!(w3, w4, w7, w8, w0);
+    rounds4!(ae, bf, cg, dh, k[10] + w0, k[11] + w1);
+    w2 = schedule!(w4, w5, w8, w9, w1);
+    w3 = schedule!(w5, w6, w9, w0, w2);
+    rounds4!(ae, bf, cg, dh, k[12] + w2, k[13] + w3);
+    w4 = schedule!(w6, w7, w0, w1, w3);
+    w5 = schedule!(w7, w8, w1, w2, w4);
+    rounds4!(ae, bf, cg, dh, k[14] + w4, k[15] + w5);
+    w6 = schedule!(w8, w9, w2, w3, w5);
+    w7 = schedule!(w9, w0, w3, w4, w6);
+    rounds4!(ae, bf, cg, dh, k[16] + w6, k[17] + w7);
+    w8 = schedule!(w0, w1, w4, w5, w7);
+    w9 = schedule!(w1, w2, w5, w6, w8);
+    rounds4!(ae, bf, cg, dh, k[18] + w8, k[19] + w9);
+
+    // Rounds 40..60
+    w0 = schedule!(w2, w3, w6, w7, w9);
+    w1 = schedule!(w3, w4, w7, w8, w0);
+    rounds4!(ae, bf, cg, dh, k[20] + w0, k[21] + w1);
+    w2 = schedule!(w4, w5, w8, w9, w1);
+    w3 = schedule!(w5, w6, w9, w0, w2);
+    rounds4!(ae, bf, cg, dh, k[22] + w2, k[23] + w3);
+    w4 = schedule!(w6, w7, w0, w1, w3);
+    w5 = schedule!(w7, w8, w1, w2, w4);
+    rounds4!(ae, bf, cg, dh, k[24] + w4, k[25] + w5);
+    w6 = schedule!(w8, w9, w2, w3, w5);
+    w7 = schedule!(w9, w0, w3, w4, w6);
+    rounds4!(ae, bf, cg, dh, k[26] + w6, k[27] + w7);
+    w8 = schedule!(w0, w1, w4, w5, w7);
+    w9 = schedule!(w1, w2, w5, w6, w8);
+    rounds4!(ae, bf, cg, dh, k[28] + w8, k[29] + w9);
+
+    // Rounds 60..80
+    w0 = schedule!(w2, w3, w6, w7, w9);
+    w1 = schedule!(w3, w4, w7, w8, w0);
+    rounds4!(ae, bf, cg, dh, k[30] + w0, k[31] + w1);
+    w2 = schedule!(w4, w5, w8, w9, w1);
+    w3 = schedule!(w5, w6, w9, w0, w2);
+    rounds4!(ae, bf, cg, dh, k[32] + w2, k[33] + w3);
+    w4 = schedule!(w6, w7, w0, w1, w3);
+    w5 = schedule!(w7, w8, w1, w2, w4);
+    rounds4!(ae, bf, cg, dh, k[34] + w4, k[35] + w5);
+    w6 = schedule!(w8, w9, w2, w3, w5);
+    w7 = schedule!(w9, w0, w3, w4, w6);
+    rounds4!(ae, bf, cg, dh, k[36] + w6, k[37] + w7);
+    w8 = schedule!(w0, w1, w4, w5, w7);
+    w9 = schedule!(w1, w2, w5, w6, w8);
+    rounds4!(ae, bf, cg, dh, k[38] + w8, k[39] + w9);
+
+    let u64x2(a, e) = ae;
+    let u64x2(b, f) = bf;
+    let u64x2(c, g) = cg;
+    let u64x2(d, h) = dh;
+
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+    state[5] += f;
+    state[6] += g;
+    state[7] += h;
+}
+
+/// Process a block with the SHA-2 SHA-512 algorithm.
+///
+/// The original safe implementation.
+#[inline]
+pub fn sha512_digest_block_u64_safe(state: &mut [u64/*; 8*/], block: &[u64/*; 16*/]) {
+
+    fn ch(x: u64, y: u64, z: u64) -> u64 {
+        ((x & y) ^ ((!x) & z))
+    }
+
+    fn maj(x: u64, y: u64, z: u64) -> u64 {
+        ((x & y) ^ (x & z) ^ (y & z))
+    }
+
+    fn sum0(x: u64) -> u64 {
+        ((x << 36) | (x >> 28)) ^ ((x << 30) | (x >> 34)) ^ ((x << 25) | (x >> 39))
+    }
+
+    fn sum1(x: u64) -> u64 {
+        ((x << 50) | (x >> 14)) ^ ((x << 46) | (x >> 18)) ^ ((x << 23) | (x >> 41))
+    }
+
+    fn sigma0(x: u64) -> u64 {
+        ((x << 63) | (x >> 1)) ^ ((x << 56) | (x >> 8)) ^ (x >> 7)
+    }
+
+    fn sigma1(x: u64) -> u64 {
+        ((x << 45) | (x >> 19)) ^ ((x << 3) | (x >> 61)) ^ (x >> 6)
+    }
+
+    let mut a = state[0];
+    let mut b = state[1];
+    let mut c = state[2];
+    let mut d = state[3];
+    let mut e = state[4];
+    let mut f = state[5];
+    let mut g = state[6];
+    let mut h = state[7];
+
+    let mut w = [0u64; 80];
+
+    // Sha-512 and Sha-256 use basically the same calculations which are implemented by
+    // these macros. Inlining the calculations seems to result in better generated code.
+    macro_rules! schedule {
+        ($t:expr) => (
+            w[$t] = sigma1(w[$t - 2]) + w[$t - 7] + sigma0(w[$t - 15]) + w[$t - 16];
+        )
+    }
+
+    macro_rules! round {
+        ($A:ident, $B:ident, $C:ident, $D:ident,
+         $E:ident, $F:ident, $G:ident, $H:ident, $K:ident, $t:expr) => {
+            {
+                $H += sum1($E) + ch($E, $F, $G) + $K[$t] + w[$t];
+                $D += $H;
+                $H += sum0($A) + maj($A, $B, $C);
+            }
+        }
+    }
+
+    for t in 0..16 {
+        w[t] = block[t].to_be();
+    }
+
+    // Putting the message schedule inside the same loop as the round calculations allows for
+    // the compiler to generate better code.
+    for t in range_step(0, 64, 8) {
+        schedule!(t + 16);
+        schedule!(t + 17);
+        schedule!(t + 18);
+        schedule!(t + 19);
+        schedule!(t + 20);
+        schedule!(t + 21);
+        schedule!(t + 22);
+        schedule!(t + 23);
+
+        round!(a, b, c, d, e, f, g, h, K64, t);
+        round!(h, a, b, c, d, e, f, g, K64, t + 1);
+        round!(g, h, a, b, c, d, e, f, K64, t + 2);
+        round!(f, g, h, a, b, c, d, e, K64, t + 3);
+        round!(e, f, g, h, a, b, c, d, K64, t + 4);
+        round!(d, e, f, g, h, a, b, c, K64, t + 5);
+        round!(c, d, e, f, g, h, a, b, K64, t + 6);
+        round!(b, c, d, e, f, g, h, a, K64, t + 7);
+    }
+
+    for t in range_step(64, 80, 8) {
+        round!(a, b, c, d, e, f, g, h, K64, t);
+        round!(h, a, b, c, d, e, f, g, K64, t + 1);
+        round!(g, h, a, b, c, d, e, f, K64, t + 2);
+        round!(f, g, h, a, b, c, d, e, K64, t + 3);
+        round!(e, f, g, h, a, b, c, d, K64, t + 4);
+        round!(d, e, f, g, h, a, b, c, K64, t + 5);
+        round!(c, d, e, f, g, h, a, b, K64, t + 6);
+        round!(b, c, d, e, f, g, h, a, K64, t + 7);
+    }
+
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+    state[5] += f;
+    state[6] += g;
+    state[7] += h;
+}
+
+/// Process a block with the SHA-2 SHA-512 algorithm.
+///
+/// TODO
+pub fn sha512_digest_block(state: &mut [u64/*; 8*/], bytes: &[u8/*; 128*/]) {
+    assert_eq!(state.len(), STATE_LEN);
+    assert_eq!(bytes.len(), BLOCK_LEN*8);
+    let (words, _): (&[u64; 16], usize) = unsafe {
+        ::std::mem::transmute(bytes)
+    };
+    sha512_digest_block_u64_safe(state, &words[]);
+}
 
 // A structure that represents that state of a digest computation for the SHA-2 512 family
 // of digest functions
@@ -41,7 +678,7 @@ impl Engine512State {
         }
     }
 
-    fn reset(&mut self, h: &[u64; 8]) {
+    fn reset(&mut self, h: &[u64; STATE_LEN]) {
         self.h0 = h[0];
         self.h1 = h[1];
         self.h2 = h[2];
@@ -52,109 +689,16 @@ impl Engine512State {
         self.h7 = h[7];
     }
 
-    fn process_block(&mut self, data: &[u8]) {
-        fn ch(x: u64, y: u64, z: u64) -> u64 {
-            ((x & y) ^ ((!x) & z))
-        }
-
-        fn maj(x: u64, y: u64, z: u64) -> u64 {
-            ((x & y) ^ (x & z) ^ (y & z))
-        }
-
-        fn sum0(x: u64) -> u64 {
-            ((x << 36) | (x >> 28)) ^ ((x << 30) | (x >> 34)) ^ ((x << 25) | (x >> 39))
-        }
-
-        fn sum1(x: u64) -> u64 {
-            ((x << 50) | (x >> 14)) ^ ((x << 46) | (x >> 18)) ^ ((x << 23) | (x >> 41))
-        }
-
-        fn sigma0(x: u64) -> u64 {
-            ((x << 63) | (x >> 1)) ^ ((x << 56) | (x >> 8)) ^ (x >> 7)
-        }
-
-        fn sigma1(x: u64) -> u64 {
-            ((x << 45) | (x >> 19)) ^ ((x << 3) | (x >> 61)) ^ (x >> 6)
-        }
-
-        let mut a = self.h0;
-        let mut b = self.h1;
-        let mut c = self.h2;
-        let mut d = self.h3;
-        let mut e = self.h4;
-        let mut f = self.h5;
-        let mut g = self.h6;
-        let mut h = self.h7;
-
-        let mut w = [0u64; 80];
-
-        // Sha-512 and Sha-256 use basically the same calculations which are implemented by
-        // these macros. Inlining the calculations seems to result in better generated code.
-        macro_rules! schedule_round( ($t:expr) => (
-                w[$t] = sigma1(w[$t - 2]) + w[$t - 7] + sigma0(w[$t - 15]) + w[$t - 16];
-                )
-        );
-
-        macro_rules! sha2_round(
-            ($A:ident, $B:ident, $C:ident, $D:ident,
-             $E:ident, $F:ident, $G:ident, $H:ident, $K:ident, $t:expr) => (
-                {
-                    $H += sum1($E) + ch($E, $F, $G) + $K[$t] + w[$t];
-                    $D += $H;
-                    $H += sum0($A) + maj($A, $B, $C);
-                }
-             )
-        );
-
-
-        read_u64v_be(&mut w[0..16], data);
-
-        // Putting the message schedule inside the same loop as the round calculations allows for
-        // the compiler to generate better code.
-        for t in range_step(0, 64, 8) {
-            schedule_round!(t + 16);
-            schedule_round!(t + 17);
-            schedule_round!(t + 18);
-            schedule_round!(t + 19);
-            schedule_round!(t + 20);
-            schedule_round!(t + 21);
-            schedule_round!(t + 22);
-            schedule_round!(t + 23);
-
-            sha2_round!(a, b, c, d, e, f, g, h, K64, t);
-            sha2_round!(h, a, b, c, d, e, f, g, K64, t + 1);
-            sha2_round!(g, h, a, b, c, d, e, f, K64, t + 2);
-            sha2_round!(f, g, h, a, b, c, d, e, K64, t + 3);
-            sha2_round!(e, f, g, h, a, b, c, d, K64, t + 4);
-            sha2_round!(d, e, f, g, h, a, b, c, K64, t + 5);
-            sha2_round!(c, d, e, f, g, h, a, b, K64, t + 6);
-            sha2_round!(b, c, d, e, f, g, h, a, K64, t + 7);
-        }
-
-        for t in range_step(64, 80, 8) {
-            sha2_round!(a, b, c, d, e, f, g, h, K64, t);
-            sha2_round!(h, a, b, c, d, e, f, g, K64, t + 1);
-            sha2_round!(g, h, a, b, c, d, e, f, K64, t + 2);
-            sha2_round!(f, g, h, a, b, c, d, e, K64, t + 3);
-            sha2_round!(e, f, g, h, a, b, c, d, K64, t + 4);
-            sha2_round!(d, e, f, g, h, a, b, c, K64, t + 5);
-            sha2_round!(c, d, e, f, g, h, a, b, K64, t + 6);
-            sha2_round!(b, c, d, e, f, g, h, a, K64, t + 7);
-        }
-
-        self.h0 += a;
-        self.h1 += b;
-        self.h2 += c;
-        self.h3 += d;
-        self.h4 += e;
-        self.h5 += f;
-        self.h6 += g;
-        self.h7 += h;
+    pub fn process_block(&mut self, data: &[u8]) {
+        let mut state: &mut [u64; STATE_LEN] = unsafe {
+            ::std::mem::transmute(self)
+        };
+        sha512_digest_block(&mut state[], data);
     }
 }
 
 // Constants necessary for SHA-2 512 family of digests.
-static K64: [u64; 80] = [
+const K64: [u64; 80] = [
     0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
     0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
     0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
@@ -177,6 +721,18 @@ static K64: [u64; 80] = [
     0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 ];
 
+const K64X2: [u64x2; 40] = [
+    u64x2(K64[1], K64[0]), u64x2(K64[3], K64[2]), u64x2(K64[5], K64[4]), u64x2(K64[7], K64[6]),
+    u64x2(K64[9], K64[8]), u64x2(K64[11], K64[10]), u64x2(K64[13], K64[12]), u64x2(K64[15], K64[14]),
+    u64x2(K64[17], K64[16]), u64x2(K64[19], K64[18]), u64x2(K64[21], K64[20]), u64x2(K64[23], K64[22]),
+    u64x2(K64[25], K64[24]), u64x2(K64[27], K64[26]), u64x2(K64[29], K64[28]), u64x2(K64[31], K64[30]),
+    u64x2(K64[33], K64[32]), u64x2(K64[35], K64[34]), u64x2(K64[37], K64[36]), u64x2(K64[39], K64[38]),
+    u64x2(K64[41], K64[40]), u64x2(K64[43], K64[42]), u64x2(K64[45], K64[44]), u64x2(K64[47], K64[46]),
+    u64x2(K64[49], K64[48]), u64x2(K64[51], K64[50]), u64x2(K64[53], K64[52]), u64x2(K64[55], K64[54]),
+    u64x2(K64[57], K64[56]), u64x2(K64[59], K64[58]), u64x2(K64[61], K64[60]), u64x2(K64[63], K64[62]),
+    u64x2(K64[65], K64[64]), u64x2(K64[67], K64[66]), u64x2(K64[69], K64[68]), u64x2(K64[71], K64[70]),
+    u64x2(K64[73], K64[72]), u64x2(K64[75], K64[74]), u64x2(K64[77], K64[76]), u64x2(K64[79], K64[78])
+];
 
 // A structure that keeps track of the state of the Sha-512 operation and contains the logic
 // necessary to perform the final calculations.
@@ -188,7 +744,7 @@ struct Engine512 {
 }
 
 impl Engine512 {
-    fn new(h: &[u64; 8]) -> Engine512 {
+    fn new(h: &[u64; STATE_LEN]) -> Engine512 {
         Engine512 {
             length_bits: (0, 0),
             buffer: FixedBuffer128::new(),
@@ -197,7 +753,7 @@ impl Engine512 {
         }
     }
 
-    fn reset(&mut self, h: &[u64; 8]) {
+    fn reset(&mut self, h: &[u64; STATE_LEN]) {
         self.length_bits = (0, 0);
         self.buffer.reset();
         self.state.reset(h);
@@ -275,7 +831,7 @@ impl Digest for Sha512 {
     fn block_size(&self) -> usize { 128 }
 }
 
-static H512: [u64; 8] = [
+static H512: [u64; STATE_LEN] = [
     0x6a09e667f3bcc908,
     0xbb67ae8584caa73b,
     0x3c6ef372fe94f82b,
@@ -328,7 +884,7 @@ impl Digest for Sha384 {
     fn block_size(&self) -> usize { 128 }
 }
 
-static H384: [u64; 8] = [
+static H384: [u64; STATE_LEN] = [
     0xcbbb9d5dc1059ed8,
     0x629a292a367cd507,
     0x9159015a3070dd17,
@@ -379,7 +935,7 @@ impl Digest for Sha512Trunc256 {
     fn block_size(&self) -> usize { 128 }
 }
 
-static H512_TRUNC_256: [u64; 8] = [
+static H512_TRUNC_256: [u64; STATE_LEN] = [
     0x22312194fc2bf72c,
     0x9f555fa3c84c64c2,
     0x2393b86b6f53b151,
@@ -430,7 +986,7 @@ impl Digest for Sha512Trunc224 {
     fn block_size(&self) -> usize { 128 }
 }
 
-static H512_TRUNC_224: [u64; 8] = [
+static H512_TRUNC_224: [u64; STATE_LEN] = [
     0x8c3d37c819544da2,
     0x73e1996689dcd4d6,
     0x1dfab7ae32ff9c82,
@@ -457,7 +1013,7 @@ struct Engine256State {
 }
 
 impl Engine256State {
-    fn new(h: &[u32; 8]) -> Engine256State {
+    fn new(h: &[u32; STATE_LEN]) -> Engine256State {
         Engine256State {
             h0: h[0],
             h1: h[1],
@@ -470,7 +1026,7 @@ impl Engine256State {
         }
     }
 
-    fn reset(&mut self, h: &[u32; 8]) {
+    fn reset(&mut self, h: &[u32; STATE_LEN]) {
         self.h0 = h[0];
         self.h1 = h[1];
         self.h2 = h[2];
@@ -481,108 +1037,15 @@ impl Engine256State {
         self.h7 = h[7];
     }
 
-    fn process_block(&mut self, data: &[u8]) {
-        fn ch(x: u32, y: u32, z: u32) -> u32 {
-            ((x & y) ^ ((!x) & z))
-        }
-
-        fn maj(x: u32, y: u32, z: u32) -> u32 {
-            ((x & y) ^ (x & z) ^ (y & z))
-        }
-
-        fn sum0(x: u32) -> u32 {
-            ((x >> 2) | (x << 30)) ^ ((x >> 13) | (x << 19)) ^ ((x >> 22) | (x << 10))
-        }
-
-        fn sum1(x: u32) -> u32 {
-            ((x >> 6) | (x << 26)) ^ ((x >> 11) | (x << 21)) ^ ((x >> 25) | (x << 7))
-        }
-
-        fn sigma0(x: u32) -> u32 {
-            ((x >> 7) | (x << 25)) ^ ((x >> 18) | (x << 14)) ^ (x >> 3)
-        }
-
-        fn sigma1(x: u32) -> u32 {
-            ((x >> 17) | (x << 15)) ^ ((x >> 19) | (x << 13)) ^ (x >> 10)
-        }
-
-        let mut a = self.h0;
-        let mut b = self.h1;
-        let mut c = self.h2;
-        let mut d = self.h3;
-        let mut e = self.h4;
-        let mut f = self.h5;
-        let mut g = self.h6;
-        let mut h = self.h7;
-
-        let mut w = [0u32; 64];
-
-        // Sha-512 and Sha-256 use basically the same calculations which are implemented
-        // by these macros. Inlining the calculations seems to result in better generated code.
-        macro_rules! schedule_round( ($t:expr) => (
-                w[$t] = sigma1(w[$t - 2]) + w[$t - 7] + sigma0(w[$t - 15]) + w[$t - 16];
-                )
-        );
-
-        macro_rules! sha2_round(
-            ($A:ident, $B:ident, $C:ident, $D:ident,
-             $E:ident, $F:ident, $G:ident, $H:ident, $K:ident, $t:expr) => (
-                {
-                    $H += sum1($E) + ch($E, $F, $G) + $K[$t] + w[$t];
-                    $D += $H;
-                    $H += sum0($A) + maj($A, $B, $C);
-                }
-             )
-        );
-
-
-        read_u32v_be(&mut w[0..16], data);
-
-        // Putting the message schedule inside the same loop as the round calculations allows for
-        // the compiler to generate better code.
-        for t in range_step(0, 48, 8) {
-            schedule_round!(t + 16);
-            schedule_round!(t + 17);
-            schedule_round!(t + 18);
-            schedule_round!(t + 19);
-            schedule_round!(t + 20);
-            schedule_round!(t + 21);
-            schedule_round!(t + 22);
-            schedule_round!(t + 23);
-
-            sha2_round!(a, b, c, d, e, f, g, h, K32, t);
-            sha2_round!(h, a, b, c, d, e, f, g, K32, t + 1);
-            sha2_round!(g, h, a, b, c, d, e, f, K32, t + 2);
-            sha2_round!(f, g, h, a, b, c, d, e, K32, t + 3);
-            sha2_round!(e, f, g, h, a, b, c, d, K32, t + 4);
-            sha2_round!(d, e, f, g, h, a, b, c, K32, t + 5);
-            sha2_round!(c, d, e, f, g, h, a, b, K32, t + 6);
-            sha2_round!(b, c, d, e, f, g, h, a, K32, t + 7);
-        }
-
-        for t in range_step(48, 64, 8) {
-            sha2_round!(a, b, c, d, e, f, g, h, K32, t);
-            sha2_round!(h, a, b, c, d, e, f, g, K32, t + 1);
-            sha2_round!(g, h, a, b, c, d, e, f, K32, t + 2);
-            sha2_round!(f, g, h, a, b, c, d, e, K32, t + 3);
-            sha2_round!(e, f, g, h, a, b, c, d, K32, t + 4);
-            sha2_round!(d, e, f, g, h, a, b, c, K32, t + 5);
-            sha2_round!(c, d, e, f, g, h, a, b, K32, t + 6);
-            sha2_round!(b, c, d, e, f, g, h, a, K32, t + 7);
-        }
-
-        self.h0 += a;
-        self.h1 += b;
-        self.h2 += c;
-        self.h3 += d;
-        self.h4 += e;
-        self.h5 += f;
-        self.h6 += g;
-        self.h7 += h;
+    pub fn process_block(&mut self, data: &[u8]) {
+        let mut state: &mut [u32; STATE_LEN] = unsafe {
+            ::std::mem::transmute(self)
+        };
+        sha256_digest_block(&mut state[], data);
     }
 }
 
-static K32: [u32; 64] = [
+const K32: [u32; 64] = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -601,6 +1064,24 @@ static K32: [u32; 64] = [
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 ];
 
+const K32X4: [u32x4; 16] = [
+    u32x4(K32[3], K32[2], K32[1], K32[0]),
+    u32x4(K32[7], K32[6], K32[5], K32[4]),
+    u32x4(K32[11], K32[10], K32[9], K32[8]),
+    u32x4(K32[15], K32[14], K32[13], K32[12]),
+    u32x4(K32[19], K32[18], K32[17], K32[16]),
+    u32x4(K32[23], K32[22], K32[21], K32[20]),
+    u32x4(K32[27], K32[26], K32[25], K32[24]),
+    u32x4(K32[31], K32[30], K32[29], K32[28]),
+    u32x4(K32[35], K32[34], K32[33], K32[32]),
+    u32x4(K32[39], K32[38], K32[37], K32[36]),
+    u32x4(K32[43], K32[42], K32[41], K32[40]),
+    u32x4(K32[47], K32[46], K32[45], K32[44]),
+    u32x4(K32[51], K32[50], K32[49], K32[48]),
+    u32x4(K32[55], K32[54], K32[53], K32[52]),
+    u32x4(K32[59], K32[58], K32[57], K32[56]),
+    u32x4(K32[63], K32[62], K32[61], K32[60]),
+];
 
 // A structure that keeps track of the state of the Sha-256 operation and contains the logic
 // necessary to perform the final calculations.
@@ -613,7 +1094,7 @@ struct Engine256 {
 }
 
 impl Engine256 {
-    fn new(h: &[u32; 8]) -> Engine256 {
+    fn new(h: &[u32; STATE_LEN]) -> Engine256 {
         Engine256 {
             length_bits: 0,
             buffer: FixedBuffer64::new(),
@@ -622,7 +1103,7 @@ impl Engine256 {
         }
     }
 
-    fn reset(&mut self, h: &[u32; 8]) {
+    fn reset(&mut self, h: &[u32; STATE_LEN]) {
         self.length_bits = 0;
         self.buffer.reset();
         self.state.reset(h);
@@ -697,7 +1178,7 @@ impl Digest for Sha256 {
     fn block_size(&self) -> usize { 64 }
 }
 
-static H256: [u32; 8] = [
+static H256: [u32; STATE_LEN] = [
     0x6a09e667,
     0xbb67ae85,
     0x3c6ef372,
@@ -751,7 +1232,7 @@ impl Digest for Sha224 {
     fn block_size(&self) -> usize { 64 }
 }
 
-static H224: [u32; 8] = [
+static H224: [u32; STATE_LEN] = [
     0xc1059ed8,
     0x367cd507,
     0x3070dd17,
@@ -980,6 +1461,28 @@ mod bench {
     use sha2::{Sha256,Sha512};
 
     #[bench]
+    pub fn sha256_block(bh: & mut Bencher) {
+        use super::sha256_digest_block;
+        let mut result = [0u32; 8];
+        let bytes = [1u8; 64];
+        bh.iter( || {
+            sha256_digest_block(&mut result[], &bytes);
+        });
+        bh.bytes = bytes.len() as u64;
+    }
+    
+    #[bench]
+    pub fn sha512_block(bh: & mut Bencher) {
+        use super::sha512_digest_block;
+        let mut result = [0u64; 8];
+        let bytes = [1u8; 128];
+        bh.iter( || {
+            sha512_digest_block(&mut result[], &bytes);
+        });
+        bh.bytes = bytes.len() as u64;
+    }
+    
+    #[bench]
     pub fn sha256_10(bh: & mut Bencher) {
         let mut sh = Sha256::new();
         let bytes = [1u8; 10];
@@ -1008,8 +1511,6 @@ mod bench {
         });
         bh.bytes = bytes.len() as u64;
     }
-
-
 
     #[bench]
     pub fn sha512_10(bh: & mut Bencher) {

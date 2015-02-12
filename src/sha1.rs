@@ -22,32 +22,352 @@
  * the `reset` method.
  */
 
-
-use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64,
-    StandardPadding};
+use std::num::Int;
+use std::simd::u32x4;
 use digest::Digest;
+use cryptoutil::{write_u32_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
 
-/*
- * A SHA-1 implementation derived from Paul E. Jones's reference
- * implementation, which is written for clarity, not speed. At some
- * point this will want to be rewritten.
- */
+const STATE_LEN: usize = 5;
+const BLOCK_LEN: usize = 16;
 
-// Some unexported constants
-const DIGEST_BUF_LEN: usize = 5;
-const WORK_BUF_LEN: usize = 80;
 const K0: u32 = 0x5A827999u32;
 const K1: u32 = 0x6ED9EBA1u32;
 const K2: u32 = 0x8F1BBCDCu32;
 const K3: u32 = 0xCA62C1D6u32;
 
-/// Structure representing the state of a Sha1 computation
-#[derive(Copy)]
-pub struct Sha1 {
-    h: [u32; DIGEST_BUF_LEN],
-    length_bits: u64,
-    buffer: FixedBuffer64,
-    computed: bool,
+/*
+ *  /// Emulates `llvm.arm.neon.sha1h` intrinsic.
+ *  ///
+ *  /// (The letter 'H' might stand for half, maybe?)
+ *  #[inline]
+ *  fn sha1h(a: u32) -> u32 {
+ *      a.rotate_left(30)
+ *  }
+ *
+ *  /// Emulates `llvm.arm.neon.sha1su0` intrinsic.
+ *  #[inline]
+ *  fn sha1su0(a: u32x4, b: u32x4, c: u32x4) -> u32x4 {
+ *      sha1msg1(a, b) ^ c
+ *  }
+ *
+ *  /// Emulates `llvm.arm.neon.sha1su1` intrinsic.
+ *  #[inline]
+ *  fn sha1su1(a: u32x4, b: u32x4) -> u32x4 {
+ *      sha1msg2(a, b)
+ *  }
+ *
+ *  /// Emulates `llvm.arm.neon.sha1c` intrinsic.
+ *  #[inline]
+ *  fn sha1c(abcd: u32x4, e: u32, msg: u32x4) -> u32x4 {
+ *      sha1rnds4c(abcd, sha1stadd(e, msg))
+ *  }
+ *
+ *  /// Emulates `llvm.arm.neon.sha1p` intrinsic.
+ *  #[inline]
+ *  fn sha1p(abcd: u32x4, e: u32, msg: u32x4) -> u32x4 {
+ *      sha1rnds4p(abcd, sha1stadd(e, msg))
+ *  }
+ *
+ *  /// Emulates `llvm.arm.neon.sha1m` intrinsic.
+ *  #[inline]
+ *  fn sha1m(abcd: u32x4, e: u32, msg: u32x4) -> u32x4 {
+ *      sha1rnds4m(abcd, sha1stadd(e, msg))
+ *  }
+ */
+
+/// Emulates `llvm.x86.sha1msg1` intrinsic.
+#[inline]
+pub fn sha1msg1(a: u32x4, b: u32x4) -> u32x4 {
+    let u32x4(_, _, w2, w3) = a;
+    let u32x4(w4, w5, _, _) = b;
+    a ^ u32x4(w2, w3, w4, w5)
+}
+
+/// Emulates `llvm.x86.sha1msg2` intrinsic.
+#[inline]
+pub fn sha1msg2(a: u32x4, b: u32x4) -> u32x4 {
+    let u32x4(x0, x1, x2, x3) = a;
+    let u32x4(_, w13, w14, w15) = b;
+
+    let w16 = (x0 ^ w13).rotate_left(1);
+    let w17 = (x1 ^ w14).rotate_left(1);
+    let w18 = (x2 ^ w15).rotate_left(1);
+    let w19 = (x3 ^ w16).rotate_left(1);
+
+    u32x4(w16, w17, w18, w19)
+}
+
+/// Emulates `llvm.x86.sha1nexte` intrinsic.
+#[inline]
+pub fn sha1nexte(abcd: u32x4, msg: u32x4) -> u32x4 {
+    sha1stadd(sha1st(abcd).rotate_left(30), msg)
+}
+
+/// Emulates `llvm.x86.sha1rnds4` intrinsic.
+#[inline]
+pub fn sha1rnds4(abcd: u32x4, work: u32x4, i: i8) -> u32x4 {
+    const K0V: u32x4 = u32x4(K0, K0, K0, K0);
+    const K1V: u32x4 = u32x4(K1, K1, K1, K1);
+    const K2V: u32x4 = u32x4(K2, K2, K2, K2);
+    const K3V: u32x4 = u32x4(K3, K3, K3, K3);
+
+    match i {
+        0 => sha1rnds4c(abcd, work + K0V),
+        1 => sha1rnds4p(abcd, work + K1V),
+        2 => sha1rnds4m(abcd, work + K2V),
+        3 => sha1rnds4p(abcd, work + K3V),
+        _ => panic!("unknown icosaround index")
+    }
+}
+
+/// Not an intrinsic.
+#[inline]
+pub fn sha1rnds4c(abcd: u32x4, msg: u32x4) -> u32x4 {
+    let u32x4(mut a, mut b, mut c, mut d) = abcd;
+    let u32x4(t, u, v, w) = msg;
+    let mut e = 0u32;
+
+    macro_rules! bool3ary_202 {
+        ($a:expr, $b:expr, $c:expr) => (($c ^ ($a & ($b ^ $c))))
+    } // Choose, MD5F, SHA1C
+
+    e += a.rotate_left(5) + bool3ary_202!(b, c, d) + t; b = b.rotate_left(30);
+    d += e.rotate_left(5) + bool3ary_202!(a, b, c) + u; a = a.rotate_left(30);
+    c += d.rotate_left(5) + bool3ary_202!(e, a, b) + v; e = e.rotate_left(30);
+    b += c.rotate_left(5) + bool3ary_202!(d, e, a) + w; d = d.rotate_left(30);
+
+    u32x4(b, c, d, e)
+}
+
+/// Not an intrinsic.
+#[inline]
+pub fn sha1rnds4p(abcd: u32x4, msg: u32x4) -> u32x4 {
+    let u32x4(mut a, mut b, mut c, mut d) = abcd;
+    let u32x4(t, u, v, w) = msg;
+    let mut e = 0u32;
+
+    macro_rules! bool3ary_150 {
+        ($a:expr, $b:expr, $c:expr) => (($a ^ $b ^ $c))
+    } // Parity, XOR, MD5H, SHA1P
+
+    e += a.rotate_left(5) + bool3ary_150!(b, c, d) + t; b = b.rotate_left(30);
+    d += e.rotate_left(5) + bool3ary_150!(a, b, c) + u; a = a.rotate_left(30);
+    c += d.rotate_left(5) + bool3ary_150!(e, a, b) + v; e = e.rotate_left(30);
+    b += c.rotate_left(5) + bool3ary_150!(d, e, a) + w; d = d.rotate_left(30);
+
+    u32x4(b, c, d, e)
+}
+
+/// Not an intrinsic.
+#[inline]
+pub fn sha1rnds4m(abcd: u32x4, msg: u32x4) -> u32x4 {
+    let u32x4(mut a, mut b, mut c, mut d) = abcd;
+    let u32x4(t, u, v, w) = msg;
+    let mut e = 0u32;
+
+    macro_rules! bool3ary_232 {
+        ($a:expr, $b:expr, $c:expr) => (($a & $b) ^ ($a & $c) ^ ($b & $c))
+    } // Majority, SHA1M
+
+    e += a.rotate_left(5) + bool3ary_232!(b, c, d) + t; b = b.rotate_left(30);
+    d += e.rotate_left(5) + bool3ary_232!(a, b, c) + u; a = a.rotate_left(30);
+    c += d.rotate_left(5) + bool3ary_232!(e, a, b) + v; e = e.rotate_left(30);
+    b += c.rotate_left(5) + bool3ary_232!(d, e, a) + w; d = d.rotate_left(30);
+
+    u32x4(b, c, d, e)
+}
+
+/// Not an intrinsic.
+#[inline]
+pub fn sha1stadd(e: u32, w0: u32x4) -> u32x4 {
+    let u32x4(a, b, c, d) = w0;
+    u32x4(e + a, b, c, d)
+}
+
+/// Not an intrinsic.
+#[inline]
+pub fn sha1st(w0: u32x4) -> u32 {
+    let u32x4(a, _, _, _) = w0;
+    a
+}
+
+/// Process a block with the SHA-1 algorithm.
+#[inline]
+pub fn sha1_digest_block_u32(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
+
+    macro_rules! schedule {
+        ($v0:expr, $v1:expr, $v2:expr, $v3:expr) => (
+            sha1msg2(sha1msg1($v0, $v1) ^ $v2, $v3)
+        )
+    }
+
+    macro_rules! rounds4 {
+        ($h0:ident, $h1:ident, $wk:expr, $i:expr) => (
+            sha1rnds4($h0, sha1nexte($h1, $wk), $i)
+        )
+    }
+
+    // Rounds 0..20
+    let mut h0 = u32x4(state[0],
+                       state[1],
+                       state[2],
+                       state[3]);
+    let mut w0 = u32x4(block[0].to_be(),
+                       block[1].to_be(),
+                       block[2].to_be(),
+                       block[3].to_be());
+    let mut h1 = sha1rnds4(h0, sha1stadd(state[4], w0), 0);
+    let mut w1 = u32x4(block[4].to_be(),
+                       block[5].to_be(),
+                       block[6].to_be(),
+                       block[7].to_be());
+    h0 = rounds4!(h1, h0, w1, 0);
+    let mut w2 = u32x4(block[8].to_be(),
+                       block[9].to_be(),
+                       block[10].to_be(),
+                       block[11].to_be());
+    h1 = rounds4!(h0, h1, w2, 0);
+    let mut w3 = u32x4(block[12].to_be(),
+                       block[13].to_be(),
+                       block[14].to_be(),
+                       block[15].to_be());
+    h0 = rounds4!(h1, h0, w3, 0);
+    let mut w4 = schedule!(w0, w1, w2, w3);
+    h1 = rounds4!(h0, h1, w4, 0);
+
+    // Rounds 20..40
+    w0 = schedule!(w1, w2, w3, w4);
+    h0 = rounds4!(h1, h0, w0, 1);
+    w1 = schedule!(w2, w3, w4, w0);
+    h1 = rounds4!(h0, h1, w1, 1);
+    w2 = schedule!(w3, w4, w0, w1);
+    h0 = rounds4!(h1, h0, w2, 1);
+    w3 = schedule!(w4, w0, w1, w2);
+    h1 = rounds4!(h0, h1, w3, 1);
+    w4 = schedule!(w0, w1, w2, w3);
+    h0 = rounds4!(h1, h0, w4, 1);
+
+    // Rounds 40..60
+    w0 = schedule!(w1, w2, w3, w4);
+    h1 = rounds4!(h0, h1, w0, 2);
+    w1 = schedule!(w2, w3, w4, w0);
+    h0 = rounds4!(h1, h0, w1, 2);
+    w2 = schedule!(w3, w4, w0, w1);
+    h1 = rounds4!(h0, h1, w2, 2);
+    w3 = schedule!(w4, w0, w1, w2);
+    h0 = rounds4!(h1, h0, w3, 2);
+    w4 = schedule!(w0, w1, w2, w3);
+    h1 = rounds4!(h0, h1, w4, 2);
+
+    // Rounds 60..80
+    w0 = schedule!(w1, w2, w3, w4);
+    h0 = rounds4!(h1, h0, w0, 3);
+    w1 = schedule!(w2, w3, w4, w0);
+    h1 = rounds4!(h0, h1, w1, 3);
+    w2 = schedule!(w3, w4, w0, w1);
+    h0 = rounds4!(h1, h0, w2, 3);
+    w3 = schedule!(w4, w0, w1, w2);
+    h1 = rounds4!(h0, h1, w3, 3);
+    w4 = schedule!(w0, w1, w2, w3);
+    h0 = rounds4!(h1, h0, w4, 3);
+
+    let e = sha1st(h1).rotate_left(30);
+    let u32x4(a, b, c, d) = h0;
+
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+}
+
+/// Process a block with the SHA-1 algorithm.
+///
+/// The original safe algorithm.
+///
+/// A SHA-1 implementation derived from Paul E. Jones's reference
+/// implementation, which is written for clarity, not speed. At some
+/// point this will want to be rewritten.
+#[inline]
+pub fn sha1_digest_block_u32_safe(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
+    let mut w = [0u32; 80];
+
+    let mut a = state[0];
+    let mut b = state[1];
+    let mut c = state[2];
+    let mut d = state[3];
+    let mut e = state[4];
+    let mut temp: u32;
+
+    // Initialize the first 16 words of the vector w
+    for t in 0..16 {
+        w[t] = block[t].to_be();
+    }
+
+    // Initialize the rest of vector w
+    let mut t = 16; // loop counter
+    while t < 80 {
+        let val = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
+        w[t] = val.rotate_left(1);
+        t += 1;
+    }
+    t = 0;
+    while t < 20 {
+        temp = a.rotate_left(5) + (b & c | !b & d) + e + w[t] + K0;
+        e = d;
+        d = c;
+        c = b.rotate_left(30);
+        b = a;
+        a = temp;
+        t += 1;
+    }
+    while t < 40 {
+        temp = a.rotate_left(5) + (b ^ c ^ d) + e + w[t] + K1;
+        e = d;
+        d = c;
+        c = b.rotate_left(30);
+        b = a;
+        a = temp;
+        t += 1;
+    }
+    while t < 60 {
+        temp = a.rotate_left(5) + (b & c | b & d | c & d) + e + w[t] + K2;
+        e = d;
+        d = c;
+        c = b.rotate_left(30);
+        b = a;
+        a = temp;
+        t += 1;
+    }
+    while t < 80 {
+        temp = a.rotate_left(5) + (b ^ c ^ d) + e + w[t] + K3;
+        e = d;
+        d = c;
+        c = b.rotate_left(30);
+        b = a;
+        a = temp;
+        t += 1;
+    }
+
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+}
+
+/// Process a block with the SHA-1 algorithm.
+///
+/// Chooses an implementation based on architecture,
+/// and whether or not the architecture supports SHA
+/// instruction set extensions.
+pub fn sha1_digest_block(state: &mut [u32/*; 5*/], bytes: &[u8/*; 64*/]) {
+    assert_eq!(state.len(), STATE_LEN);
+    assert_eq!(bytes.len(), BLOCK_LEN*4);
+    let (words, _): (&[u32; 16], usize) = unsafe {
+        ::std::mem::transmute(bytes)
+    };
+    sha1_digest_block_u32_safe(state, &words[]);
 }
 
 fn add_input(st: &mut Sha1, msg: &[u8]) {
@@ -55,85 +375,16 @@ fn add_input(st: &mut Sha1, msg: &[u8]) {
     // Assumes that msg.len() can be converted to u64 without overflow
     st.length_bits = add_bytes_to_bits(st.length_bits, msg.len() as u64);
     let st_h = &mut st.h;
-    st.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h); });
-}
-
-fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
-    let mut w = [0u32; WORK_BUF_LEN];
-
-    // Initialize the first 16 words of the vector w
-    read_u32v_be(&mut w[0..16], data);
-
-    // Initialize the rest of vector w
-    let mut t = 16; // loop counter
-    while t < 80 {
-        let val = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
-        w[t] = circular_shift(1, val);
-        t += 1;
-    }
-    let mut a = h[0];
-    let mut b = h[1];
-    let mut c = h[2];
-    let mut d = h[3];
-    let mut e = h[4];
-    let mut temp: u32;
-    t = 0;
-    while t < 20 {
-        temp = circular_shift(5, a) + (b & c | !b & d) + e + w[t] + K0;
-        e = d;
-        d = c;
-        c = circular_shift(30, b);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    while t < 40 {
-        temp = circular_shift(5, a) + (b ^ c ^ d) + e + w[t] + K1;
-        e = d;
-        d = c;
-        c = circular_shift(30, b);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    while t < 60 {
-        temp =
-            circular_shift(5, a) + (b & c | b & d | c & d) + e + w[t] +
-                K2;
-        e = d;
-        d = c;
-        c = circular_shift(30, b);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    while t < 80 {
-        temp = circular_shift(5, a) + (b ^ c ^ d) + e + w[t] + K3;
-        e = d;
-        d = c;
-        c = circular_shift(30, b);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    h[0] += a;
-    h[1] += b;
-    h[2] += c;
-    h[3] += d;
-    h[4] += e;
-}
-
-fn circular_shift(bits: u32, word: u32) -> u32 {
-    word << bits as usize | word >> (32u32 - bits) as usize
+    st.buffer.input(msg, |d: &[u8]| { sha1_digest_block(st_h, d); });
 }
 
 fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
     if !st.computed {
         let st_h = &mut st.h;
-        st.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
+        st.buffer.standard_padding(8, |d: &[u8]| { sha1_digest_block(&mut *st_h, d) });
         write_u32_be(st.buffer.next(4), (st.length_bits >> 32) as u32 );
         write_u32_be(st.buffer.next(4), st.length_bits as u32);
-        process_msg_block(st.buffer.full_buffer(), st_h);
+        sha1_digest_block(st_h, st.buffer.full_buffer());
 
         st.computed = true;
     }
@@ -145,11 +396,20 @@ fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
     write_u32_be(&mut rs[16..20], st.h[4]);
 }
 
+/// Structure representing the state of a Sha1 computation
+#[derive(Copy)]
+pub struct Sha1 {
+    h: [u32; STATE_LEN],
+    length_bits: u64,
+    buffer: FixedBuffer64,
+    computed: bool,
+}
+
 impl Sha1 {
     /// Construct a `sha` object
     pub fn new() -> Sha1 {
         let mut st = Sha1 {
-            h: [0u32; DIGEST_BUF_LEN],
+            h: [0u32; STATE_LEN],
             length_bits: 0u64,
             buffer: FixedBuffer64::new(),
             computed: false,
@@ -294,6 +554,17 @@ mod bench {
     use test::Bencher;
     use digest::Digest;
     use sha1::Sha1;
+
+    #[bench]
+    pub fn sha1_block(bh: & mut Bencher) {
+        use super::sha1_digest_block;
+        let mut result = [0u32; 5];
+        let bytes = [1u8; 64];
+        bh.iter( || {
+            sha1_digest_block(&mut result[], &bytes);
+        });
+        bh.bytes = bytes.len() as u64;
+    }
 
     #[bench]
     pub fn sha1_10(bh: & mut Bencher) {
