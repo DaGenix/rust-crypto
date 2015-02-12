@@ -96,13 +96,6 @@ impl Salsa20 {
         xsalsa20
     }
 
-    pub fn hsalsa20(key: &[u8], nonce: &[u8], out: &mut [u8]) {
-        assert!(key.len() == 32);
-        assert!(nonce.len() == 16);
-        let mut hsalsa20 = Salsa20 { state: Salsa20::expand(key, nonce), output: [0; 64], offset: 64 };
-        hsalsa20.hsalsa20_hash(out);
-    }
-
     fn expand(key: &[u8], nonce: &[u8]) -> SalsaState {
         let constant = match key.len() {
             16 => b"expand 16-byte k",
@@ -248,6 +241,13 @@ impl Decryptor for Salsa20 {
             -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
+}
+
+pub fn hsalsa20(key: &[u8], nonce: &[u8], out: &mut [u8]) {
+    assert!(key.len() == 32);
+    assert!(nonce.len() == 16);
+    let mut h = Salsa20 { state: Salsa20::expand(key, nonce), output: [0; 64], offset: 64 };
+    h.hsalsa20_hash(out);
 }
 
 #[cfg(test)]
