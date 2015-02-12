@@ -339,7 +339,7 @@ pub fn sha256_digest_block(state: &mut [u32/*; 8*/], bytes: &[u8/*; 64*/]) {
     let (words, _): (&[u32; 16], usize) = unsafe {
         ::std::mem::transmute(bytes)
     };
-    sha256_digest_block_u32_safe(state, &words[]);
+    sha256_digest_block_u32(state, &words[]);
 }
 
 /// Not an intrinsic, but works like an unaligned load.
@@ -648,7 +648,7 @@ pub fn sha512_digest_block(state: &mut [u64/*; 8*/], bytes: &[u8/*; 128*/]) {
     let (words, _): (&[u64; 16], usize) = unsafe {
         ::std::mem::transmute(bytes)
     };
-    sha512_digest_block_u64_safe(state, &words[]);
+    sha512_digest_block_u64(state, &words[]);
 }
 
 // A structure that represents that state of a digest computation for the SHA-2 512 family

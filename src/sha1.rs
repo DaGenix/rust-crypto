@@ -187,8 +187,7 @@ pub fn sha1stadd(e: u32, w0: u32x4) -> u32x4 {
 /// Not an intrinsic.
 #[inline]
 pub fn sha1st(w0: u32x4) -> u32 {
-    let u32x4(a, _, _, _) = w0;
-    a
+    w0.0
 }
 
 /// Process a block with the SHA-1 algorithm.
@@ -367,7 +366,7 @@ pub fn sha1_digest_block(state: &mut [u32/*; 5*/], bytes: &[u8/*; 64*/]) {
     let (words, _): (&[u32; 16], usize) = unsafe {
         ::std::mem::transmute(bytes)
     };
-    sha1_digest_block_u32_safe(state, &words[]);
+    sha1_digest_block_u32(state, &words[]);
 }
 
 fn add_input(st: &mut Sha1, msg: &[u8]) {
