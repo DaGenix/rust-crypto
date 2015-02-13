@@ -26,11 +26,11 @@ pub struct Salsa20 {
     offset: usize,
 }
 
-static S7:u32x4 = u32x4(7, 7, 7, 7);
-static S9:u32x4 = u32x4(9, 9, 9, 9);
-static S13:u32x4 = u32x4(13, 13, 13, 13);
-static S18:u32x4 = u32x4(18, 18, 18, 18);
-static S32:u32x4 = u32x4(32, 32, 32, 32);
+const S7:u32x4 = u32x4(7, 7, 7, 7);
+const S9:u32x4 = u32x4(9, 9, 9, 9);
+const S13:u32x4 = u32x4(13, 13, 13, 13);
+const S18:u32x4 = u32x4(18, 18, 18, 18);
+const S32:u32x4 = u32x4(32, 32, 32, 32);
 
 macro_rules! prepare_rowround {
     ($a: expr, $b: expr, $c: expr) => {{
@@ -241,6 +241,13 @@ impl Decryptor for Salsa20 {
             -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
+}
+
+pub fn hsalsa20(key: &[u8], nonce: &[u8], out: &mut [u8]) {
+    assert!(key.len() == 32);
+    assert!(nonce.len() == 16);
+    let mut h = Salsa20 { state: Salsa20::expand(key, nonce), output: [0; 64], offset: 64 };
+    h.hsalsa20_hash(out);
 }
 
 #[cfg(test)]
