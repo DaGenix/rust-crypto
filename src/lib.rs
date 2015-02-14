@@ -11,7 +11,6 @@
 #![feature(io)]
 #![feature(simd)]
 #![feature(slicing_syntax)]
-#![cfg_attr(test, feature(std_misc))]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;

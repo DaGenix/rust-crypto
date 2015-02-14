@@ -263,12 +263,15 @@ impl<'a> SeedableRng<&'a [u8]> for Fortuna {
 }
 
 #[cfg(test)]
+fn test_force_reseed(f: &mut Fortuna) {
+    f.last_reseed_time -= 0.2;
+}
+
+#[cfg(test)]
 mod tests {
-    use std::time::Duration;
-    use std::old_io::timer;
     use rand::{SeedableRng, Rng};
 
-    use super::{Fortuna, Pool, NUM_POOLS};
+    use super::{Fortuna, Pool, NUM_POOLS, test_force_reseed};
 
     #[test]
     fn test_create_unseeded() {
@@ -444,8 +447,8 @@ mod tests {
         f.fill_bytes(output.as_mut_slice());
         assert_eq!(&expected[], &output[]);
 
-        // After more than 100 ms
-        timer::sleep(Duration::milliseconds(200));
+        // Simulate more than 100 ms passing
+        test_force_reseed(&mut f);
         // time.sleep(0.2)
         // print list(bytearray(x.random_data(100)))
         let expected = [ 62, 147, 205, 228,  22,   3, 225, 217, 211, 202,
