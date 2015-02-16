@@ -163,8 +163,8 @@ impl Sosemanuk {
     pub fn new(key: &[u8], nonce: &[u8]) -> Sosemanuk {
         let mut sosemanuk = Sosemanuk { lfsr: [0; 10], fsm_r: [0; 2], subkeys: [0; 100], output: [0; 80], offset: 80 };
  
-        assert!(key.len() == 16 || key.len() == 32);
-        assert!(nonce.len() == 16);
+        assert!(key.len() >= 16 && key.len() <= 32);
+        assert!(nonce.len() <= 16);
        
         key_setup(&key, &mut sosemanuk.subkeys);
         iv_setup(&nonce, &mut sosemanuk.subkeys, &mut sosemanuk.lfsr, &mut sosemanuk.fsm_r);
@@ -1498,7 +1498,7 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
  
 fn iv_setup(iv : &[u8], subkeys : &mut[u32; 100], lfsr : &mut[u32; 10], fsm_r : &mut[u32; 2]) {
     let mut nonce : [u8; 16] = [0; 16];
-    if (iv.len() < 16) {
+    if iv.len() < 16 {
         copy_memory(&mut nonce[0..iv.len()], &iv);
     } else {
         copy_memory(&mut nonce[0..16], &iv[0..16]);
