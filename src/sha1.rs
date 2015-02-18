@@ -9,23 +9,61 @@
 // except according to those terms.
 
 /*!
- * An implementation of the SHA-1 cryptographic hash.
- *
- * First create a `sha1` object using the `sha1` constructor, then
- * feed it input using the `input` or `input_str` methods, which may be
- * called any number of times.
- *
- * After the entire input has been fed to the hash read the result using
- * the `result` or `result_str` methods.
- *
- * The `sha1` object may be reused to create multiple hashes by calling
- * the `reset` method.
+An implementation of the SHA-1 cryptographic hash algorithm.
+
+To use this module, first create a `Sha1` object using the `Sha1` constructor,
+then feed it an input message using the `input` or `input_str` methods,
+which may be called any number of times; they will buffer the input until
+there is enough to call the block algorithm.
+
+After the entire input has been fed to the hash read the result using
+the `result` or `result_str` methods. The first will return bytes, and
+the second will return a `String` object of the same bytes represented
+in hexadecimal form.
+
+The `Sha1` object may be reused to create multiple hashes by calling
+the `reset()` method. These traits are implemented by all hash digest
+algorithms that implement the `Digest` trait. An example of use is:
+
+```rust
+use self::crypto::digest::Digest;
+use self::crypto::sha1::Sha1;
+
+// create a Sha1 object
+let mut hasher = Sha1::new();
+
+// write input message
+hasher.input_str("hello world");
+
+// read hash digest
+let hex = hasher.result_str();
+
+assert_eq!(hex.as_slice(), "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+```
+
+# Mathematics
+
+The mathematics of the SHA-1 algorithm are quite interesting. In its
+definition, The SHA-1 algorithm uses:
+
+* 1 binary operation on bit-arrays:
+  * "exclusive or" (XOR)
+* 2 binary operations on integers:
+  * "addition" (ADD)
+  * "rotate left" (ROL)
+* 3 ternary operations on bit-arrays:
+  * "choose" (CH)
+  * "parity" (PAR)
+  * "majority" (MAJ)
+
+Some of these functions are commonly found in all hash digest
+algorithms, but some, like "parity" is only found in SHA-1.
  */
 
 use std::num::Int;
 use std::simd::u32x4;
 use digest::Digest;
-use cryptoutil::{write_u32_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
+use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
 
 const STATE_LEN: usize = 5;
 const BLOCK_LEN: usize = 16;
@@ -35,57 +73,28 @@ const K1: u32 = 0x6ED9EBA1u32;
 const K2: u32 = 0x8F1BBCDCu32;
 const K3: u32 = 0xCA62C1D6u32;
 
-/*
- *  /// Emulates `llvm.arm.neon.sha1h` intrinsic.
- *  ///
- *  /// (The letter 'H' might stand for half, maybe?)
- *  #[inline]
- *  fn sha1h(a: u32) -> u32 {
- *      a.rotate_left(30)
- *  }
- *
- *  /// Emulates `llvm.arm.neon.sha1su0` intrinsic.
- *  #[inline]
- *  fn sha1su0(a: u32x4, b: u32x4, c: u32x4) -> u32x4 {
- *      sha1msg1(a, b) ^ c
- *  }
- *
- *  /// Emulates `llvm.arm.neon.sha1su1` intrinsic.
- *  #[inline]
- *  fn sha1su1(a: u32x4, b: u32x4) -> u32x4 {
- *      sha1msg2(a, b)
- *  }
- *
- *  /// Emulates `llvm.arm.neon.sha1c` intrinsic.
- *  #[inline]
- *  fn sha1c(abcd: u32x4, e: u32, msg: u32x4) -> u32x4 {
- *      sha1rnds4c(abcd, sha1stadd(e, msg))
- *  }
- *
- *  /// Emulates `llvm.arm.neon.sha1p` intrinsic.
- *  #[inline]
- *  fn sha1p(abcd: u32x4, e: u32, msg: u32x4) -> u32x4 {
- *      sha1rnds4p(abcd, sha1stadd(e, msg))
- *  }
- *
- *  /// Emulates `llvm.arm.neon.sha1m` intrinsic.
- *  #[inline]
- *  fn sha1m(abcd: u32x4, e: u32, msg: u32x4) -> u32x4 {
- *      sha1rnds4m(abcd, sha1stadd(e, msg))
- *  }
- */
+/// Not an intrinsic, but gets the first element of a vector.
+#[inline]
+pub fn sha1_first(w0: u32x4) -> u32 {
+    w0.0
+}
+
+/// Not an intrinsic, but adds a word to the first element of a vector.
+#[inline]
+pub fn sha1_first_add(e: u32, w0: u32x4) -> u32x4 {
+    let u32x4(a, b, c, d) = w0;
+    u32x4(e + a, b, c, d)
+}
 
 /// Emulates `llvm.x86.sha1msg1` intrinsic.
-#[inline]
-pub fn sha1msg1(a: u32x4, b: u32x4) -> u32x4 {
+fn sha1msg1(a: u32x4, b: u32x4) -> u32x4 {
     let u32x4(_, _, w2, w3) = a;
     let u32x4(w4, w5, _, _) = b;
     a ^ u32x4(w2, w3, w4, w5)
 }
 
 /// Emulates `llvm.x86.sha1msg2` intrinsic.
-#[inline]
-pub fn sha1msg2(a: u32x4, b: u32x4) -> u32x4 {
+fn sha1msg2(a: u32x4, b: u32x4) -> u32x4 {
     let u32x4(x0, x1, x2, x3) = a;
     let u32x4(_, w13, w14, w15) = b;
 
@@ -97,15 +106,20 @@ pub fn sha1msg2(a: u32x4, b: u32x4) -> u32x4 {
     u32x4(w16, w17, w18, w19)
 }
 
+/// Performs 4 rounds of the message schedule update.
+pub fn sha1_schedule_x4(v0: u32x4, v1: u32x4, v2: u32x4, v3: u32x4) -> u32x4 {
+    sha1msg2(sha1msg1(v0, v1) ^ v2, v3)
+}
+
 /// Emulates `llvm.x86.sha1nexte` intrinsic.
 #[inline]
-pub fn sha1nexte(abcd: u32x4, msg: u32x4) -> u32x4 {
-    sha1stadd(sha1st(abcd).rotate_left(30), msg)
+pub fn sha1_first_half(abcd: u32x4, msg: u32x4) -> u32x4 {
+    sha1_first_add(sha1_first(abcd).rotate_left(30), msg)
 }
 
 /// Emulates `llvm.x86.sha1rnds4` intrinsic.
-#[inline]
-pub fn sha1rnds4(abcd: u32x4, work: u32x4, i: i8) -> u32x4 {
+/// Performs 4 rounds of the message block digest.
+pub fn sha1_digest_round_x4(abcd: u32x4, work: u32x4, i: i8) -> u32x4 {
     const K0V: u32x4 = u32x4(K0, K0, K0, K0);
     const K1V: u32x4 = u32x4(K1, K1, K1, K1);
     const K2V: u32x4 = u32x4(K2, K2, K2, K2);
@@ -120,9 +134,8 @@ pub fn sha1rnds4(abcd: u32x4, work: u32x4, i: i8) -> u32x4 {
     }
 }
 
-/// Not an intrinsic.
-#[inline]
-pub fn sha1rnds4c(abcd: u32x4, msg: u32x4) -> u32x4 {
+/// Not an intrinsic, but helps emulate `llvm.x86.sha1rnds4` intrinsic.
+fn sha1rnds4c(abcd: u32x4, msg: u32x4) -> u32x4 {
     let u32x4(mut a, mut b, mut c, mut d) = abcd;
     let u32x4(t, u, v, w) = msg;
     let mut e = 0u32;
@@ -139,9 +152,8 @@ pub fn sha1rnds4c(abcd: u32x4, msg: u32x4) -> u32x4 {
     u32x4(b, c, d, e)
 }
 
-/// Not an intrinsic.
-#[inline]
-pub fn sha1rnds4p(abcd: u32x4, msg: u32x4) -> u32x4 {
+/// Not an intrinsic, but helps emulate `llvm.x86.sha1rnds4` intrinsic.
+fn sha1rnds4p(abcd: u32x4, msg: u32x4) -> u32x4 {
     let u32x4(mut a, mut b, mut c, mut d) = abcd;
     let u32x4(t, u, v, w) = msg;
     let mut e = 0u32;
@@ -158,9 +170,8 @@ pub fn sha1rnds4p(abcd: u32x4, msg: u32x4) -> u32x4 {
     u32x4(b, c, d, e)
 }
 
-/// Not an intrinsic.
-#[inline]
-pub fn sha1rnds4m(abcd: u32x4, msg: u32x4) -> u32x4 {
+/// Not an intrinsic, but helps emulate `llvm.x86.sha1rnds4` intrinsic.
+fn sha1rnds4m(abcd: u32x4, msg: u32x4) -> u32x4 {
     let u32x4(mut a, mut b, mut c, mut d) = abcd;
     let u32x4(t, u, v, w) = msg;
     let mut e = 0u32;
@@ -177,22 +188,8 @@ pub fn sha1rnds4m(abcd: u32x4, msg: u32x4) -> u32x4 {
     u32x4(b, c, d, e)
 }
 
-/// Not an intrinsic.
-#[inline]
-pub fn sha1stadd(e: u32, w0: u32x4) -> u32x4 {
-    let u32x4(a, b, c, d) = w0;
-    u32x4(e + a, b, c, d)
-}
-
-/// Not an intrinsic.
-#[inline]
-pub fn sha1st(w0: u32x4) -> u32 {
-    w0.0
-}
-
 /// Process a block with the SHA-1 algorithm.
-#[inline]
-pub fn sha1_digest_block_u32(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
+pub fn sha1_digest_block_u32(state: &mut [u32; 5], block: &[u32; 16]) {
 
     macro_rules! schedule {
         ($v0:expr, $v1:expr, $v2:expr, $v3:expr) => (
@@ -202,7 +199,7 @@ pub fn sha1_digest_block_u32(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
 
     macro_rules! rounds4 {
         ($h0:ident, $h1:ident, $wk:expr, $i:expr) => (
-            sha1rnds4($h0, sha1nexte($h1, $wk), $i)
+            sha1_digest_round_x4($h0, sha1_first_half($h1, $wk), $i)
         )
     }
 
@@ -211,25 +208,25 @@ pub fn sha1_digest_block_u32(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
                        state[1],
                        state[2],
                        state[3]);
-    let mut w0 = u32x4(block[0].to_be(),
-                       block[1].to_be(),
-                       block[2].to_be(),
-                       block[3].to_be());
-    let mut h1 = sha1rnds4(h0, sha1stadd(state[4], w0), 0);
-    let mut w1 = u32x4(block[4].to_be(),
-                       block[5].to_be(),
-                       block[6].to_be(),
-                       block[7].to_be());
+    let mut w0 = u32x4(block[0],
+                       block[1],
+                       block[2],
+                       block[3]);
+    let mut h1 = sha1_digest_round_x4(h0, sha1_first_add(state[4], w0), 0);
+    let mut w1 = u32x4(block[4],
+                       block[5],
+                       block[6],
+                       block[7]);
     h0 = rounds4!(h1, h0, w1, 0);
-    let mut w2 = u32x4(block[8].to_be(),
-                       block[9].to_be(),
-                       block[10].to_be(),
-                       block[11].to_be());
+    let mut w2 = u32x4(block[8],
+                       block[9],
+                       block[10],
+                       block[11]);
     h1 = rounds4!(h0, h1, w2, 0);
-    let mut w3 = u32x4(block[12].to_be(),
-                       block[13].to_be(),
-                       block[14].to_be(),
-                       block[15].to_be());
+    let mut w3 = u32x4(block[12],
+                       block[13],
+                       block[14],
+                       block[15]);
     h0 = rounds4!(h1, h0, w3, 0);
     let mut w4 = schedule!(w0, w1, w2, w3);
     h1 = rounds4!(h0, h1, w4, 0);
@@ -270,7 +267,7 @@ pub fn sha1_digest_block_u32(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
     w4 = schedule!(w0, w1, w2, w3);
     h0 = rounds4!(h1, h0, w4, 3);
 
-    let e = sha1st(h1).rotate_left(30);
+    let e = sha1_first(h1).rotate_left(30);
     let u32x4(a, b, c, d) = h0;
 
     state[0] += a;
@@ -280,93 +277,59 @@ pub fn sha1_digest_block_u32(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
     state[4] += e;
 }
 
-/// Process a block with the SHA-1 algorithm.
+/// Process a block with the SHA-1 algorithm. (See more...)
 ///
-/// The original safe algorithm.
+/// SHA-1 is a cryptographic hash function, and as such, it operates
+/// on an arbitrary number of bytes. This function operates on a fixed
+/// number of bytes. If you call this function with anything other than
+/// 64 bytes, then it will panic! This function takes two arguments:
 ///
-/// A SHA-1 implementation derived from Paul E. Jones's reference
-/// implementation, which is written for clarity, not speed. At some
-/// point this will want to be rewritten.
-#[inline]
-pub fn sha1_digest_block_u32_safe(state: &mut [u32/*; 5*/], block: &[u32/*; 16*/]) {
-    let mut w = [0u32; 80];
-
-    let mut a = state[0];
-    let mut b = state[1];
-    let mut c = state[2];
-    let mut d = state[3];
-    let mut e = state[4];
-    let mut temp: u32;
-
-    // Initialize the first 16 words of the vector w
-    for t in 0..16 {
-        w[t] = block[t].to_be();
-    }
-
-    // Initialize the rest of vector w
-    let mut t = 16; // loop counter
-    while t < 80 {
-        let val = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
-        w[t] = val.rotate_left(1);
-        t += 1;
-    }
-    t = 0;
-    while t < 20 {
-        temp = a.rotate_left(5) + (b & c | !b & d) + e + w[t] + K0;
-        e = d;
-        d = c;
-        c = b.rotate_left(30);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    while t < 40 {
-        temp = a.rotate_left(5) + (b ^ c ^ d) + e + w[t] + K1;
-        e = d;
-        d = c;
-        c = b.rotate_left(30);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    while t < 60 {
-        temp = a.rotate_left(5) + (b & c | b & d | c & d) + e + w[t] + K2;
-        e = d;
-        d = c;
-        c = b.rotate_left(30);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-    while t < 80 {
-        temp = a.rotate_left(5) + (b ^ c ^ d) + e + w[t] + K3;
-        e = d;
-        d = c;
-        c = b.rotate_left(30);
-        b = a;
-        a = temp;
-        t += 1;
-    }
-
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
-}
-
-/// Process a block with the SHA-1 algorithm.
+/// * `state` is reference to an **array** of 5 words.
+/// * `block` is reference to a **slice** of 64 bytes.
 ///
-/// Chooses an implementation based on architecture,
-/// and whether or not the architecture supports SHA
-/// instruction set extensions.
-pub fn sha1_digest_block(state: &mut [u32/*; 5*/], bytes: &[u8/*; 64*/]) {
-    assert_eq!(state.len(), STATE_LEN);
-    assert_eq!(bytes.len(), BLOCK_LEN*4);
-    let (words, _): (&[u32; 16], usize) = unsafe {
-        ::std::mem::transmute(bytes)
-    };
-    sha1_digest_block_u32(state, &words[]);
+/// If you want the function that performs a message digest on an arbitrary
+/// number of bytes, then see also the `Sha1` struct above.
+///
+/// # Implementation
+///
+/// First, some background. Both ARM and Intel are releasing documentation
+/// that they plan to include instruction set extensions for SHA1 and SHA256
+/// sometime in the near future. Second, LLVM won't lower these intrinsics yet,
+/// so these functions were written emulate these instructions. Finally,
+/// the block function implemented with these emulated intrinsics turned out
+/// to be quite fast! What follows is a discussion of this CPU-level view
+/// of the SHA-1 algorithm and how it relates to the mathematical definition.
+///
+/// The SHA instruction set extensions can be divided up into two categories:
+///
+/// * message work schedule update calculation ("schedule" v., "work" n.)
+/// * message block 80-round digest calculation ("digest" v., "block" n.)
+///
+/// The schedule-related functions can be used to easily perform 4 rounds
+/// of the message work schedule update calculation, as shown below:
+///
+/// ```ignore
+/// macro_rules! schedule_x4 {
+///     ($v0:expr, $v1:expr, $v2:expr, $v3:expr) => (
+///         sha1msg2(sha1msg1($v0, $v1) ^ $v2, $v3)
+///     )
+/// }
+///
+/// macro_rules! round_x4 {
+///     ($h0:ident, $h1:ident, $wk:expr, $i:expr) => (
+///         sha1rnds4($h0, sha1_first_half($h1, $wk), $i)
+///     )
+/// }
+/// ```
+///
+/// and also shown above is how the digest-related functions can be used to
+/// perform 4 rounds of the message block digest calculation.
+///
+pub fn sha1_digest_block(state: &mut [u32; 5], block: &[u8/*; 64*/]) {
+    assert_eq!(block.len(), BLOCK_LEN*4);
+    let mut block2 = [0u32; BLOCK_LEN];
+    read_u32v_be(&mut block2[], block);
+    sha1_digest_block_u32(state, &block2);
 }
 
 fn add_input(st: &mut Sha1, msg: &[u8]) {
@@ -552,17 +515,17 @@ mod tests {
 mod bench {
     use test::Bencher;
     use digest::Digest;
-    use sha1::Sha1;
+    use sha1::{STATE_LEN, BLOCK_LEN};
+    use sha1::{Sha1, sha1_digest_block_u32};
 
     #[bench]
     pub fn sha1_block(bh: & mut Bencher) {
-        use super::sha1_digest_block;
-        let mut result = [0u32; 5];
-        let bytes = [1u8; 64];
+        let mut state = [0u32; STATE_LEN];
+        let words = [1u32; BLOCK_LEN];
         bh.iter( || {
-            sha1_digest_block(&mut result[], &bytes);
+            sha1_digest_block_u32(&mut state, &words);
         });
-        bh.bytes = bytes.len() as u64;
+        bh.bytes = 64u64;
     }
 
     #[bench]
