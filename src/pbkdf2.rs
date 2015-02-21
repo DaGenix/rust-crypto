@@ -12,6 +12,7 @@
 use std::iter::repeat;
 use std::old_io::IoResult;
 use std::num::Int;
+use std::slice::bytes::copy_memory;
 
 use rand::{OsRng, Rng};
 use serialize::base64;
@@ -103,7 +104,8 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         } else {
             let mut tmp: Vec<u8> = repeat(0).take(os).collect();
             calculate_block(mac, salt, c, idx, &mut scratch[..], &mut tmp[..]);
-            chunk.clone_from_slice(&tmp[..]);
+            let chunk_len = chunk.len();
+            copy_memory(chunk, &tmp[..chunk_len]);
         }
     }
 }

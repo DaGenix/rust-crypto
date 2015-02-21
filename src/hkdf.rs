@@ -9,6 +9,7 @@
 
 use std::iter::repeat;
 use std::num::Int;
+use std::slice::bytes::copy_memory;
 
 use digest::Digest;
 use hmac::Hmac;
@@ -61,7 +62,8 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
         mac.input(&nbuf);
         mac.raw_result(t.as_mut_slice());
         mac.reset();
-        chunk.clone_from_slice(&t[..]);
+        let chunk_len = chunk.len();
+        copy_memory(chunk, &t[..chunk_len]);
     }
 }
 

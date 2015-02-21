@@ -44,6 +44,8 @@
  * say) then you need to EXPLICITLY RESEED THE RNG AFTER FORKING.
  */
 
+use std::slice::bytes::copy_memory;
+
 use rand::{Rng, SeedableRng};
 use time::precise_time_s;
 
@@ -133,7 +135,7 @@ impl FortunaGenerator {
         if rem > 0 {
             let mut buf = [0; AES_BLOCK_SIZE];
             self.generate_blocks(1, buf.as_mut_slice());
-            out[(n * AES_BLOCK_SIZE)..].clone_from_slice(&buf[..rem]);
+            copy_memory(&mut out[(n * AES_BLOCK_SIZE)..], &buf[..rem]);
         }
 
         // Rekey
