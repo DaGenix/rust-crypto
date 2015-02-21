@@ -69,7 +69,7 @@ impl <D: Digest> Hmac<D> {
      */
     pub fn new(mut digest: D, key: &[u8]) -> Hmac<D> {
         let (i_key, o_key) = create_keys(&mut digest, key);
-        digest.input(&i_key[]);
+        digest.input(&i_key[..]);
         Hmac {
             digest: digest,
             i_key: i_key,
@@ -87,7 +87,7 @@ impl <D: Digest> Mac for Hmac<D> {
 
     fn reset(&mut self) {
         self.digest.reset();
-        self.digest.input(&self.i_key[]);
+        self.digest.input(&self.i_key[..]);
         self.finished = false;
     }
 
@@ -105,7 +105,7 @@ impl <D: Digest> Mac for Hmac<D> {
             self.digest.result(output);
 
             self.digest.reset();
-            self.digest.input(&self.o_key[]);
+            self.digest.input(&self.o_key[..]);
             self.digest.input(output);
 
             self.finished = true;
@@ -164,18 +164,18 @@ mod test {
     fn test_hmac_md5() {
         let tests = tests();
         for t in tests.iter() {
-            let mut hmac = Hmac::new(Md5::new(), &t.key[]);
+            let mut hmac = Hmac::new(Md5::new(), &t.key[..]);
 
-            hmac.input(&t.data[]);
+            hmac.input(&t.data[..]);
             let result = hmac.result();
-            let expected = MacResult::new(&t.expected[]);
+            let expected = MacResult::new(&t.expected[..]);
             assert!(result == expected);
 
             hmac.reset();
 
-            hmac.input(&t.data[]);
+            hmac.input(&t.data[..]);
             let result2 = hmac.result();
-            let expected2 = MacResult::new(&t.expected[]);
+            let expected2 = MacResult::new(&t.expected[..]);
             assert!(result2 == expected2);
         }
     }
@@ -184,12 +184,12 @@ mod test {
     fn test_hmac_md5_incremental() {
         let tests = tests();
         for t in tests.iter() {
-            let mut hmac = Hmac::new(Md5::new(), &t.key[]);
+            let mut hmac = Hmac::new(Md5::new(), &t.key[..]);
             for i in range(0, t.data.len()) {
                 hmac.input(&t.data[i..i + 1]);
             }
             let result = hmac.result();
-            let expected = MacResult::new(&t.expected[]);
+            let expected = MacResult::new(&t.expected[..]);
             assert!(result == expected);
         }
     }

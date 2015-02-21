@@ -107,10 +107,10 @@ mod test {
       if tv.tag.len() < 16 {
         continue;
       }
-      let mut c = ChaCha20Poly1305::new(&tv.key, &tv.nonce, &tv.aad[]);
+      let mut c = ChaCha20Poly1305::new(&tv.key, &tv.nonce, &tv.aad[..]);
       let mut output: Vec<u8> = repeat(0).take(tv.plain_text.len()).collect();
       let mut tag: Vec<u8> = repeat(0).take(tv.tag.len()).collect();
-      c.encrypt(&tv.plain_text[], &mut output[], &mut tag[]);
+      c.encrypt(&tv.plain_text[..], &mut output[..], &mut tag[..]);
       assert_eq!(output, tv.cipher_text);
       assert_eq!(tag, tv.tag);
     }
@@ -122,9 +122,9 @@ mod test {
       if tv.tag.len() < 16 {
         continue;
       }
-      let mut c = ChaCha20Poly1305::new(&tv.key, &tv.nonce, &tv.aad[]);
+      let mut c = ChaCha20Poly1305::new(&tv.key, &tv.nonce, &tv.aad[..]);
       let mut output: Vec<u8> = repeat(0).take(tv.plain_text.len()).collect();
-      let result = c.decrypt(&tv.cipher_text[], &mut output[], &tv.tag[]);
+      let result = c.decrypt(&tv.cipher_text[..], &mut output[..], &tv.tag[..]);
       assert_eq!(output, tv.plain_text);
       assert!(result);
     }

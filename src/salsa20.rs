@@ -278,7 +278,7 @@ mod test {
 
         let mut salsa20 = Salsa20::new(&key, &nonce);
         salsa20.process(&input, &mut stream);
-        assert!(stream[] == result[]);
+        assert!(stream[..] == result[..]);
     }
     
     #[test]
@@ -301,7 +301,7 @@ mod test {
 
         let mut salsa20 = Salsa20::new(&key, &nonce);
         salsa20.process(&input, &mut stream);
-        assert!(stream[] == result[]);
+        assert!(stream[..] == result[..]);
     }
 
     #[test]
@@ -325,7 +325,7 @@ mod test {
         let mut sh = Sha256::new();
         sh.input(stream.as_slice());
         let out_str = sh.result_str();
-        assert!(&out_str[] == output_str);
+        assert!(&out_str[..] == output_str);
     }
 
     #[test]
@@ -363,7 +363,7 @@ mod test {
 
         let mut xsalsa20 = Salsa20::new_xsalsa20(&key, &nonce);
         xsalsa20.process(&input, &mut stream);
-        assert!(stream[] == result[]);
+        assert!(stream[..] == result[..]);
     }
 }
 

@@ -122,7 +122,7 @@ fn main() {
     rng.fill_bytes(&mut iv);
 
     let encrypted_data = encrypt(message.as_bytes(), &key, &iv).ok().unwrap();
-    let decrypted_data = decrypt(&encrypted_data[], &key, &iv).ok().unwrap();
+    let decrypted_data = decrypt(&encrypted_data[..], &key, &iv).ok().unwrap();
 
-    assert!(message.as_bytes() == &decrypted_data[]);
+    assert!(message.as_bytes() == &decrypted_data[..]);
 }

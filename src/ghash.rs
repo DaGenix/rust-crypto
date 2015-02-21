@@ -299,8 +299,8 @@ impl Mac for Ghash {
 
     fn result(&mut self) -> MacResult {
         let mut mac = [0u8; 16];
-        self.raw_result(&mut mac[]);
-        MacResult::new(&mac[])
+        self.raw_result(&mut mac[..]);
+        MacResult::new(&mac[..])
     }
 
     fn raw_result(&mut self, output: &mut [u8]) {
@@ -539,7 +539,7 @@ mod test {
     fn hash() {
         for &(h, a, c, g) in CASES.iter() {
             let ghash = Ghash::new(h);
-            assert_eq!(&ghash.input_a(a).input_c(c).result()[], g);
+            assert_eq!(&ghash.input_a(a).input_c(c).result()[..], g);
         }
     }
 
@@ -553,7 +553,7 @@ mod test {
                             .input_a(a2)
                             .input_c(c1)
                             .input_c(c2)
-                            .result()[], g);
+                            .result()[..], g);
         }
     }
 }

@@ -54,14 +54,14 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
         n = n.checked_add(1).expect("HKDF size limit exceeded.");
 
         if n != 1 {
-            mac.input(&t[]);
+            mac.input(&t[..]);
         }
         let nbuf = [n];
         mac.input(info);
         mac.input(&nbuf);
         mac.raw_result(t.as_mut_slice());
         mac.reset();
-        chunk.clone_from_slice(&t[]);
+        chunk.clone_from_slice(&t[..]);
     }
 }
 
@@ -154,12 +154,12 @@ mod test {
 
         for t in test_vectors.iter() {
             let mut prk: Vec<u8> = repeat(0).take(t.prk.len()).collect();
-            hkdf_extract(t.digest, &t.salt[], &t.ikm[], prk.as_mut_slice());
+            hkdf_extract(t.digest, &t.salt[..], &t.ikm[..], prk.as_mut_slice());
             assert!(prk == t.prk);
 
             let mut okm: Vec<u8> = repeat(0).take(t.okm.len()).collect();
             assert!(okm.len() == t.l);
-            hkdf_expand(t.digest, &prk[], &t.info[], okm.as_mut_slice());
+            hkdf_expand(t.digest, &prk[..], &t.info[..], okm.as_mut_slice());
             assert!(okm == t.okm);
         }
     }
@@ -230,12 +230,12 @@ mod test {
 
         for t in test_vectors.iter() {
             let mut prk: Vec<u8> = repeat(0).take(t.prk.len()).collect();
-            hkdf_extract(t.digest, &t.salt[], &t.ikm[], prk.as_mut_slice());
+            hkdf_extract(t.digest, &t.salt[..], &t.ikm[..], prk.as_mut_slice());
             assert!(prk == t.prk);
 
             let mut okm: Vec<u8> = repeat(0).take(t.okm.len()).collect();
             assert!(okm.len() == t.l);
-            hkdf_expand(t.digest, &prk[], &t.info[], okm.as_mut_slice());
+            hkdf_expand(t.digest, &prk[..], &t.info[..], okm.as_mut_slice());
             assert!(okm == t.okm);
         }
     }

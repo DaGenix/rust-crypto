@@ -98,12 +98,12 @@ impl FortunaGenerator {
     fn reseed(&mut self, s: &[u8]) {
         // Compute key as Sha256d( key || s )
         let mut hasher = Sha256::new();
-        hasher.input(&self.key[]);
+        hasher.input(&self.key[..]);
         hasher.input(s);
         hasher.result(self.key.as_mut_slice());
         hasher = Sha256::new();
-        hasher.input(&self.key[]);
-        hasher.result(&mut self.key[]);
+        hasher.input(&self.key[..]);
+        hasher.result(&mut self.key[..]);
         // Increment the counter
         self.increment_counter();
     }
@@ -111,13 +111,13 @@ impl FortunaGenerator {
     /// Generates some `k` 16-byte blocks of random output (PC 9.4.3)
     /// This should never be used directly, except by `generate_random_data`.
     fn generate_blocks(&mut self, k: usize, out: &mut [u8]) {
-        assert!(self.ctr[] != [0; CTR_LEN][]);
+        assert!(self.ctr[..] != [0; CTR_LEN][..]);
 
         // Setup AES encryptor
-        let block_encryptor = AesSafe256Encryptor::new(&self.key[]);
+        let block_encryptor = AesSafe256Encryptor::new(&self.key[..]);
         // Concatenate all the blocks
         for j in range(0, k) {
-            block_encryptor.encrypt_block(&self.ctr[],
+            block_encryptor.encrypt_block(&self.ctr[..],
                                           &mut out[AES_BLOCK_SIZE * j..AES_BLOCK_SIZE * (j + 1)]);
             self.increment_counter();
         }
@@ -243,7 +243,7 @@ impl Rng for Fortuna {
     fn next_u32(&mut self) -> u32 {
         let mut ret = [0; 4];
         self.fill_bytes(ret.as_mut_slice());
-        read_u32_le(&ret[])
+        read_u32_le(&ret[..])
     }
 }
 
@@ -305,7 +305,7 @@ mod tests {
         // NB for this test I'm just trusting the output of the RNG to be correct.
         // I do check for some high-level features: changing most anything should
         // change the output, there should be no tests, etc.
-        let mut f1: Fortuna = SeedableRng::from_seed(&[0, 1, 2, 3, 4, 5][]);
+        let mut f1: Fortuna = SeedableRng::from_seed(&[0, 1, 2, 3, 4, 5][..]);
         assert_eq!(f1.next_u32(), 3369034117);
 
         let mut f2: Fortuna = Fortuna::new_unseeded();
@@ -354,9 +354,9 @@ mod tests {
                         177, 223,  87, 192,  50, 251,  61,  65, 141, 100,
                          59, 228,  23, 215,  58, 107, 248, 248, 103,  57,
                         127,  31, 241,  91, 230,  33,   0, 164,  77, 46];
-        let mut f: Fortuna = SeedableRng::from_seed(&[1, 2, 3, 4][]);
+        let mut f: Fortuna = SeedableRng::from_seed(&[1, 2, 3, 4][..]);
         f.fill_bytes(output.as_mut_slice());
-        assert_eq!(&expected[], &output[]);
+        assert_eq!(&expected[..], &output[..]);
 
         let mut scratch = [0; (1 << 20)];
         f.generator.generate_random_data(scratch.as_mut_slice());
@@ -372,7 +372,7 @@ mod tests {
                          42, 184,  92,  42, 171, 222, 198, 117, 162, 134,
                         116, 109,  77, 195, 187, 139,  37,  78, 224,  63];
         f.fill_bytes(output.as_mut_slice());
-        assert_eq!(&expected[], &output[]);
+        assert_eq!(&expected[..], &output[..]);
 
         f.reseed(&[5]);
 
@@ -388,7 +388,7 @@ mod tests {
                          17, 100, 138,  49,  79, 239, 210, 189, 141,  46];
 
         f.fill_bytes(output.as_mut_slice());
-        assert_eq!(&expected[], &output[]);
+        assert_eq!(&expected[..], &output[..]);
     }
 
     #[test]
@@ -425,7 +425,7 @@ mod tests {
                          28,  30, 195, 195,   9, 154,  31, 172, 209, 232,
                         238, 111,  75, 251, 196,  43, 217, 241,  93, 237];
         f.fill_bytes(output.as_mut_slice());
-        assert_eq!(&expected[], &output[]);
+        assert_eq!(&expected[..], &output[..]);
 
         // Immediately (less than 100ms)
         f.add_random_event(0, 0, &[0; 32]);
@@ -445,7 +445,7 @@ mod tests {
                         114,  68, 123, 200,  37, 183, 163, 224, 201, 155,
                         233,  71, 111,  26,   8, 114, 232, 181,  13,  51];
         f.fill_bytes(output.as_mut_slice());
-        assert_eq!(&expected[], &output[]);
+        assert_eq!(&expected[..], &output[..]);
 
         // Simulate more than 100 ms passing
         test_force_reseed(&mut f);
@@ -462,7 +462,7 @@ mod tests {
                         238,   0, 239,  99, 159,  96, 184,  90,  54, 122,
                         184, 241, 221, 151, 169,  29, 197,  45,  80,   6];
         f.fill_bytes(output.as_mut_slice());
-        assert_eq!(&expected[], &output[]);
+        assert_eq!(&expected[..], &output[..]);
     }
 }
 
@@ -475,7 +475,7 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_32(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][]);
+        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][..]);
         bh.iter( || {
             f.next_u32();
         });
@@ -484,7 +484,7 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_64(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][]);
+        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][..]);
         bh.iter( || {
             f.next_u64();
         });
@@ -493,7 +493,7 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_1k(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][]);
+        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][..]);
         let mut bytes = [0u8; 1024];
         bh.iter( || {
             f.fill_bytes(&mut bytes);
@@ -503,7 +503,7 @@ mod bench {
 
     #[bench]
     pub fn fortuna_new_64k(bh: &mut Bencher) {
-        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][]);
+        let mut f: Fortuna = SeedableRng::from_seed(&[100; 64][..]);
         let mut bytes = [0u8; 65536];
         bh.iter( || {
             f.fill_bytes(&mut bytes);

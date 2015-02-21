@@ -409,7 +409,7 @@ mod test {
             let mut c = ChaCha20::new(&tv.key, &tv.nonce);
             let input: Vec<u8> = repeat(0).take(tv.keystream.len()).collect();
             let mut output: Vec<u8> = repeat(0).take(input.len()).collect();
-            c.process(&input[], &mut output[]);
+            c.process(&input[..], &mut output[..]);
             assert_eq!(output, tv.keystream);
         }
     }
@@ -452,7 +452,7 @@ mod test {
 
         let mut xchacha20 = ChaCha20::new_xchacha20(&key, &nonce);
         xchacha20.process(&input, &mut stream);
-        assert!(stream[] == result[]);
+        assert!(stream[..] == result[..]);
     }
 
     #[test]
@@ -585,7 +585,7 @@ mod test {
             let mut c = ChaCha20::new(&tv.key, &tv.nonce);
             let input: Vec<u8> = repeat(0).take(tv.keystream.len()).collect();
             let mut output: Vec<u8> = repeat(0).take(input.len()).collect();
-            c.process(&input[], &mut output[]);
+            c.process(&input[..], &mut output[..]);
             assert_eq!(output, tv.keystream);
         }
     }

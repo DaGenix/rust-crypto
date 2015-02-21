@@ -259,7 +259,7 @@ mod test {
 
         for t in tests.iter() {
             let mut out: Vec<u8> = repeat(0).take(t.out.len()).collect();
-            bcrypt_pbkdf(&t.password[], &t.salt[], t.rounds, &mut out[]);
+            bcrypt_pbkdf(&t.password[..], &t.salt[..], t.rounds, &mut out[..]);
             assert_eq!(out, t.out);
         }
     }

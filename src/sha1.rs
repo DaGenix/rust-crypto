@@ -328,7 +328,7 @@ pub fn sha1_digest_block_u32(state: &mut [u32; 5], block: &[u32; 16]) {
 pub fn sha1_digest_block(state: &mut [u32; 5], block: &[u8/*; 64*/]) {
     assert_eq!(block.len(), BLOCK_LEN*4);
     let mut block2 = [0u32; BLOCK_LEN];
-    read_u32v_be(&mut block2[], block);
+    read_u32v_be(&mut block2[..], block);
     sha1_digest_block_u32(state, &block2);
 }
 
@@ -471,11 +471,11 @@ mod tests {
         for t in tests.iter() {
             (*sh).input_str(t.input);
             sh.result(&mut out);
-            assert!(t.output[] == out[]);
+            assert!(t.output[..] == out[..]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -491,11 +491,11 @@ mod tests {
                 left = left - take;
             }
             sh.result(&mut out);
-            assert!(t.output[] == out[]);
+            assert!(t.output[..] == out[..]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }

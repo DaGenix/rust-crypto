@@ -170,7 +170,7 @@ pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
     let p = plaintext.as_ptr();
     let k = keystream.as_ptr();
     let d = dst.as_mut_ptr();
-    for i in range(0is, plaintext.len() as isize) {
+    for i in range(0isize, plaintext.len() as isize) {
         unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
     }
 }
@@ -515,7 +515,7 @@ pub mod test {
 
         let result_str = digest.result_str();
 
-        assert!(expected == &result_str[]);
+        assert!(expected == &result_str[..]);
     }
 
     // A normal addition - no overflow occurs

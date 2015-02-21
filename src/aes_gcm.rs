@@ -157,12 +157,12 @@ mod test {
                 32 => KeySize::KeySize256,
                 _ => unreachable!()
             };
-            let mut cipher = AesGcm::new(key_size, &item.key[], &item.iv[], &item.aad[]);
+            let mut cipher = AesGcm::new(key_size, &item.key[..], &item.iv[..], &item.aad[..]);
             let mut out: Vec<u8> = repeat(0).take(item.plain_text.len()).collect();
             
             let mut out_tag: Vec<u8> = repeat(0).take(16).collect();
             
-            cipher.encrypt(&item.plain_text[], &mut out[],&mut out_tag[]);
+            cipher.encrypt(&item.plain_text[..], &mut out[..],&mut out_tag[..]);
             assert_eq!(out, item.cipher_text);
             assert_eq!(out_tag, item.tag);
         }
@@ -178,10 +178,10 @@ mod test {
                 32 => KeySize::KeySize256,
                 _ => unreachable!()
             };
-            let mut decipher = AesGcm::new(key_size, &item.key[], &item.iv[], &item.aad[]);
+            let mut decipher = AesGcm::new(key_size, &item.key[..], &item.iv[..], &item.aad[..]);
             let mut out: Vec<u8> = repeat(0).take(item.plain_text.len()).collect();
                         
-            let result = decipher.decrypt(&item.cipher_text[], &mut out[], &item.tag[]);
+            let result = decipher.decrypt(&item.cipher_text[..], &mut out[..], &item.tag[..]);
             assert_eq!(out, item.plain_text);
             assert!(result);
         }
@@ -196,11 +196,11 @@ mod test {
                 32 => KeySize::KeySize256,
                 _ => unreachable!()
             };
-            let mut decipher = AesGcm::new(key_size, &item.key[], &item.iv[], &item.aad[]);
+            let mut decipher = AesGcm::new(key_size, &item.key[..], &item.iv[..], &item.aad[..]);
             let tag: Vec<u8> = repeat(0).take(16).collect();
             let mut out1: Vec<u8> = repeat(0).take(item.plain_text.len()).collect();
             let out2: Vec<u8> = repeat(0).take(item.plain_text.len()).collect();
-            let result = decipher.decrypt(&item.cipher_text[], &mut out1[], &tag[]);
+            let result = decipher.decrypt(&item.cipher_text[..], &mut out1[..], &tag[..]);
             assert_eq!(out1, out2);
             assert!(!result);
         }
