@@ -963,37 +963,37 @@ impl Fe {
         let z_5_0 = z9*z22;
 
         /* qhasm: z_10_5 = z_5_0^2^5 */
-        let z_10_5 = range(0, 5).fold(z_5_0, |z_5_n, _| z_5_n.square());
+        let z_10_5 = (0..5).fold(z_5_0, |z_5_n, _| z_5_n.square());
 
         /* qhasm: z_10_0 = z_10_5*z_5_0 */
         let z_10_0 = z_10_5*z_5_0;
 
         /* qhasm: z_20_10 = z_10_0^2^10 */
-        let z_20_10 = range(0, 10).fold(z_10_0, |x, _| x.square());
+        let z_20_10 = (0..10).fold(z_10_0, |x, _| x.square());
 
         /* qhasm: z_20_0 = z_20_10*z_10_0 */
         let z_20_0 = z_20_10*z_10_0;
 
         /* qhasm: z_40_20 = z_20_0^2^20 */
-        let z_40_20 = range(0, 20).fold(z_20_0, |x, _| x.square());
+        let z_40_20 = (0..20).fold(z_20_0, |x, _| x.square());
 
         /* qhasm: z_40_0 = z_40_20*z_20_0 */
         let z_40_0 = z_40_20*z_20_0;
 
         /* qhasm: z_50_10 = z_40_0^2^10 */
-        let z_50_10 = range(0, 10).fold(z_40_0, |x, _| x.square());
+        let z_50_10 = (0..10).fold(z_40_0, |x, _| x.square());
 
         /* qhasm: z_50_0 = z_50_10*z_10_0 */
         let z_50_0 = z_50_10*z_10_0;
 
         /* qhasm: z_100_50 = z_50_0^2^50 */
-        let z_100_50 = range(0, 50).fold(z_50_0, |x, _| x.square());
+        let z_100_50 = (0..50).fold(z_50_0, |x, _| x.square());
 
         /* qhasm: z_100_0 = z_100_50*z_50_0 */
         let z_100_0 = z_100_50*z_50_0;
 
         /* qhasm: z_200_100 = z_100_0^2^100 */
-        let z_200_100 = range(0, 100).fold(z_100_0, |x, _| x.square());
+        let z_200_100 = (0..100).fold(z_100_0, |x, _| x.square());
 
         /* qhasm: z_200_0 = z_200_100*z_100_0 */
         /* asm 1: fe_mul(>z_200_0=fe#3,<z_200_100=fe#4,<z_100_0=fe#3); */
@@ -1001,13 +1001,13 @@ impl Fe {
         let z_200_0 = z_200_100*z_100_0;
 
         /* qhasm: z_250_50 = z_200_0^2^50 */
-        let z_250_50 = range(0, 50).fold(z_200_0, |x, _| x.square());
+        let z_250_50 = (0..50).fold(z_200_0, |x, _| x.square());
 
         /* qhasm: z_250_0 = z_250_50*z_50_0 */
         let z_250_0 = z_250_50*z_50_0;
 
         /* qhasm: z_255_5 = z_250_0^2^5 */
-        let z_255_5 = range(0, 5).fold(z_250_0, |x, _| x.square());
+        let z_255_5 = (0..5).fold(z_250_0, |x, _| x.square());
 
         /* qhasm: z_255_21 = z_255_5*z11 */
         /* asm 1: fe_mul(>z_255_21=fe#12,<z_255_5=fe#2,<z11=fe#1); */
@@ -1036,26 +1036,26 @@ impl Fe {
 
     fn pow25523(&self) -> Fe {
         let z2 = self.square();
-        let z8 = range(0, 2).fold(z2, |x, _| x.square());
+        let z8 = (0..2).fold(z2, |x, _| x.square());
         let z9 = *self * z8;
         let z11 = z2 * z9;
         let z22 = z11.square();
         let z_5_0 = z9 * z22;
-        let z_10_5 = range(0, 5).fold(z_5_0, |x, _| x.square());
+        let z_10_5 = (0..5).fold(z_5_0, |x, _| x.square());
         let z_10_0 = z_10_5 * z_5_0;
-        let z_20_10 = range(0, 10).fold(z_10_0, |x, _| x.square());
+        let z_20_10 = (0..10).fold(z_10_0, |x, _| x.square());
         let z_20_0 = z_20_10 * z_10_0;
-        let z_40_20 = range(0, 20).fold(z_20_0, |x, _| x.square());
+        let z_40_20 = (0..20).fold(z_20_0, |x, _| x.square());
         let z_40_0 = z_40_20 * z_20_0;
-        let z_50_10 = range(0, 10).fold(z_40_0, |x, _| x.square());
+        let z_50_10 = (0..10).fold(z_40_0, |x, _| x.square());
         let z_50_0 = z_50_10 * z_10_0;
-        let z_100_50 = range(0, 50).fold(z_50_0, |x, _| x.square());
+        let z_100_50 = (0..50).fold(z_50_0, |x, _| x.square());
         let z_100_0 = z_100_50 * z_50_0;
-        let z_200_100 = range(0, 100).fold(z_100_0, |x, _| x.square());
+        let z_200_100 = (0..100).fold(z_100_0, |x, _| x.square());
         let z_200_0 = z_200_100 * z_100_0;
-        let z_250_50 = range(0, 50).fold(z_200_0, |x, _| x.square());
+        let z_250_50 = (0..50).fold(z_200_0, |x, _| x.square());
         let z_250_0 = z_250_50 * z_50_0;
-        let z_252_2 = range(0, 2).fold(z_250_0, |x, _| x.square());
+        let z_252_2 = (0..2).fold(z_250_0, |x, _| x.square());
         let z_252_3 = z_252_2 * *self;
 
         z_252_3
@@ -1155,18 +1155,18 @@ impl GeP2 {
 
     fn slide(a: &[u8]) -> [i8; 256] {
         let mut r = [0i8; 256];
-        for i in range(0, 256) {
+        for i in (0..256) {
             r[i] = (1 & (a[i >> 3] >> (i & 7))) as i8;
         }
-        for i in range(0, 256) {
+        for i in (0..256) {
             if r[i]!=0 {
-                for b in range(1, min(7, 256-i)) {
+                for b in (1..min(7, 256-i)) {
                     if r[i + b] != 0 {
                         if r[i] + (r[i + b] << b) <= 15 {
                             r[i] += r[i + b] << b; r[i + b] = 0;
                         } else if r[i] - (r[i + b] << b) >= -15 {
                             r[i] -= r[i + b] << b;
-                            for k in range(i+b, 256) {
+                            for k in (i+b..256) {
                                 if r[k]==0 {
                                     r[k] = 1;
                                     break;
@@ -1462,7 +1462,7 @@ pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
     let mut s: GeP2;
     let mut t: GePrecomp;
 
-    for i in range(0, 32) {
+    for i in (0..32) {
         es[2 * i + 0] = ((a[i] >> 0) & 15) as i8;
         es[2 * i + 1] = ((a[i] >> 4) & 15) as i8;
     }
@@ -1470,7 +1470,7 @@ pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
     /* es[63] is between 0 and 7 */
 
     let mut carry: i8 = 0;
-    for i in range(0, 63) {
+    for i in (0..63) {
         es[i] += carry;
         carry = es[i] + 8;
         carry >>= 4;
@@ -2167,8 +2167,8 @@ mod tests {
 
     #[test]
     fn from_to_bytes_preserves() {
-        for i in range(0, 50) {
-            let mut e: Vec<u8> = range(0u32, 32).map(|idx| (idx*(1289+i*761)) as u8).collect();
+        for i in (0..50) {
+            let mut e: Vec<u8> = (0u32..32).map(|idx| (idx*(1289+i*761)) as u8).collect();
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;
@@ -2205,7 +2205,7 @@ mod tests {
         type Item = Fe;
 
         fn next(&mut self) -> Option<Fe> {
-            let mut e: Vec<u8> = range(0, 32).map(|idx| (idx*(1289+self.which*761)) as u8).collect();
+            let mut e: Vec<u8> = (0..32).map(|idx| (idx*(1289+self.which*761)) as u8).collect();
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;

@@ -46,7 +46,7 @@ pub fn write_u64v_le(dst: &mut[u8], input: &[u64]) {
     unsafe {
         let mut x: *mut u8 = dst.get_unchecked_mut(0);
         let mut y: *const u64 = input.get_unchecked(0);
-        for _ in range(0, input.len()) {
+        for _ in (0..input.len()) {
             let tmp = (*y).to_le();
             ptr::copy_nonoverlapping_memory(x, &tmp as *const _ as *const u8, 8);
             x = x.offset(8);
@@ -98,7 +98,7 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     unsafe {
         let mut x = dst.get_unchecked_mut(0) as *mut u64;
         let mut y = input.get_unchecked(0) as *const u8;
-        for _ in range(0, dst.len()) {
+        for _ in (0..dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
             ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, y, 8);
             *x = Int::from_be(tmp);
@@ -114,7 +114,7 @@ pub fn read_u64v_le(dst: &mut[u64], input: &[u8]) {
     unsafe {
         let mut x = dst.get_unchecked_mut(0) as *mut u64;
         let mut y = input.get_unchecked(0) as *const u8;
-        for _ in range(0, dst.len()) {
+        for _ in (0..dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
             ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, y, 8);
             *x = Int::from_le(tmp);
@@ -130,7 +130,7 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     unsafe {
         let mut x = dst.get_unchecked_mut(0) as *mut u32;
         let mut y = input.get_unchecked(0) as *const u8;
-        for _ in range(0, dst.len()) {
+        for _ in (0..dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
             ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, y, 4);
             *x = Int::from_be(tmp);
@@ -146,7 +146,7 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     unsafe {
         let mut x = dst.get_unchecked_mut(0) as *mut u32;
         let mut y = input.get_unchecked(0) as *const u8;
-        for _ in range(0, dst.len()) {
+        for _ in (0..dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
             ptr::copy_nonoverlapping_memory(&mut tmp as *mut _ as *mut u8, y, 4);
             *x = Int::from_le(tmp);
@@ -185,7 +185,7 @@ pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
     let p = plaintext.as_ptr();
     let k = keystream.as_ptr();
     let d = dst.as_mut_ptr();
-    for i in range(0isize, plaintext.len() as isize) {
+    for i in (0isize..plaintext.len() as isize) {
         unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
     }
 }

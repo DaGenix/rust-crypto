@@ -28,7 +28,7 @@ impl Rc4 {
             *x = i as u8;
         }
         let mut j: u8 = 0;
-        for i in range(0, 256) {
+        for i in (0..256) {
             j = j + rc4.state[i] + key[i % key.len()];
             rc4.state.swap(i, j as usize);
         }
