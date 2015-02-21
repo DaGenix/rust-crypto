@@ -1014,12 +1014,12 @@ impl <T: BitXor<Output = T> + BitAnd<Output = T> + Copy> Gf4Ops for Bs4State<T> 
 }
 
 // Operations in GF(2^8) using normal basis (d^16,d)
-trait Gf8Ops<T> {
+trait Gf8Ops {
     // inverse
     fn inv(&self) -> Self;
 }
 
-impl <T: BitXor<Output = T> + BitAnd<Output = T> + Copy + Default> Gf8Ops<T> for Bs8State<T> {
+impl <T: BitXor<Output = T> + BitAnd<Output = T> + Copy + Default> Gf8Ops for Bs8State<T> {
     fn inv(&self) -> Bs8State<T> {
         let (b, a) = self.split();
         let c = a.xor(b).sq_scl();
