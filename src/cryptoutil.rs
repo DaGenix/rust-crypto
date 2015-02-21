@@ -515,7 +515,7 @@ pub mod test {
 
         let result_str = digest.result_str();
 
-        assert!(expected == &result_str[]);
+        assert!(expected == &result_str[..]);
     }
 
     // A normal addition - no overflow occurs

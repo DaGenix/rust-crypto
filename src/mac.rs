@@ -77,7 +77,7 @@ impl MacResult {
      * may permit timing attacks which defeat the security provided by the Mac function.
      */
     pub fn code<'s>(&'s self) -> &'s [u8] {
-        &self.code[]
+        &self.code[..]
     }
 }
 

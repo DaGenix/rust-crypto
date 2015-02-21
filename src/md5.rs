@@ -274,7 +274,7 @@ mod tests {
 
         let mut sh = Md5::new();
 
-        test_hash(&mut sh, &tests[]);
+        test_hash(&mut sh, &tests[..]);
     }
 
     #[test]

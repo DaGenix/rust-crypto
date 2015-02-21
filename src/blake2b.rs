@@ -420,7 +420,7 @@ mod digest_tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -436,7 +436,7 @@ mod digest_tests {
             }
 
             let out_str = sh.result_str();
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -462,7 +462,7 @@ mod digest_tests {
 
         let mut sh = Blake2b::new(64);
 
-        test_hash(&mut sh, &tests[]);
+        test_hash(&mut sh, &tests[..]);
     }
 }
 
@@ -475,7 +475,7 @@ mod mac_tests {
     #[test]
     fn test_blake2b_mac() {
         let key: Vec<u8> = range(0, 64).map(|i| i).collect();
-        let mut m = Blake2b::new_keyed(64, &key[]);
+        let mut m = Blake2b::new_keyed(64, &key[..]);
         m.input(&[1,2,4,8]);
         let expected = [
             0x8e, 0xc6, 0xcb, 0x71, 0xc4, 0x5c, 0x3c, 0x90,

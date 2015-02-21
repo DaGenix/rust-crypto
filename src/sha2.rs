@@ -351,7 +351,7 @@ pub fn sha256_digest_block_u32(state: &mut [u32; 8], block: &[u32; 16]) {
 pub fn sha256_digest_block(state: &mut [u32; 8], block: &[u8/*; 64*/]) {
     assert_eq!(block.len(), BLOCK_LEN*4);
     let mut block2 = [0u32; BLOCK_LEN];
-    read_u32v_be(&mut block2[], block);
+    read_u32v_be(&mut block2[..], block);
     sha256_digest_block_u32(state, &block2);
 }
 
@@ -638,7 +638,7 @@ pub fn sha512_digest_block_u64(state: &mut [u64; 8], block: &[u64; 16]) {
 pub fn sha512_digest_block(state: &mut [u64; 8], block: &[u8/*; 128*/]) {
     assert_eq!(block.len(), BLOCK_LEN*8);
     let mut block2 = [0u64; BLOCK_LEN];
-    read_u64v_be(&mut block2[], block);
+    read_u64v_be(&mut block2[..], block);
     sha512_digest_block_u64(state, &block2);
 }
 
@@ -1207,7 +1207,7 @@ mod tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -1223,7 +1223,7 @@ mod tests {
             }
 
             let out_str = sh.result_str();
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -1251,7 +1251,7 @@ mod tests {
 
         let mut sh = box Sha512::new();
 
-        test_hash(&mut *sh, &tests[]);
+        test_hash(&mut *sh, &tests[..]);
     }
 
     #[test]
@@ -1276,7 +1276,7 @@ mod tests {
 
         let mut sh = box Sha384::new();
 
-        test_hash(&mut *sh, &tests[]);
+        test_hash(&mut *sh, &tests[..]);
     }
 
     #[test]
@@ -1301,7 +1301,7 @@ mod tests {
 
         let mut sh = box Sha512Trunc256::new();
 
-        test_hash(&mut *sh, &tests[]);
+        test_hash(&mut *sh, &tests[..]);
     }
 
     #[test]
@@ -1326,7 +1326,7 @@ mod tests {
 
         let mut sh = box Sha512Trunc224::new();
 
-        test_hash(&mut *sh, &tests[]);
+        test_hash(&mut *sh, &tests[..]);
     }
 
     #[test]
@@ -1351,7 +1351,7 @@ mod tests {
 
         let mut sh = box Sha256::new();
 
-        test_hash(&mut *sh, &tests[]);
+        test_hash(&mut *sh, &tests[..]);
     }
 
     #[test]
@@ -1376,7 +1376,7 @@ mod tests {
 
         let mut sh = box Sha224::new();
 
-        test_hash(&mut *sh, &tests[]);
+        test_hash(&mut *sh, &tests[..]);
     }
 
     #[test]

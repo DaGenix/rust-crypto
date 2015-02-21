@@ -147,7 +147,7 @@ macro_rules! process_block(
 fn process_msg_block(data: &[u8], h: &mut [u32; DIGEST_BUF_LEN]) {
     let mut w = [0u32; WORK_BUF_LEN];
     read_u32v_le(&mut w[0..16], data);
-    process_block!(h, w[],
+    process_block!(h, w[..],
         // Round 1
         round1: h_ordering 0, 1, 2, 3, 4; data_index  0; roll_shift 11
         round1: h_ordering 4, 0, 1, 2, 3; data_index  1; roll_shift 14
@@ -483,11 +483,11 @@ mod tests {
         for t in tests.iter() {
             (*sh).input_str(t.input);
             sh.result(&mut out);
-            assert_eq!(&t.output[], &out[]);
+            assert_eq!(&t.output[..], &out[..]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert_eq!(&out_str[], t.output_str);
+            assert_eq!(&out_str[..], t.output_str);
 
             sh.reset();
         }
@@ -503,11 +503,11 @@ mod tests {
                 left = left - take;
             }
             sh.result(&mut out);
-            assert_eq!(&t.output[], &out[]);
+            assert_eq!(&t.output[..], &out[..]);
 
             let out_str = (*sh).result_str();
             assert_eq!(out_str.len(), 40);
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }

@@ -496,20 +496,20 @@ mod test {
         // cryptographically strong, however.
         assert!(out1 != out2);
 
-        match scrypt_check(password, &out1[]) {
+        match scrypt_check(password, &out1[..]) {
             Ok(r) => assert!(r),
             Err(_) => panic!()
         }
-        match scrypt_check(password, &out2[]) {
+        match scrypt_check(password, &out2[..]) {
             Ok(r) => assert!(r),
             Err(_) => panic!()
         }
 
-        match scrypt_check("wrong", &out1[]) {
+        match scrypt_check("wrong", &out1[..]) {
             Ok(r) => assert!(!r),
             Err(_) => panic!()
         }
-        match scrypt_check("wrong", &out2[]) {
+        match scrypt_check("wrong", &out2[..]) {
             Ok(r) => assert!(!r),
             Err(_) => panic!()
         }
