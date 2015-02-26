@@ -12,7 +12,7 @@ Bounds on each t[i] vary depending on context.
 */
 
 #[derive(Copy)]
-pub struct Fe([i32; 10]);
+pub struct Fe(pub [i32; 10]);
 
 impl PartialEq for Fe {
     fn eq(&self, other: &Fe) -> bool {
@@ -943,7 +943,7 @@ impl Fe {
             h5 as i32, h6 as i32, h7 as i32, h8 as i32, h9 as i32])
     }
 
-    fn invert(&self) -> Fe {
+    pub fn invert(&self) -> Fe {
         let z1 = *self;
 
         /* qhasm: z2 = z1^2^1 */
