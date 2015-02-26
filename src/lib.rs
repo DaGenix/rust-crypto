@@ -10,8 +10,7 @@
 #![feature(core)]
 #![feature(io)]
 #![feature(simd)]
-#![feature(slicing_syntax)]
-#![cfg_attr(test, feature(std_misc))]
+#![feature(old_io)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;

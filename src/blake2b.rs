@@ -127,23 +127,25 @@ impl Blake2b {
     }
 
     fn apply_param(&mut self, p: &Blake2bParam) {
-        use std::old_io::BufWriter;
+        use std::io::Write;
+        use cryptoutil::WriteExt;
 
         let mut param_bytes : [u8; 64] = [0; 64];
         {
-            let mut writer = BufWriter::new(&mut param_bytes);
+            let mut writer: &mut [u8] = &mut param_bytes;
             writer.write_u8(p.digest_length).unwrap();
             writer.write_u8(p.key_length).unwrap();
             writer.write_u8(p.fanout).unwrap();
             writer.write_u8(p.depth).unwrap();
-            writer.write_le_u32(p.leaf_length).unwrap();
-            writer.write_le_u64(p.node_offset).unwrap();
+            writer.write_u32_le(p.leaf_length).unwrap();
+            writer.write_u64_le(p.node_offset).unwrap();
             writer.write_u8(p.node_depth).unwrap();
             writer.write_u8(p.inner_length).unwrap();
             writer.write_all(&p.reserved).unwrap();
             writer.write_all(&p.salt).unwrap();
             writer.write_all(&p.personal).unwrap();
         }
+
         let mut param_words : [u64; 8] = [0; 8];
         read_u64v_le(&mut param_words, &param_bytes);
         for (h, param_word) in self.h.iter_mut().zip(param_words.iter()) {
@@ -418,7 +420,7 @@ mod digest_tests {
             sh.input_str(t.input);
 
             let out_str = sh.result_str();
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -434,7 +436,7 @@ mod digest_tests {
             }
 
             let out_str = sh.result_str();
-            assert!(&out_str[] == t.output_str);
+            assert!(&out_str[..] == t.output_str);
 
             sh.reset();
         }
@@ -460,7 +462,7 @@ mod digest_tests {
 
         let mut sh = Blake2b::new(64);
 
-        test_hash(&mut sh, &tests[]);
+        test_hash(&mut sh, &tests[..]);
     }
 }
 
@@ -473,7 +475,7 @@ mod mac_tests {
     #[test]
     fn test_blake2b_mac() {
         let key: Vec<u8> = range(0, 64).map(|i| i).collect();
-        let mut m = Blake2b::new_keyed(64, &key[]);
+        let mut m = Blake2b::new_keyed(64, &key[..]);
         m.input(&[1,2,4,8]);
         let expected = [
             0x8e, 0xc6, 0xcb, 0x71, 0xc4, 0x5c, 0x3c, 0x90,

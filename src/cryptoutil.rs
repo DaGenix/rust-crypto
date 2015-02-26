@@ -9,7 +9,7 @@
 // except according to those terms.
 
 use std;
-use std::mem;
+use std::{io, mem};
 use std::num::{Int, UnsignedInt};
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
@@ -170,11 +170,47 @@ pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
     let p = plaintext.as_ptr();
     let k = keystream.as_ptr();
     let d = dst.as_mut_ptr();
-    for i in range(0is, plaintext.len() as isize) {
+    for i in range(0isize, plaintext.len() as isize) {
         unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
     }
 }
 
+/// An extension trait to implement a few useful serialization
+/// methods on types that implement Write
+pub trait WriteExt {
+    fn write_u8(&mut self, val: u8) -> io::Result<()>;
+    fn write_u32_le(&mut self, val: u32) -> io::Result<()>;
+    fn write_u32_be(&mut self, val: u32) -> io::Result<()>;
+    fn write_u64_le(&mut self, val: u64) -> io::Result<()>;
+    fn write_u64_be(&mut self, val: u64) -> io::Result<()>;
+}
+
+impl <T> WriteExt for T where T: io::Write {
+    fn write_u8(&mut self, val: u8) -> io::Result<()> {
+        let buff = [val];
+        self.write_all(&buff)
+    }
+    fn write_u32_le(&mut self, val: u32) -> io::Result<()> {
+        let mut buff = [0u8; 4];
+        write_u32_le(&mut buff, val);
+        self.write_all(&buff)
+    }
+    fn write_u32_be(&mut self, val: u32) -> io::Result<()> {
+        let mut buff = [0u8; 4];
+        write_u32_be(&mut buff, val);
+        self.write_all(&buff)
+    }
+    fn write_u64_le(&mut self, val: u64) -> io::Result<()> {
+        let mut buff = [0u8; 8];
+        write_u64_le(&mut buff, val);
+        self.write_all(&buff)
+    }
+    fn write_u64_be(&mut self, val: u64) -> io::Result<()> {
+        let mut buff = [0u8; 8];
+        write_u64_be(&mut buff, val);
+        self.write_all(&buff)
+    }
+}
 
 /// symm_enc_or_dec() implements the necessary functionality to turn a SynchronousStreamCipher into
 /// an Encryptor or Decryptor
@@ -479,7 +515,7 @@ pub mod test {
 
         let result_str = digest.result_str();
 
-        assert!(expected == &result_str[]);
+        assert!(expected == &result_str[..]);
     }
 
     // A normal addition - no overflow occurs
