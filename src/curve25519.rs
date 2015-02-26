@@ -2117,7 +2117,7 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
 
     swap = 0;
     // pos starts at 254 and goes down to 0
-    for pos in (0us..255).rev() {
+    for pos in (0usize..255).rev() {
         b = (e[pos / 8] >> (pos & 7)) as i32;
         b &= 1;
         swap ^= b;

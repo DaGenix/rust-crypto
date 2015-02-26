@@ -124,34 +124,42 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
 
 pub fn exchange(public_key: &[u8], private_key: &[u8]) -> [u8; 32] {
     let ed_y = Fe::from_bytes(&public_key);
-    let ed_z = Fe([1,0,0,0,0,0,0,0,0,0]);
     // Produce public key in Montgomery form.
-    let mont_x = edwards_to_montgomery_x(ed_y, ed_z);
+    let mont_x = edwards_to_montgomery_x(ed_y);
+
     // Produce private key from seed component (bytes 0 to 32) 
-    // of extended secret key (64 bytes).
+    // of the Ed25519 extended private key (64 bytes).
     let mut hasher = Sha512::new();
     hasher.input(&private_key[0..32]);
     let mut hash: [u8; 64] = [0; 64];
     hasher.result(&mut hash);
+    // Clamp the hash such that it is a valid private key
+    hash[0] &= 248;
+    hash[31] &= 127;
+    hash[31] |= 64;
 
     let shared_mont_x : [u8; 32] = curve25519(&hash, &mont_x.to_bytes()); // priv., pub.
-    /* Normally need to clamp this produced private key (hash), 
-       but this is done by curve25519 function prior to processing. */
+    
     shared_mont_x
-    // For NaCl compatibility, subsequent step required: HSalsa20 hashing.
 }
 
-fn edwards_to_montgomery_x(ed_y: Fe, ed_z: Fe) -> Fe {
+fn edwards_to_montgomery_x(ed_y: Fe) -> Fe {
+    let ed_z = Fe([1,0,0,0,0,0,0,0,0,0]);
     let temp_x = ed_z.add(ed_y);
     let temp_z = ed_z.sub(ed_y);
     let temp_z_inv = temp_z.invert();
+
     let mont_x = temp_x.mul(temp_z_inv);
+
     mont_x
 }
 
 #[cfg(test)]
 mod tests {
-    use ed25519::{keypair, signature, verify};
+    use ed25519::{keypair, signature, verify, exchange};
+    use curve25519::{curve25519_base, curve25519};
+    use digest::Digest;
+    use sha2::{Sha512};
 
     fn do_keypair_case(seed: [u8; 32], expected_secret: [u8; 64], expected_public: [u8; 32]) {
         let (actual_secret, actual_public) = keypair(seed.as_slice());
@@ -179,6 +187,28 @@ mod tests {
              0x43, 0x7b, 0xa6, 0x80, 0x1e, 0xb2, 0x10, 0xac, 0x4c, 0x39, 0xd9, 0x00, 0x72, 0xd7, 0x0d, 0xa8],
             [0x5d, 0x83, 0x31, 0x26, 0x56, 0x0c, 0xb1, 0x9a, 0x14, 0x19, 0x37, 0x27, 0x78, 0x96, 0xf0, 0xfd,
              0x43, 0x7b, 0xa6, 0x80, 0x1e, 0xb2, 0x10, 0xac, 0x4c, 0x39, 0xd9, 0x00, 0x72, 0xd7, 0x0d, 0xa8]);
+    }
+
+    #[test]
+    fn keypair_matches_mont() {
+        let seed = [0x26, 0x27, 0xf6, 0x85, 0x97, 0x15, 0xad, 0x1d, 0xd2, 0x94, 0xdd, 0xc4, 0x76, 0x19, 0x39, 0x31,
+                    0xf1, 0xad, 0xb5, 0x58, 0xf0, 0x93, 0x97, 0x32, 0x19, 0x2b, 0xd1, 0xc0, 0xfd, 0x16, 0x8e, 0x4e];
+        let (ed_private, ed_public) = keypair(seed.as_slice());
+
+        let mut hasher = Sha512::new();
+        hasher.input(&ed_private[0..32]);
+        let mut hash: [u8; 64] = [0; 64];
+        hasher.result(&mut hash);
+        hash[0] &= 248;
+        hash[31] &= 127;
+        hash[31] |= 64;
+
+        let cv_public = curve25519_base(&hash);
+
+        let edx_ss = exchange(&ed_public, &ed_private);
+        let cv_ss = curve25519(&hash, &cv_public);
+
+        assert_eq!(edx_ss.to_vec(), cv_ss.to_vec());
     }
 
     fn do_sign_verify_case(seed: [u8; 32], message: &[u8], expected_signature: [u8; 64]) {
