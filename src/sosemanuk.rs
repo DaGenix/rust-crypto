@@ -2360,6 +2360,70 @@ mod test {
         sosemanuk.process(&input, &mut output);
         assert!(output.as_slice() == expected_output.as_slice());
     }
+
+    #[test]
+    fn test_sosemanuk_ecrypt_set_2_vector_63() {
+        let key = "3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F00000000000000000000000000000000".from_hex().unwrap();
+        let nonce = "00000000000000000000000000000000".from_hex().unwrap();
+
+        let input = [0u8; 64];
+        let expected_output_hex = "7D755F30A2B747A50D7D28147EDF0B3E3FAB6856A7373C7306C00D1D4076969354D7AB4343C0115E7839502C5C699ED06DB119968AEBFD08D8B968A7161D613F";
+        let expected_output = expected_output_hex.from_hex().unwrap();
+
+        let mut output = [0u8; 64];
+ 
+        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+        sosemanuk.process(&input, &mut output);
+        assert!(output.as_slice() == expected_output.as_slice());
+    }
+
+    #[test]
+    fn test_sosemanuk_ecrypt_set_2_vector_90() {
+        let key = "5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A".from_hex().unwrap();
+        let nonce = "00000000000000000000000000000000".from_hex().unwrap();
+
+        let input = [0u8; 64];
+        let expected_output_hex = "F5D7D72686322D1751AFD16A1DD98282D2B9A1EE0C305DF52F86AE1B831E90C22E2DE089CEE656A992736385D9135B823B3611098674BF820986A4342B89ABF7";
+        let expected_output = expected_output_hex.from_hex().unwrap();
+
+        let mut output = [0u8; 64];
+ 
+        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+        sosemanuk.process(&input, &mut output);
+        assert!(output.as_slice() == expected_output.as_slice());
+    }
+
+    #[test]
+    fn test_sosemanuk_ecrypt_set_3_vector_135() {
+        let key = "8788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9FA0A1A2A3A4".from_hex().unwrap();
+        let nonce = "00000000000000000000000000000000".from_hex().unwrap();
+
+        let input = [0u8; 64];
+        let expected_output_hex = "9D7EE5A10BBB0756D66B8DAA5AE08F41B05C9E7C6B13532EAA81F224282B61C66DEEE5AF6251DB26C49B865C5AD4250AE89787FC86C35409CF2986CF820293AA";
+        let expected_output = expected_output_hex.from_hex().unwrap();
+
+        let mut output = [0u8; 64];
+ 
+        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+        sosemanuk.process(&input, &mut output);
+        assert!(output.as_slice() == expected_output.as_slice());
+    }
+
+    #[test]
+    fn test_sosemanuk_ecrypt_set_3_vector_207() {
+        let key = "CFD0D1D2D3D4D5D6D7D8D9DADBDCDDDEDFE0E1E2E3E4E5E6E7E8E9EAEBECEDEE".from_hex().unwrap();
+        let nonce = "00000000000000000000000000000000".from_hex().unwrap();
+
+        let input = [0u8; 64];
+        let expected_output_hex = "F028923659C6C0A17065E013368D93EBCF2F4FD892B6E27E104EF0A2605708EA26336AE966D5058BC144F7954FE2FC3C258F00734AA5BEC8281814B746197084";
+        let expected_output = expected_output_hex.from_hex().unwrap();
+
+        let mut output = [0u8; 64];
+ 
+        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+        sosemanuk.process(&input, &mut output);
+        assert!(output.as_slice() == expected_output.as_slice());
+    }
    
     #[test]
     fn test_sosemanuk_ecrypt_set_6_vector_3() {
@@ -2371,6 +2435,40 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
+ 
+        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+        sosemanuk.process(&input, &mut output);
+        assert!(output.as_slice() == expected_output.as_slice());
+    }
+
+    // From TEST_VECTOR_128.txt from reference C implementation
+
+    #[test]
+    fn test_sosemanuk_vector128_test1() {
+        let key = "A7C083FEB7100000000000000000000000000000000000000000000000000000".from_hex().unwrap();
+        let nonce = "00112233445566778899AABBCCDDEEFF".from_hex().unwrap();
+
+        let input = [0u8; 64];
+        let expected_output_hex = "FE81D2162C9A100D04895C454A77515BBE6A431A935CB90E2221EBB7EF502328943539492EFF6310C871054C2889CC728F82E86B1AFFF4334B6127A13A155C75151630BD482EB673FF5DB477FA6C53EBE1A4EC38C23C5400C315455D93A2ACED9598604727FA340D5F2A8BD757B77833F74BD2BC049313C80616B4A06268AE350DB92EEC4FA56C171374A67A80C006D0EAD048CE7B640F17D3D5A62D1F251C21";
+        let expected_output = expected_output_hex.from_hex().unwrap();
+
+        let mut output = [0u8; 160];
+ 
+        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+        sosemanuk.process(&input, &mut output);
+        assert!(output.as_slice() == expected_output.as_slice());
+    }
+
+    #[test]
+    fn test_sosemanuk_vector128_test2() {
+        let key = "00112233445566778899AABBCCDDEEFF10000000000000000000000000000000".from_hex().unwrap();
+        let nonce = "8899AABBCCDDEEFF0011223344556677".from_hex().unwrap();
+
+        let input = [0u8; 64];
+        let expected_output_hex = "FA61DBEB71178131A77C714BD2EABF4E1394207A25698AA1308F2F063A0F760604CF67569BA59A3DFAD7F00145C78D29C5FFE5F964950486424451952C84039D234D9C37EECBBCA1EBFB0DD16EA1194A6AFC1A460E33E33FE8D55C48977079C687810D74FEDDEE1B3986218FB1E1C1765E4DF64D7F6911C19A270C59C74B24461717F86CE3B11808FACD4F2E714168DA44CF6360D54DDA2241BCB79401A4EDCC";
+        let expected_output = expected_output_hex.from_hex().unwrap();
+
+        let mut output = [0u8; 160];
  
         let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
         sosemanuk.process(&input, &mut output);
