@@ -48,8 +48,10 @@ pub mod salsa20;
 pub mod scrypt;
 pub mod sha1;
 pub mod sha2;
+pub mod sosemanuk;
 pub mod symmetriccipher;
 pub mod util;
+pub mod whirlpool;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub mod aesni;
