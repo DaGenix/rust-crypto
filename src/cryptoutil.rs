@@ -77,6 +77,21 @@ pub fn write_u32_le(dst: &mut[u8], mut input: u32) {
     }
 }
 
+/// Write a vector of u32s into a vector of bytes. The values are written in little-endian format.
+pub fn write_u32v_le (dst: &mut[u8], input: &[u32]) {
+    assert!(dst.len() == 4 * input.len());
+    unsafe {
+        let mut x: *mut u8 = dst.get_unchecked_mut(0);
+        let mut y: *const u32 = input.get_unchecked(0);
+        for _ in range(0, input.len()) {
+            let tmp = (*y).to_le();
+            ptr::copy_nonoverlapping_memory(x, &tmp as *const _ as *const u8, 4);
+            x = x.offset(4);
+            y = y.offset(1);
+        }
+    }
+}
+
 /// Read a vector of bytes into a vector of u64s. The values are read in big-endian format.
 pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     assert!(dst.len() * 8 == input.len());
