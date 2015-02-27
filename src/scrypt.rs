@@ -27,6 +27,7 @@ use pbkdf2::pbkdf2;
 use sha2::Sha256;
 use util::fixed_time_eq;
 
+
 // The salsa20/8 core function.
 fn salsa20_8(input: &[u8], output: &mut [u8]) {
 

@@ -7,7 +7,7 @@
  
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
-use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
+use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32v_le};
  
 use std::num::Int;
 use std::slice::bytes::copy_memory;
@@ -163,7 +163,7 @@ impl Sosemanuk {
     pub fn new(key: &[u8], nonce: &[u8]) -> Sosemanuk {
         let mut sosemanuk = Sosemanuk { lfsr: [0; 10], fsm_r: [0; 2], subkeys: [0; 100], output: [0; 80], offset: 80 };
  
-        assert!(key.len() >= 16 && key.len() <= 32);
+        //assert!(key.len() >= 16 && key.len() <= 32);
         assert!(nonce.len() <= 16);
        
         key_setup(&key, &mut sosemanuk.subkeys);
@@ -271,11 +271,9 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[0..4], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[4..8], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[8..12], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[12..16], (f4 ^ v3) as u32);
- 
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[0..16], &sbox_res);
+
         tt = r1;
         //r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
         r1 = r2 + (s5 ^ match (r1 & 0x01) {
@@ -347,11 +345,9 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[16..20], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[20..24], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[24..28], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[28..32], (f4 ^ v3) as u32);
- 
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[16..32], &sbox_res);
+
         tt = r1;
         //r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
         r1 = r2 + (s9 ^ match (r1 & 0x01) {
@@ -423,11 +419,9 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[32..36], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[36..40], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[40..44], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[44..48], (f4 ^ v3) as u32);
- 
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[32..48], &sbox_res);
+
         tt = r1;
         //r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
         r1 = r2 + (s3 ^ match (r1 & 0x01) {
@@ -499,10 +493,8 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[48..52], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[52..56], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[56..60], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[60..64], (f4 ^ v3) as u32);
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[48..64], &sbox_res);
  
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
@@ -575,10 +567,8 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[64..68], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[68..72], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[72..76], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[76..80], (f4 ^ v3) as u32);
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[64..80], &sbox_res);
  
         self.lfsr[0] = s0;
         self.lfsr[1] = s1;
@@ -629,7 +619,7 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     let mut r3 : u32;
     let mut r4 : u32;
     let mut tt : u32;
-    let mut i = 0us;
+    let mut i = 0 as usize;
  
     tt = (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0)));
     w0 = tt.rotate_left(11);
@@ -2363,7 +2353,7 @@ mod test {
 
     #[test]
     fn test_sosemanuk_ecrypt_set_2_vector_63() {
-        let key = "3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F00000000000000000000000000000000".from_hex().unwrap();
+        let key = "3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F".from_hex().unwrap();
         let nonce = "00000000000000000000000000000000".from_hex().unwrap();
 
         let input = [0u8; 64];
@@ -2445,10 +2435,10 @@ mod test {
 
     #[test]
     fn test_sosemanuk_vector128_test1() {
-        let key = "A7C083FEB7100000000000000000000000000000000000000000000000000000".from_hex().unwrap();
+        let key = "A7C083FEB7".from_hex().unwrap();
         let nonce = "00112233445566778899AABBCCDDEEFF".from_hex().unwrap();
 
-        let input = [0u8; 64];
+        let input = [0u8; 160];
         let expected_output_hex = "FE81D2162C9A100D04895C454A77515BBE6A431A935CB90E2221EBB7EF502328943539492EFF6310C871054C2889CC728F82E86B1AFFF4334B6127A13A155C75151630BD482EB673FF5DB477FA6C53EBE1A4EC38C23C5400C315455D93A2ACED9598604727FA340D5F2A8BD757B77833F74BD2BC049313C80616B4A06268AE350DB92EEC4FA56C171374A67A80C006D0EAD048CE7B640F17D3D5A62D1F251C21";
         let expected_output = expected_output_hex.from_hex().unwrap();
 
@@ -2461,7 +2451,7 @@ mod test {
 
     #[test]
     fn test_sosemanuk_vector128_test2() {
-        let key = "00112233445566778899AABBCCDDEEFF10000000000000000000000000000000".from_hex().unwrap();
+        let key = "00112233445566778899AABBCCDDEEFF".from_hex().unwrap();
         let nonce = "8899AABBCCDDEEFF0011223344556677".from_hex().unwrap();
 
         let input = [0u8; 160];
