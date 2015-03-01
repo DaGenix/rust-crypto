@@ -7,7 +7,7 @@
  
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
-use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
+use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32v_le};
  
 use std::num::Int;
 use std::slice::bytes::copy_memory;
@@ -163,7 +163,7 @@ impl Sosemanuk {
     pub fn new(key: &[u8], nonce: &[u8]) -> Sosemanuk {
         let mut sosemanuk = Sosemanuk { lfsr: [0; 10], fsm_r: [0; 2], subkeys: [0; 100], output: [0; 80], offset: 80 };
  
-        assert!(key.len() >= 16 && key.len() <= 32);
+        assert!(key.len() <= 32);
         assert!(nonce.len() <= 16);
        
         key_setup(&key, &mut sosemanuk.subkeys);
@@ -194,7 +194,6 @@ impl Sosemanuk {
         let mut v1 : u32;
         let mut v2 : u32;
         let mut v3 : u32;
-        let mut v4 : u32;
         let mut tt : u32;
  
         let ref mul_alpha = ALPHA_MUL_TABLE;
@@ -202,7 +201,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
-        r1 = r2 + (s1 ^ match (r1 & 0x01) {
+        r1 = r2 + (s1 ^ match r1 & 0x01 {
             0 => 0,
             _ => s8
         });
@@ -214,7 +213,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
-        r1 = r2 + (s2 ^ match (r1 & 0x01) {
+        r1 = r2 + (s2 ^ match r1 & 0x01 {
             0 => 0,
             _ => s9
         });
@@ -226,7 +225,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
-        r1 = r2 + (s3 ^ match (r1 & 0x01) {
+        r1 = r2 + (s3 ^ match r1 & 0x01 {
             0 => 0,
             _ => s0
         });
@@ -238,7 +237,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
-        r1 = r2 + (s4 ^ match (r1 & 0x01) {
+        r1 = r2 + (s4 ^ match r1 & 0x01 {
             0 => 0,
             _ => s1
         });
@@ -271,14 +270,12 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[0..4], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[4..8], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[8..12], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[12..16], (f4 ^ v3) as u32);
- 
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[0..16], &sbox_res);
+
         tt = r1;
         //r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
-        r1 = r2 + (s5 ^ match (r1 & 0x01) {
+        r1 = r2 + (s5 ^ match r1 & 0x01 {
             0 => 0,
             _ => s2
         });
@@ -290,7 +287,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
-        r1 = r2 + (s6 ^ match (r1 & 0x01) {
+        r1 = r2 + (s6 ^ match r1 & 0x01 {
             0 => 0,
             _ => s3
         });
@@ -302,7 +299,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
-        r1 = r2 + (s7 ^ match (r1 & 0x01) {
+        r1 = r2 + (s7 ^ match r1 & 0x01 {
             0 => 0,
             _ => s4
         });
@@ -314,7 +311,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
-        r1 = r2 + (s8 ^ match (r1 & 0x01) {
+        r1 = r2 + (s8 ^ match r1 & 0x01 {
             0 => 0,
             _ => s5
         });
@@ -347,14 +344,12 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[16..20], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[20..24], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[24..28], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[28..32], (f4 ^ v3) as u32);
- 
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[16..32], &sbox_res);
+
         tt = r1;
         //r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
-        r1 = r2 + (s9 ^ match (r1 & 0x01) {
+        r1 = r2 + (s9 ^ match r1 & 0x01 {
             0 => 0,
             _ => s6
         });
@@ -366,7 +361,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
-        r1 = r2 + (s0 ^ match (r1 & 0x01) {
+        r1 = r2 + (s0 ^ match r1 & 0x01 {
             0 => 0,
             _ => s7
         });
@@ -378,7 +373,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
-        r1 = r2 + (s1 ^ match (r1 & 0x01) {
+        r1 = r2 + (s1 ^ match r1 & 0x01 {
             0 => 0,
             _ => s8
         });
@@ -390,7 +385,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
-        r1 = r2 + (s2 ^ match (r1 & 0x01) {
+        r1 = r2 + (s2 ^ match r1 & 0x01 {
             0 => 0,
             _ => s9
         });
@@ -423,14 +418,12 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[32..36], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[36..40], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[40..44], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[44..48], (f4 ^ v3) as u32);
- 
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[32..48], &sbox_res);
+
         tt = r1;
         //r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
-        r1 = r2 + (s3 ^ match (r1 & 0x01) {
+        r1 = r2 + (s3 ^ match r1 & 0x01 {
             0 => 0,
             _ => s0
         });
@@ -442,7 +435,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
-        r1 = r2 + (s4 ^ match (r1 & 0x01) {
+        r1 = r2 + (s4 ^ match r1 & 0x01 {
             0 => 0,
             _ => s1
         });
@@ -454,7 +447,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
-        r1 = r2 + (s5 ^ match (r1 & 0x01) {
+        r1 = r2 + (s5 ^ match r1 & 0x01 {
             0 => 0,
             _ => s2
         });
@@ -466,7 +459,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
-        r1 = r2 + (s6 ^ match (r1 & 0x01) {
+        r1 = r2 + (s6 ^ match r1 & 0x01 {
             0 => 0,
             _ => s3
         });
@@ -499,14 +492,12 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[48..52], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[52..56], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[56..60], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[60..64], (f4 ^ v3) as u32);
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[48..64], &sbox_res);
  
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
-        r1 = r2 + (s7 ^ match (r1 & 0x01) {
+        r1 = r2 + (s7 ^ match r1 & 0x01 {
             0 => 0,
             _ => s4
         });
@@ -518,7 +509,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
-        r1 = r2 + (s8 ^ match (r1 & 0x01) {
+        r1 = r2 + (s8 ^ match r1 & 0x01 {
             0 => 0,
             _ => s5
         });
@@ -530,7 +521,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
-        r1 = r2 + (s9 ^ match (r1 & 0x01) {
+        r1 = r2 + (s9 ^ match r1 & 0x01 {
             0 => 0,
             _ => s6
         });
@@ -542,7 +533,7 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
-        r1 = r2 + (s0 ^ match (r1 & 0x01) {
+        r1 = r2 + (s0 ^ match r1 & 0x01 {
             0 => 0,
             _ => s7
         });
@@ -575,10 +566,8 @@ impl Sosemanuk {
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
-        write_u32_le(&mut self.output[64..68], (f2 ^ v0) as u32);
-        write_u32_le(&mut self.output[68..72], (f3 ^ v1) as u32);
-        write_u32_le(&mut self.output[72..76], (f1 ^ v2) as u32);
-        write_u32_le(&mut self.output[76..80], (f4 ^ v3) as u32);
+        let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
+        write_u32v_le(&mut self.output[64..80], &sbox_res);
  
         self.lfsr[0] = s0;
         self.lfsr[1] = s1;
@@ -629,15 +618,15 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     let mut r3 : u32;
     let mut r4 : u32;
     let mut tt : u32;
-    let mut i = 0us;
+    let mut i = 0 as usize;
  
-    tt = (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0));
     w0 = tt.rotate_left(11);
-    tt = (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (0 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (0 + 1));
     w1 = tt.rotate_left(11);
-    tt = (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (0 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (0 + 2));
     w2 = tt.rotate_left(11);
-    tt = (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (0 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (0 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -666,13 +655,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r2; i+=1;
     subkeys[i] = r3; i+=1;
     subkeys[i] = r4; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (4)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (4));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (4 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (4 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (4 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (4 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (4 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (4 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -698,13 +687,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
     subkeys[i] = r4; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (8)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (8));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (8 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (8 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (8 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (8 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (8 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (8 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -732,13 +721,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r0; i+=1;
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (12)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (12));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (12 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (12 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (12 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (12 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (12 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (12 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -766,13 +755,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r4; i+=1;
     subkeys[i] = r2; i+=1;
     subkeys[i] = r0; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (16)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (16));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (16 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (16 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (16 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (16 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (16 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (16 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -802,13 +791,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
     subkeys[i] = r0; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (20)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (20));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (20 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (20 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (20 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (20 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (20 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (20 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -836,13 +825,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r1; i+=1;
     subkeys[i] = r4; i+=1;
     subkeys[i] = r2; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (24)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (24));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (24 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (24 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (24 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (24 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (24 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (24 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -871,13 +860,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r0; i+=1;
     subkeys[i] = r2; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (28)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (28));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (28 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (28 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (28 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (28 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (28 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (28 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -907,13 +896,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r4; i+=1;
     subkeys[i] = r0; i+=1;
     subkeys[i] = r3; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (32)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (32));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (32 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (32 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (32 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (32 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (32 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (32 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -942,13 +931,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r2; i+=1;
     subkeys[i] = r3; i+=1;
     subkeys[i] = r4; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (36)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (36));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (36 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (36 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (36 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (36 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (36 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (36 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -974,13 +963,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
     subkeys[i] = r4; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (40)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (40));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (40 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (40 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (40 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (40 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (40 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (40 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1008,13 +997,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r0; i+=1;
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (44)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (44));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (44 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (44 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (44 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (44 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (44 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (44 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1042,13 +1031,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r4; i+=1;
     subkeys[i] = r2; i+=1;
     subkeys[i] = r0; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (48)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (48));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (48 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (48 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (48 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (48 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (48 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (48 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1078,13 +1067,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
     subkeys[i] = r0; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (52)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (52));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (52 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (52 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (52 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (52 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (52 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (52 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1112,13 +1101,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r1; i+=1;
     subkeys[i] = r4; i+=1;
     subkeys[i] = r2; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (56)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (56));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (56 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (56 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (56 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (56 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (56 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (56 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1147,13 +1136,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r0; i+=1;
     subkeys[i] = r2; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (60)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (60));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (60 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (60 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (60 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (60 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (60 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (60 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1183,13 +1172,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r4; i+=1;
     subkeys[i] = r0; i+=1;
     subkeys[i] = r3; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (64)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (64));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (64 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (64 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (64 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (64 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (64 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (64 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1218,13 +1207,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r2; i+=1;
     subkeys[i] = r3; i+=1;
     subkeys[i] = r4; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (68)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (68));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (68 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (68 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (68 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (68 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (68 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (68 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1250,13 +1239,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
     subkeys[i] = r4; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (72)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (72));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (72 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (72 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (72 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (72 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (72 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (72 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1284,13 +1273,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r0; i+=1;
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (76)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (76));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (76 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (76 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (76 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (76 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (76 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (76 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1318,13 +1307,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r4; i+=1;
     subkeys[i] = r2; i+=1;
     subkeys[i] = r0; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (80)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (80));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (80 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (80 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (80 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (80 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (80 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (80 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1354,13 +1343,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r1; i+=1;
     subkeys[i] = r0; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (84)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (84));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (84 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (84 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (84 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (84 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (84 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (84 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1388,13 +1377,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r1; i+=1;
     subkeys[i] = r4; i+=1;
     subkeys[i] = r2; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (88)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (88));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (88 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (88 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (88 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (88 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (88 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (88 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -1423,13 +1412,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r0; i+=1;
     subkeys[i] = r2; i+=1;
-    tt =  (w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (92)));
+    tt = w4 ^ w7 ^ w1 ^ w3 ^ (0x9E3779B9 ^ (92));
     w4 = tt.rotate_left(11);
-    tt =  (w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (92 + 1)));
+    tt = w5 ^ w0 ^ w2 ^ w4 ^ (0x9E3779B9 ^ (92 + 1));
     w5 = tt.rotate_left(11);
-    tt =  (w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (92 + 2)));
+    tt = w6 ^ w1 ^ w3 ^ w5 ^ (0x9E3779B9 ^ (92 + 2));
     w6 = tt.rotate_left(11);
-    tt =  (w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (92 + 3)));
+    tt = w7 ^ w2 ^ w4 ^ w6 ^ (0x9E3779B9 ^ (92 + 3));
     w7 = tt.rotate_left(11);
     r0 = w4;
     r1 = w5;
@@ -1459,13 +1448,13 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r4; i+=1;
     subkeys[i] = r0; i+=1;
     subkeys[i] = r3; i+=1;
-    tt =  (w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (96)));
+    tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (96));
     w0 = tt.rotate_left(11);
-    tt =  (w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (96 + 1)));
+    tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (96 + 1));
     w1 = tt.rotate_left(11);
-    tt =  (w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (96 + 2)));
+    tt = w2 ^ w5 ^ w7 ^ w1 ^ (0x9E3779B9 ^ (96 + 2));
     w2 = tt.rotate_left(11);
-    tt =  (w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (96 + 3)));
+    tt = w3 ^ w6 ^ w0 ^ w2 ^ (0x9E3779B9 ^ (96 + 3));
     w3 = tt.rotate_left(11);
     r0 = w0;
     r1 = w1;
@@ -2341,7 +2330,7 @@ impl Decryptor for Sosemanuk {
 mod test {
     use sosemanuk::Sosemanuk;
     use symmetriccipher::SynchronousStreamCipher;
-    use serialize::hex::{FromHex, ToHex};
+    use serialize::hex::{FromHex};
 
     // Vectors from http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/sosemanuk/unverified.test-vectors?rev=108&view=markup
 
@@ -2363,7 +2352,7 @@ mod test {
 
     #[test]
     fn test_sosemanuk_ecrypt_set_2_vector_63() {
-        let key = "3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F00000000000000000000000000000000".from_hex().unwrap();
+        let key = "3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F".from_hex().unwrap();
         let nonce = "00000000000000000000000000000000".from_hex().unwrap();
 
         let input = [0u8; 64];
@@ -2445,10 +2434,10 @@ mod test {
 
     #[test]
     fn test_sosemanuk_vector128_test1() {
-        let key = "A7C083FEB7100000000000000000000000000000000000000000000000000000".from_hex().unwrap();
+        let key = "A7C083FEB7".from_hex().unwrap();
         let nonce = "00112233445566778899AABBCCDDEEFF".from_hex().unwrap();
 
-        let input = [0u8; 64];
+        let input = [0u8; 160];
         let expected_output_hex = "FE81D2162C9A100D04895C454A77515BBE6A431A935CB90E2221EBB7EF502328943539492EFF6310C871054C2889CC728F82E86B1AFFF4334B6127A13A155C75151630BD482EB673FF5DB477FA6C53EBE1A4EC38C23C5400C315455D93A2ACED9598604727FA340D5F2A8BD757B77833F74BD2BC049313C80616B4A06268AE350DB92EEC4FA56C171374A67A80C006D0EAD048CE7B640F17D3D5A62D1F251C21";
         let expected_output = expected_output_hex.from_hex().unwrap();
 
@@ -2461,7 +2450,7 @@ mod test {
 
     #[test]
     fn test_sosemanuk_vector128_test2() {
-        let key = "00112233445566778899AABBCCDDEEFF10000000000000000000000000000000".from_hex().unwrap();
+        let key = "00112233445566778899AABBCCDDEEFF".from_hex().unwrap();
         let nonce = "8899AABBCCDDEEFF0011223344556677".from_hex().unwrap();
 
         let input = [0u8; 160];
