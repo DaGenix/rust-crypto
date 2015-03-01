@@ -177,7 +177,7 @@ impl Decryptor for Hc128 {
 }
 
  
-// #[cfg(test)]
+#[cfg(test)]
 mod test {
     use hc128::Hc128;
     use symmetriccipher::SynchronousStreamCipher;
