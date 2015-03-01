@@ -54,7 +54,7 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
 
 /// Get the best implementation of an EcbEncryptor
 #[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
-pub fn ecb_encryptor<X: PaddingProcessor + Send>(
+pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         padding: X) -> Box<Encryptor> {
@@ -110,7 +110,7 @@ pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
 
 /// Get the best implementation of an EcbDecryptor
 #[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
-pub fn ecb_decryptor<X: PaddingProcessor + Send>(
+pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         padding: X) -> Box<Decryptor> {
@@ -167,7 +167,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
 
 /// Get the best implementation of a CbcEncryptor
 #[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
-pub fn cbc_encryptor<X: PaddingProcessor + Send>(
+pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
