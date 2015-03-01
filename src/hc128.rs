@@ -7,13 +7,10 @@
  
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
-use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, write_u32v_le};
+use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
  
 use std::num::Int;
-use std::slice::bytes::copy_memory;
-
 use std::ptr;
-use std::intrinsics::offset;
 
 
 #[derive(Copy)]
@@ -41,14 +38,14 @@ impl Hc128 {
         let mut w : [u32; 1280] = [0; 1280];
 
         for i in range(0, 16) {
-            w[i >> 2] |= ((key[i] as u32) << (8 * (i & 0x3)));
+            w[i >> 2] |= (key[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
             ptr::copy_nonoverlapping_memory(w.as_mut_ptr().offset(4), w.as_ptr(), 4);
         }
 
         for i in range(0, nonce.len() & 16) {
-            w[(i >> 2) + 8] |= ((nonce[i] as u32) << (8 * (i & 0x3)));
+            w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
             ptr::copy_nonoverlapping_memory(w.as_mut_ptr().offset(12), w.as_ptr().offset(8), 4);
@@ -78,19 +75,19 @@ impl Hc128 {
         let j : usize = self.cnt & 0x1FF;
 
         // Precompute resources
-        let dimJ3 : usize = (j - 3) & 0x1FF;
-        let dimJ10 : usize = (j - 10) & 0x1FF;
-        let dimJ511 : usize = (j - 511) & 0x1FF;
-        let dimJ12 : usize = (j - 12) & 0x1FF;
+        let dim_j3 : usize = (j - 3) & 0x1FF;
+        let dim_j10 : usize = (j - 10) & 0x1FF;
+        let dim_j511 : usize = (j - 511) & 0x1FF;
+        let dim_j12 : usize = (j - 12) & 0x1FF;
 
         let mut ret : u32;
 
-        if (self.cnt < 512) {
-            self.p[j] += (self.p[dimJ3].rotate_right(10) ^ self.p[dimJ511].rotate_right(23)) + self.p[dimJ10].rotate_right(8);
-            ret = (self.q[(self.p[dimJ12] & 0xFF) as usize] + self.q[(((self.p[dimJ12] >> 16) & 0xFF) + 256) as usize]) ^ self.p[j];
+        if self.cnt < 512 {
+            self.p[j] += (self.p[dim_j3].rotate_right(10) ^ self.p[dim_j511].rotate_right(23)) + self.p[dim_j10].rotate_right(8);
+            ret = (self.q[(self.p[dim_j12] & 0xFF) as usize] + self.q[(((self.p[dim_j12] >> 16) & 0xFF) + 256) as usize]) ^ self.p[j];
         } else {
-            self.q[j] += (self.q[dimJ3].rotate_left(10) ^ self.q[dimJ511].rotate_left(23)) + self.q[dimJ10].rotate_left(8);
-            ret = (self.p[(self.q[dimJ12] & 0xFF) as usize] + self.p[(((self.q[dimJ12] >> 16) & 0xFF) + 256) as usize]) ^ self.q[j];
+            self.q[j] += (self.q[dim_j3].rotate_left(10) ^ self.q[dim_j511].rotate_left(23)) + self.q[dim_j10].rotate_left(8);
+            ret = (self.p[(self.q[dim_j12] & 0xFF) as usize] + self.p[(((self.q[dim_j12] >> 16) & 0xFF) + 256) as usize]) ^ self.q[j];
         }
 
         self.cnt = (self.cnt + 1) & 0x3FF;    
@@ -184,7 +181,7 @@ impl Decryptor for Hc128 {
 mod test {
     use hc128::Hc128;
     use symmetriccipher::SynchronousStreamCipher;
-    use serialize::hex::{FromHex, ToHex};
+    use serialize::hex::{FromHex};
 
     // Vectors from http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/hc-256/hc-128/verified.test-vectors?rev=210&view=markup
 
