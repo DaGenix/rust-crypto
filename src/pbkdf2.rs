@@ -12,6 +12,7 @@
 use std::iter::repeat;
 use std::old_io::IoResult;
 use std::num::Int;
+use std::slice::bytes::copy_memory;
 
 use rand::{OsRng, Rng};
 use serialize::base64;
@@ -58,7 +59,7 @@ fn calculate_block<M: Mac>(
     }
 
     // Perform all remaining iterations
-    for _ in range(2, c) {
+    for _ in (2..c) {
         mac.input(scratch);
         mac.raw_result(scratch);
         mac.reset();
@@ -103,7 +104,8 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         } else {
             let mut tmp: Vec<u8> = repeat(0).take(os).collect();
             calculate_block(mac, salt, c, idx, &mut scratch[..], &mut tmp[..]);
-            chunk.clone_from_slice(&tmp[..]);
+            let chunk_len = chunk.len();
+            copy_memory(chunk, &tmp[..chunk_len]);
         }
     }
 }
@@ -141,7 +143,7 @@ pub fn pbkdf2_simple(password: &str, c: u32) -> IoResult<String> {
 
     pbkdf2(&mut mac, &salt[..], c, &mut dk);
 
-    let mut result = String::from_str("$rpbkdf2$0$");
+    let mut result = "$rpbkdf2$0$".to_string();
     let mut tmp = [0u8; 4];
     write_u32_be(&mut tmp, c);
     result.push_str(&tmp.to_base64(base64::STANDARD)[..]);

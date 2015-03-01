@@ -157,7 +157,7 @@ impl Salsa20 {
 
     fn hash(&mut self) {
         let mut state = self.state;
-        for _ in range(0, 10) {
+        for _ in (0..10) {
             columnround(&mut state);
             prepare_rowround!(state.a, state.b, state.c);
             rowround(&mut state);
@@ -173,7 +173,7 @@ impl Salsa20 {
              x8,  x9, x10, x11,
             x12, x13, x14, x15
         ];
-        for i in range(0, lens.len()) {
+        for i in (0..lens.len()) {
             write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
         }
 
@@ -188,7 +188,7 @@ impl Salsa20 {
 
     fn hsalsa20_hash(&mut self, out: &mut [u8]) {
         let mut state = self.state;
-        for _ in range(0, 10) {
+        for _ in (0..10) {
             columnround(&mut state);
             prepare_rowround!(state.a, state.b, state.c);
             rowround(&mut state);
@@ -202,7 +202,7 @@ impl Salsa20 {
             x0, x5, x10, x15,
             x6, x7, x8, x9
         ];
-        for i in range(0, lens.len()) {
+        for i in (0..lens.len()) {
             write_u32_le(&mut out[i*4..(i+1)*4], lens[i]);
         }
     }

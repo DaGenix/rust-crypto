@@ -474,7 +474,7 @@ mod mac_tests {
 
     #[test]
     fn test_blake2b_mac() {
-        let key: Vec<u8> = range(0, 64).map(|i| i).collect();
+        let key: Vec<u8> = (0..64).map(|i| i).collect();
         let mut m = Blake2b::new_keyed(64, &key[..]);
         m.input(&[1,2,4,8]);
         let expected = [

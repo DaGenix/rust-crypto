@@ -14,7 +14,7 @@ use std::ptr;
 
 
 #[derive(Copy)]
-struct Hc128 {
+pub struct Hc128 {
     p: [u32; 512],
     q: [u32; 512],
     cnt: usize,
@@ -41,14 +41,14 @@ impl Hc128 {
             w[i >> 2] |= (key[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
-            ptr::copy_nonoverlapping_memory(w.as_mut_ptr().offset(4), w.as_ptr(), 4);
+            ptr::copy_nonoverlapping(w.as_mut_ptr().offset(4), w.as_ptr(), 4);
         }
 
         for i in range(0, nonce.len() & 16) {
             w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
-            ptr::copy_nonoverlapping_memory(w.as_mut_ptr().offset(12), w.as_ptr().offset(8), 4);
+            ptr::copy_nonoverlapping(w.as_mut_ptr().offset(12), w.as_ptr().offset(8), 4);
         }
 
         for i in range(16, 1280) {
@@ -57,8 +57,8 @@ impl Hc128 {
 
         // Copy contents of w into p and q
         unsafe {
-            ptr::copy_nonoverlapping_memory(self.p.as_mut_ptr(), w.as_ptr().offset(256), 512);
-            ptr::copy_nonoverlapping_memory(self.q.as_mut_ptr(), w.as_ptr().offset(768), 512);
+            ptr::copy_nonoverlapping(self.p.as_mut_ptr(), w.as_ptr().offset(256), 512);
+            ptr::copy_nonoverlapping(self.q.as_mut_ptr(), w.as_ptr().offset(768), 512);
         }
         
         for i in range(0, 512) {
@@ -177,7 +177,7 @@ impl Decryptor for Hc128 {
 }
 
  
-// #[cfg(test)]
+#[cfg(test)]
 mod test {
     use hc128::Hc128;
     use symmetriccipher::SynchronousStreamCipher;

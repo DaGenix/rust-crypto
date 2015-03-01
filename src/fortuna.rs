@@ -44,6 +44,8 @@
  * say) then you need to EXPLICITLY RESEED THE RNG AFTER FORKING.
  */
 
+use std::slice::bytes::copy_memory;
+
 use rand::{Rng, SeedableRng};
 use time::precise_time_s;
 
@@ -85,7 +87,7 @@ impl FortunaGenerator {
 
     /// Increments the counter in place
     fn increment_counter(&mut self) {
-        for i in range(0, self.ctr.len()) {
+        for i in (0..self.ctr.len()) {
             self.ctr[i] += 1;
             // As soon as we don't carry, stop
             if self.ctr[i] != 0 {
@@ -116,7 +118,7 @@ impl FortunaGenerator {
         // Setup AES encryptor
         let block_encryptor = AesSafe256Encryptor::new(&self.key[..]);
         // Concatenate all the blocks
-        for j in range(0, k) {
+        for j in (0..k) {
             block_encryptor.encrypt_block(&self.ctr[..],
                                           &mut out[AES_BLOCK_SIZE * j..AES_BLOCK_SIZE * (j + 1)]);
             self.increment_counter();
@@ -133,7 +135,7 @@ impl FortunaGenerator {
         if rem > 0 {
             let mut buf = [0; AES_BLOCK_SIZE];
             self.generate_blocks(1, buf.as_mut_slice());
-            out[(n * AES_BLOCK_SIZE)..].clone_from_slice(&buf[..rem]);
+            copy_memory(&mut out[(n * AES_BLOCK_SIZE)..], &buf[..rem]);
         }
 
         // Rekey
@@ -403,7 +405,7 @@ mod tests {
         f.pool = [Pool::new(); NUM_POOLS];
         f.add_random_event(0, 0, &[0; 32]);
         f.add_random_event(0, 0, &[0; 32]);
-        for i in range(0, 32) {
+        for i in (0..32) {
             f.add_random_event(1, i, &[1, 2]);
         }
 

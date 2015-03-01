@@ -151,7 +151,7 @@ const ALPHA_DIV_TABLE : [u32; 256] =
 
 
 #[derive(Copy)]
-struct Sosemanuk {
+pub struct Sosemanuk {
     lfsr: [u32; 10],
     fsm_r: [u32; 2],
     subkeys: [u32; 100],
@@ -2326,7 +2326,7 @@ impl Decryptor for Sosemanuk {
 }
 
  
-// #[cfg(test)]
+#[cfg(test)]
 mod test {
     use sosemanuk::Sosemanuk;
     use symmetriccipher::SynchronousStreamCipher;

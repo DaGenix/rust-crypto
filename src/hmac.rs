@@ -185,7 +185,7 @@ mod test {
         let tests = tests();
         for t in tests.iter() {
             let mut hmac = Hmac::new(Md5::new(), &t.key[..]);
-            for i in range(0, t.data.len()) {
+            for i in (0..t.data.len()) {
                 hmac.input(&t.data[i..i + 1]);
             }
             let result = hmac.result();
