@@ -14,7 +14,7 @@ use std::ptr;
 
 
 #[derive(Copy)]
-struct Hc128 {
+pub struct Hc128 {
     p: [u32; 512],
     q: [u32; 512],
     cnt: usize,
