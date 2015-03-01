@@ -2326,7 +2326,7 @@ impl Decryptor for Sosemanuk {
 }
 
  
-// #[cfg(test)]
+#[cfg(test)]
 mod test {
     use sosemanuk::Sosemanuk;
     use symmetriccipher::SynchronousStreamCipher;
