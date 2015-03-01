@@ -225,7 +225,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
 
 /// Get the best implementation of a CbcDecryptor
 #[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
-pub fn cbc_decryptor<X: PaddingProcessor + Send>(
+pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
@@ -234,17 +234,17 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send>(
         KeySize::KeySize128 => {
             let aes_dec = aessafe::AesSafe128Decryptor::new(key);
             let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
-            dec as Box<Decryptor>
+            dec as Box<Decryptor + 'static>
         }
         KeySize::KeySize192 => {
             let aes_dec = aessafe::AesSafe192Decryptor::new(key);
             let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
-            dec as Box<Decryptor>
+            dec as Box<Decryptor + 'static>
         }
         KeySize::KeySize256 => {
             let aes_dec = aessafe::AesSafe256Decryptor::new(key);
             let dec = box CbcDecryptor::new(aes_dec, padding, iv.to_vec());
-            dec as Box<Decryptor>
+            dec as Box<Decryptor + 'static>
         }
     }
 }
