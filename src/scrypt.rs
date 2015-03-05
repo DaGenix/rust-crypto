@@ -166,8 +166,8 @@ impl ScryptParams {
         assert!(log_n > 0);
         assert!((log_n as usize) < size_of::<usize>() * 8);
 
-        let r = r.to_uint().unwrap();
-        let p = p.to_uint().unwrap();
+        let r = r.to_usize().unwrap();
+        let p = p.to_usize().unwrap();
 
         let n: usize = 1 << log_n;
 
