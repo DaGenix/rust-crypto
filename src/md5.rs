@@ -58,19 +58,19 @@ impl Md5State {
         }
 
         fn op_f(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            (w + f(x, y, z) + m).rotate_left(s as usize) + x
+            (w + f(x, y, z) + m).rotate_left(s) + x
         }
 
         fn op_g(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            (w + g(x, y, z) + m).rotate_left(s as usize) + x
+            (w + g(x, y, z) + m).rotate_left(s) + x
         }
 
         fn op_h(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            (w + h(x, y, z) + m).rotate_left(s as usize) + x
+            (w + h(x, y, z) + m).rotate_left(s) + x
         }
 
         fn op_i(w: u32, x: u32, y: u32, z: u32, m: u32, s: u32) -> u32 {
-            (w + i(x, y, z) + m).rotate_left(s as usize) + x
+            (w + i(x, y, z) + m).rotate_left(s) + x
         }
 
         let mut a = self.s0;
