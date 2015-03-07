@@ -13,7 +13,7 @@
  */
 
 use std::iter::repeat;
-use std::old_io::IoResult;
+use std::io;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
 use std::slice::bytes::copy_memory;
@@ -268,7 +268,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
  * * params - The ScryptParams to use
  *
  */
-pub fn scrypt_simple(password: &str, params: &ScryptParams) -> IoResult<String> {
+pub fn scrypt_simple(password: &str, params: &ScryptParams) -> io::Result<String> {
     let mut rng = try!(OsRng::new());
 
     // 128-bit salt

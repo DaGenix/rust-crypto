@@ -9,7 +9,6 @@
 #![feature(core)]
 #![feature(io)]
 #![feature(simd)]
-#![feature(old_io)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;
