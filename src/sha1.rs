@@ -61,9 +61,9 @@ algorithms, but some, like "parity" is only found in SHA-1.
  */
 
 use std::num::Int;
-use std::simd::u32x4;
 use digest::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
+use simd::u32x4;
 
 const STATE_LEN: usize = 5;
 const BLOCK_LEN: usize = 16;
