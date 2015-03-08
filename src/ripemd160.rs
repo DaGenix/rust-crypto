@@ -47,8 +47,8 @@ fn circular_shift(bits: u32, word: u32) -> u32 {
 macro_rules! round(
     ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr,
      $x:expr, $bits:expr, $add:expr, $round:expr) => ({
-        $a += $round + $x + $add;
-        $a = circular_shift($bits, $a) + $e;
+        $a = $a.wrapping_add($round).wrapping_add($x).wrapping_add($add);
+        $a = circular_shift($bits, $a).wrapping_add($e);
         $c = circular_shift(10, $c);
     });
 );
@@ -135,11 +135,11 @@ macro_rules! process_block(
                   bbb[$pf1] ^ bbb[$pf2] ^ bbb[$pf3]); )*
 
         // Combine results
-        bbb[3] += $h[1] + bb[2];
-        $h[1]   = $h[2] + bb[3] + bbb[4];
-        $h[2]   = $h[3] + bb[4] + bbb[0];
-        $h[3]   = $h[4] + bb[0] + bbb[1];
-        $h[4]   = $h[0] + bb[1] + bbb[2];
+        bbb[3] = bbb[3].wrapping_add($h[1]).wrapping_add(bb[2]);
+        $h[1]   = $h[2].wrapping_add(bb[3]).wrapping_add(bbb[4]);
+        $h[2]   = $h[3].wrapping_add(bb[4]).wrapping_add(bbb[0]);
+        $h[3]   = $h[4].wrapping_add(bb[0]).wrapping_add(bbb[1]);
+        $h[4]   = $h[0].wrapping_add(bb[1]).wrapping_add(bbb[2]);
         $h[0]   =                 bbb[3];
     });
 );
