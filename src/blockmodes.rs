@@ -664,7 +664,7 @@ impl <T: BlockDecryptor, X: PaddingProcessor> Decryptor for CbcDecryptor<T, X> {
 fn add_ctr(ctr: &mut [u8], mut ammount: u8) {
     for i in ctr.iter_mut().rev() {
         let prev = *i;
-        *i += ammount;
+        *i = i.wrapping_add(ammount);
         if *i >= prev {
             break;
         }
