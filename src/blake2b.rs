@@ -69,13 +69,13 @@ struct Blake2bParam {
 }
 
 macro_rules! G( ($r:expr, $i:expr, $a:expr, $b:expr, $c:expr, $d:expr, $m:expr) => ({
-    $a = $a + $b + $m[SIGMA[$r][2*$i+0]];
+    $a = $a.wrapping_add($b).wrapping_add($m[SIGMA[$r][2*$i+0]]);
     $d = ($d ^ $a).rotate_right(32);
-    $c = $c + $d;
+    $c = $c.wrapping_add($d);
     $b = ($b ^ $c).rotate_right(24);
-    $a = $a + $b + $m[SIGMA[$r][2*$i+1]];
+    $a = $a.wrapping_add($b).wrapping_add($m[SIGMA[$r][2*$i+1]]);
     $d = ($d ^ $a).rotate_right(16);
-    $c = $c + $d;
+    $c = $c .wrapping_add($d);
     $b = ($b ^ $c).rotate_right(63);
 }));
 

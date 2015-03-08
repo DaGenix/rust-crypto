@@ -47,6 +47,7 @@ pub mod salsa20;
 pub mod scrypt;
 pub mod sha1;
 pub mod sha2;
+mod simd;
 pub mod sosemanuk;
 pub mod symmetriccipher;
 pub mod util;

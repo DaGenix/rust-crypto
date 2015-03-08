@@ -4,11 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 use std::cmp;
-use std::simd::u32x4;
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
+use simd::u32x4;
 
 #[derive(Copy)]
 struct ChaChaState {
@@ -56,13 +56,13 @@ macro_rules! state_to_buffer {
 
 macro_rules! round{
     ($state: expr) => {{
-      $state.a += $state.b;
+      $state.a = $state.a + $state.b;
       rotate!($state.d, $state.a, S16);
-      $state.c += $state.d;
+      $state.c = $state.c + $state.d;
       rotate!($state.b, $state.c, S12);
-      $state.a += $state.b;
+      $state.a = $state.a + $state.b;
       rotate!($state.d, $state.a, S8);
-      $state.c += $state.d;
+      $state.c = $state.c + $state.d;
       rotate!($state.b, $state.c, S7);
     }}
 }
@@ -217,14 +217,14 @@ impl ChaCha20 {
             round!(state);
             swizzle!(state.d, state.c, state.b);
         }
-        state.a += self.state.a;
-        state.b += self.state.b;
-        state.c += self.state.c;
-        state.d += self.state.d;
+        state.a = state.a + self.state.a;
+        state.b = state.b + self.state.b;
+        state.c = state.c + self.state.c;
+        state.d = state.d + self.state.d;
 
         state_to_buffer!(state, self.output);
 
-        self.state.d += u32x4(1, 0, 0, 0);
+        self.state.d = self.state.d + u32x4(1, 0, 0, 0);
         let u32x4(c12, _, _, _) = self.state.d;
         if c12 == 0 {
             // we could increment the other counter word with an 8 byte nonce

@@ -7,9 +7,9 @@
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
+use simd::u32x4;
 
 use std::cmp;
-use std::simd::u32x4;
 
 #[derive(Copy)]
 struct SalsaState {
@@ -59,7 +59,7 @@ macro_rules! add_rotate_xor {
         let v = $a + $b;
         let r = S32 - $shift;
         let right = v >> r;
-        $dst ^= (v << $shift) ^ right
+        $dst = $dst ^ (v << $shift) ^ right
     }}
 }
 
@@ -177,10 +177,10 @@ impl Salsa20 {
             write_u32_le(&mut self.output[i*4..(i+1)*4], lens[i]);
         }
 
-        self.state.b += u32x4(1, 0, 0, 0);
+        self.state.b = self.state.b + u32x4(1, 0, 0, 0);
         let u32x4(_, _, _, ctr_lo) = self.state.b;
         if ctr_lo == 0 {
-            self.state.a += u32x4(0, 1, 0, 0);
+            self.state.a = self.state.a + u32x4(0, 1, 0, 0);
         }
 
         self.offset = 0;

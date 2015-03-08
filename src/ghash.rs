@@ -17,11 +17,11 @@
 
 use std::ops::BitXor;
 use std::mem;
-use std::simd;
 use std::slice::bytes::copy_memory;
 
 use cryptoutil::{read_u32_be, write_u32_be};
 use mac::{Mac, MacResult};
+use simd;
 
 // A struct representing an element in GF(2^128)
 // x^0 is the msb, while x^127 is the lsb
@@ -56,7 +56,7 @@ impl Gf128 {
 
     // Multiply the element by x modulo x^128
     // This is equivalent to a rightshift in the bit representation
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(all(target_arch = "x86_64",ndebug))]
     fn times_x(mut self) -> Gf128 {
         unsafe {
             asm!("
@@ -70,7 +70,7 @@ impl Gf128 {
         self
     }
 
-    #[cfg(not(target_arch = "x86_64"))]
+    #[cfg(any(not(target_arch = "x86_64"),not(ndebug)))]
     fn times_x(self) -> Gf128 {
         let simd::u32x4(a, b, c, d) = self.d;
         Gf128::new(a >> 1 | b << 31, b >> 1 | c << 31, c >> 1 |  d << 31, d >> 1)
@@ -96,7 +96,7 @@ impl Gf128 {
     }
 
     // This XORs the value of y with x if the LSB of self is set, otherwise y is returned
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(all(target_arch = "x86_64",ndebug))]
     fn cond_xor(self, x: Gf128, mut y: Gf128) -> Gf128 {
         let lsb = simd::u32x4(1, 0, 0, 0);
         unsafe {
@@ -113,10 +113,11 @@ impl Gf128 {
         y
     }
 
-    #[cfg(not(target_arch = "x86_64"))]
+    #[cfg(any(not(target_arch = "x86_64"),not(ndebug)))]
     fn cond_xor(self, x: Gf128, y: Gf128) -> Gf128 {
+        use simd::SimdExt;
         let lsb = simd::u32x4(1, 0, 0, 0);
-        let simd::u32x4(m, _, _, _) = (self.d & lsb) == lsb;
+        let simd::u32x4(m, _, _, _) = (self.d & lsb).simd_eq(lsb);
         let mask = simd::u32x4(m, m, m, m);
         Gf128 { d: (x.d & mask) ^ y.d }
     }

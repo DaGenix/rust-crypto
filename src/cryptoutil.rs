@@ -309,7 +309,7 @@ pub fn add_bytes_to_bits_tuple
                 // run in practice. This is the reason that this function requires that the type T
                 // be UnsignedInt - overflow is not defined for Signed types. This function could
                 // be implemented for signed types as well if that were needed.
-                Some(y) => return (y, low + new_low_bits),
+                Some(y) => return (y, low.wrapping_add(new_low_bits)),
                 None => panic!("Numeric overflow occured.")
             }
         }

@@ -52,7 +52,7 @@ impl Hc128 {
         }
 
         for i in range(16, 1280) {
-            w[i] = (f2(w[i - 2]) + w[i - 7] + f1(w[i - 15]) + w[i - 16] + (i as u32)) as u32;
+            w[i] = (f2(w[i - 2]).wrapping_add(w[i - 7]).wrapping_add(f1(w[i - 15])).wrapping_add(w[i - 16]).wrapping_add(i as u32)) as u32;
         }
 
         // Copy contents of w into p and q
@@ -75,19 +75,19 @@ impl Hc128 {
         let j : usize = self.cnt & 0x1FF;
 
         // Precompute resources
-        let dim_j3 : usize = (j - 3) & 0x1FF;
-        let dim_j10 : usize = (j - 10) & 0x1FF;
-        let dim_j511 : usize = (j - 511) & 0x1FF;
-        let dim_j12 : usize = (j - 12) & 0x1FF;
+        let dim_j3 : usize = (j.wrapping_sub(3)) & 0x1FF;
+        let dim_j10 : usize = (j.wrapping_sub(10)) & 0x1FF;
+        let dim_j511 : usize = (j.wrapping_sub(511)) & 0x1FF;
+        let dim_j12 : usize = (j.wrapping_sub(12)) & 0x1FF;
 
         let mut ret : u32;
 
         if self.cnt < 512 {
-            self.p[j] += (self.p[dim_j3].rotate_right(10) ^ self.p[dim_j511].rotate_right(23)) + self.p[dim_j10].rotate_right(8);
-            ret = (self.q[(self.p[dim_j12] & 0xFF) as usize] + self.q[(((self.p[dim_j12] >> 16) & 0xFF) + 256) as usize]) ^ self.p[j];
+            self.p[j] = self.p[j].wrapping_add(self.p[dim_j3].rotate_right(10) ^ self.p[dim_j511].rotate_right(23)).wrapping_add(self.p[dim_j10].rotate_right(8));
+            ret = (self.q[(self.p[dim_j12] & 0xFF) as usize].wrapping_add(self.q[(((self.p[dim_j12] >> 16) & 0xFF) + 256) as usize])) ^ self.p[j];
         } else {
-            self.q[j] += (self.q[dim_j3].rotate_left(10) ^ self.q[dim_j511].rotate_left(23)) + self.q[dim_j10].rotate_left(8);
-            ret = (self.p[(self.q[dim_j12] & 0xFF) as usize] + self.p[(((self.q[dim_j12] >> 16) & 0xFF) + 256) as usize]) ^ self.q[j];
+            self.q[j] = self.q[j].wrapping_add(self.q[dim_j3].rotate_left(10) ^ self.q[dim_j511].rotate_left(23)).wrapping_add(self.q[dim_j10].rotate_left(8));
+            ret = (self.p[(self.q[dim_j12] & 0xFF) as usize].wrapping_add(self.p[(((self.q[dim_j12] >> 16) & 0xFF) + 256) as usize])) ^ self.q[j];
         }
 
         self.cnt = (self.cnt + 1) & 0x3FF;    

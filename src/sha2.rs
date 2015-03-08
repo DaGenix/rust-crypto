@@ -70,13 +70,14 @@ assert_eq!(hex.as_slice(),
 
  */
 
-use std::simd::{u32x4, u64x2};
 use std::num::Int;
 use digest::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be,
                  write_u64_be, read_u64v_be,
                  add_bytes_to_bits, add_bytes_to_bits_tuple,
                  FixedBuffer, FixedBuffer128, FixedBuffer64, StandardPadding};
+
+use simd::{u32x4, u64x2};
 
 const STATE_LEN: usize = 8;
 const BLOCK_LEN: usize = 16;
@@ -119,10 +120,10 @@ fn sha256msg2(v4: u32x4, v3: u32x4) -> u32x4 {
     let u32x4(x3, x2, x1, x0) = v4;
     let u32x4(w15, w14, _, _) = v3;
 
-    let w16 = x0 + sigma1!(w14);
-    let w17 = x1 + sigma1!(w15);
-    let w18 = x2 + sigma1!(w16);
-    let w19 = x3 + sigma1!(w17);
+    let w16 = x0.wrapping_add(sigma1!(w14));
+    let w17 = x1.wrapping_add(sigma1!(w15));
+    let w18 = x2.wrapping_add(sigma1!(w16));
+    let w19 = x3.wrapping_add(sigma1!(w17));
 
     u32x4(w19, w18, w17, w16)
 }
@@ -154,18 +155,18 @@ pub fn sha256_digest_round_x2(cdgh: u32x4, abef: u32x4, wk: u32x4) -> u32x4 {
     let u32x4(c0, d0, g0, h0) = cdgh;
 
     // a round
-    let x0 = big_sigma1!(e0) + bool3ary_202!(e0, f0, g0) + wk0 + h0;
-    let y0 = big_sigma0!(a0) + bool3ary_232!(a0, b0, c0);
+    let x0 = big_sigma1!(e0).wrapping_add(bool3ary_202!(e0, f0, g0)).wrapping_add(wk0).wrapping_add(h0);
+    let y0 = big_sigma0!(a0).wrapping_add(bool3ary_232!(a0, b0, c0));
     let (a1, b1, c1, d1, e1, f1, g1, h1) = (
-        x0 + y0, a0, b0, c0,
-        x0 + d0, e0, f0, g0);
+        x0.wrapping_add(y0), a0, b0, c0,
+        x0.wrapping_add(d0), e0, f0, g0);
 
     // a round
-    let x1 = big_sigma1!(e1) + bool3ary_202!(e1, f1, g1) + wk1 + h1;
-    let y1 = big_sigma0!(a1) + bool3ary_232!(a1, b1, c1);
+    let x1 = big_sigma1!(e1).wrapping_add(bool3ary_202!(e1, f1, g1)).wrapping_add(wk1).wrapping_add(h1);
+    let y1 = big_sigma0!(a1).wrapping_add(bool3ary_232!(a1, b1, c1));
     let (a2, b2, _, _, e2, f2, _, _) = (
-        x1 + y1, a1, b1, c1,
-        x1 + d1, e1, f1, g1);
+        x1.wrapping_add(y1), a1, b1, c1,
+        x1.wrapping_add(d1), e1, f1, g1);
 
     u32x4(a2, b2, e2, f2)
 }
@@ -247,14 +248,14 @@ pub fn sha256_digest_block_u32(state: &mut [u32; 8], block: &[u32; 16]) {
     let u32x4(a, b, e, f) = abef;
     let u32x4(c, d, g, h) = cdgh;
 
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
-    state[5] += f;
-    state[6] += g;
-    state[7] += h;
+    state[0] = state[0].wrapping_add(a);
+    state[1] = state[1].wrapping_add(b);
+    state[2] = state[2].wrapping_add(c);
+    state[3] = state[3].wrapping_add(d);
+    state[4] = state[4].wrapping_add(e);
+    state[5] = state[5].wrapping_add(f);
+    state[6] = state[6].wrapping_add(g);
+    state[7] = state[7].wrapping_add(h);
 }
 
 /// Process a block with the SHA-256 algorithm. (See more...)
@@ -379,8 +380,8 @@ pub fn sha512_schedule_x2(v0: u64x2, v1: u64x2, v4to5: u64x2, v7: u64x2) -> u64x
     let u64x2(w10, w9) 	= v4to5;
     let u64x2(w15, w14) = v7;
 
-    let w16 = sigma1(w14) + w9  + sigma0(w1) + w0;
-    let w17 = sigma1(w15) + w10 + sigma0(w2) + w1;
+    let w16 = sigma1(w14).wrapping_add(w9).wrapping_add(sigma0(w1)).wrapping_add(w0);
+    let w17 = sigma1(w15).wrapping_add(w10).wrapping_add(sigma0(w2)).wrapping_add(w1);
 
     u64x2(w17, w16)
 }
@@ -407,11 +408,11 @@ pub fn sha512_digest_round(ae: u64x2, bf: u64x2, cg: u64x2, dh: u64x2, wk0: u64)
     let u64x2(d0, h0) = dh;
 
     // a round
-    let x0 = big_sigma1!(e0) + bool3ary_202!(e0, f0, g0) + wk0 + h0;
-    let y0 = big_sigma0!(a0) + bool3ary_232!(a0, b0, c0);
+    let x0 = big_sigma1!(e0).wrapping_add(bool3ary_202!(e0, f0, g0)).wrapping_add(wk0).wrapping_add(h0);
+    let y0 = big_sigma0!(a0).wrapping_add(bool3ary_232!(a0, b0, c0));
     let (a1, _, _, _, e1, _, _, _) = (
-        x0 + y0, a0, b0, c0,
-        x0 + d0, e0, f0, g0);
+        x0.wrapping_add(y0), a0, b0, c0,
+        x0.wrapping_add(d0), e0, f0, g0);
 
     u64x2(a1, e1)
 }
@@ -530,14 +531,14 @@ pub fn sha512_digest_block_u64(state: &mut [u64; 8], block: &[u64; 16]) {
     let u64x2(c, g) = cg;
     let u64x2(d, h) = dh;
 
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
-    state[5] += f;
-    state[6] += g;
-    state[7] += h;
+    state[0] = state[0].wrapping_add(a);
+    state[1] = state[1].wrapping_add(b);
+    state[2] = state[2].wrapping_add(c);
+    state[3] = state[3].wrapping_add(d);
+    state[4] = state[4].wrapping_add(e);
+    state[5] = state[5].wrapping_add(f);
+    state[6] = state[6].wrapping_add(g);
+    state[7] = state[7].wrapping_add(h);
 }
 
 /// Process a block with the SHA-512 algorithm. (See more...)

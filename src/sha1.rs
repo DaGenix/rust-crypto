@@ -61,9 +61,9 @@ algorithms, but some, like "parity" is only found in SHA-1.
  */
 
 use std::num::Int;
-use std::simd::u32x4;
 use digest::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
+use simd::u32x4;
 
 const STATE_LEN: usize = 5;
 const BLOCK_LEN: usize = 16;
@@ -83,7 +83,7 @@ pub fn sha1_first(w0: u32x4) -> u32 {
 #[inline]
 pub fn sha1_first_add(e: u32, w0: u32x4) -> u32x4 {
     let u32x4(a, b, c, d) = w0;
-    u32x4(e + a, b, c, d)
+    u32x4(e.wrapping_add(a), b, c, d)
 }
 
 /// Emulates `llvm.x86.sha1msg1` intrinsic.
@@ -144,10 +144,17 @@ fn sha1rnds4c(abcd: u32x4, msg: u32x4) -> u32x4 {
         ($a:expr, $b:expr, $c:expr) => (($c ^ ($a & ($b ^ $c))))
     } // Choose, MD5F, SHA1C
 
-    e += a.rotate_left(5) + bool3ary_202!(b, c, d) + t; b = b.rotate_left(30);
-    d += e.rotate_left(5) + bool3ary_202!(a, b, c) + u; a = a.rotate_left(30);
-    c += d.rotate_left(5) + bool3ary_202!(e, a, b) + v; e = e.rotate_left(30);
-    b += c.rotate_left(5) + bool3ary_202!(d, e, a) + w; d = d.rotate_left(30);
+    e = e.wrapping_add(a.rotate_left(5)).wrapping_add(bool3ary_202!(b, c, d)).wrapping_add(t);
+    b = b.rotate_left(30);
+
+    d = d.wrapping_add(e.rotate_left(5)).wrapping_add(bool3ary_202!(a, b, c)).wrapping_add(u);
+    a = a.rotate_left(30);
+
+    c = c.wrapping_add(d.rotate_left(5)).wrapping_add(bool3ary_202!(e, a, b)).wrapping_add(v);
+    e = e.rotate_left(30);
+
+    b = b.wrapping_add(c.rotate_left(5)).wrapping_add(bool3ary_202!(d, e, a)).wrapping_add(w);
+    d = d.rotate_left(30);
 
     u32x4(b, c, d, e)
 }
@@ -162,10 +169,17 @@ fn sha1rnds4p(abcd: u32x4, msg: u32x4) -> u32x4 {
         ($a:expr, $b:expr, $c:expr) => (($a ^ $b ^ $c))
     } // Parity, XOR, MD5H, SHA1P
 
-    e += a.rotate_left(5) + bool3ary_150!(b, c, d) + t; b = b.rotate_left(30);
-    d += e.rotate_left(5) + bool3ary_150!(a, b, c) + u; a = a.rotate_left(30);
-    c += d.rotate_left(5) + bool3ary_150!(e, a, b) + v; e = e.rotate_left(30);
-    b += c.rotate_left(5) + bool3ary_150!(d, e, a) + w; d = d.rotate_left(30);
+    e = e.wrapping_add(a.rotate_left(5)).wrapping_add(bool3ary_150!(b, c, d)).wrapping_add(t);
+    b = b.rotate_left(30);
+
+    d = d.wrapping_add(e.rotate_left(5)).wrapping_add(bool3ary_150!(a, b, c)).wrapping_add(u);
+    a = a.rotate_left(30);
+
+    c = c.wrapping_add(d.rotate_left(5)).wrapping_add(bool3ary_150!(e, a, b)).wrapping_add(v);
+    e = e.rotate_left(30);
+
+    b = b.wrapping_add(c.rotate_left(5)).wrapping_add(bool3ary_150!(d, e, a)).wrapping_add(w);
+    d = d.rotate_left(30);
 
     u32x4(b, c, d, e)
 }
@@ -180,10 +194,17 @@ fn sha1rnds4m(abcd: u32x4, msg: u32x4) -> u32x4 {
         ($a:expr, $b:expr, $c:expr) => (($a & $b) ^ ($a & $c) ^ ($b & $c))
     } // Majority, SHA1M
 
-    e += a.rotate_left(5) + bool3ary_232!(b, c, d) + t; b = b.rotate_left(30);
-    d += e.rotate_left(5) + bool3ary_232!(a, b, c) + u; a = a.rotate_left(30);
-    c += d.rotate_left(5) + bool3ary_232!(e, a, b) + v; e = e.rotate_left(30);
-    b += c.rotate_left(5) + bool3ary_232!(d, e, a) + w; d = d.rotate_left(30);
+    e = e.wrapping_add(a.rotate_left(5)).wrapping_add(bool3ary_232!(b, c, d)).wrapping_add(t);
+    b = b.rotate_left(30);
+
+    d = d.wrapping_add(e.rotate_left(5)).wrapping_add(bool3ary_232!(a, b, c)).wrapping_add(u);
+    a = a.rotate_left(30);
+
+    c = c.wrapping_add(d.rotate_left(5)).wrapping_add(bool3ary_232!(e, a, b)).wrapping_add(v);
+    e = e.rotate_left(30);
+
+    b = b.wrapping_add(c.rotate_left(5)).wrapping_add(bool3ary_232!(d, e, a)).wrapping_add(w);
+    d = d.rotate_left(30);
 
     u32x4(b, c, d, e)
 }
@@ -270,11 +291,11 @@ pub fn sha1_digest_block_u32(state: &mut [u32; 5], block: &[u32; 16]) {
     let e = sha1_first(h1).rotate_left(30);
     let u32x4(a, b, c, d) = h0;
 
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
+    state[0] = state[0].wrapping_add(a);
+    state[1] = state[1].wrapping_add(b);
+    state[2] = state[2].wrapping_add(c);
+    state[3] = state[3].wrapping_add(d);
+    state[4] = state[4].wrapping_add(e);
 }
 
 /// Process a block with the SHA-1 algorithm. (See more...)
