@@ -12,13 +12,8 @@ readme = "README.md"
 [lib]
 name = "crypto"
 
-[profile.dev]
-opt-level = 2
-debug = false
-
 [profile.test]
 opt-level = 2
-debug = false
 
 [dependencies]
 time = "*"
