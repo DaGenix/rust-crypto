@@ -1,6 +1,6 @@
 [package]
 name = "rust-crypto"
-version = "0.2.21"
+version = "0.2.22"
 authors = ["The Rust-Crypto Project Developers"]
 license = "MIT/Apache-2.0"
 homepage = "https://github.com/DaGenix/rust-crypto/"
@@ -13,6 +13,7 @@ readme = "README.md"
 name = "crypto"
 
 [profile.dev]
+opt-level = 2
 debug = false
 
 [profile.test]
