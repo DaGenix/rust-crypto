@@ -1398,7 +1398,7 @@ impl Sub<GePrecomp> for GeP3 {
 fn equal(b: u8, c: u8) -> i32 {
     let x = b ^ c; /* 0: yes; 1..255: no */
     let mut y = x as u32; /* 0: yes; 1..255: no */
-    y -= 1; /* 4294967295: yes; 0..254: no */
+    y = y.wrapping_sub(1); /* 4294967295: yes; 0..254: no */
     y >>= 31; /* 1: yes; 0: no */
     y as i32
 }
