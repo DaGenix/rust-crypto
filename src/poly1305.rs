@@ -120,14 +120,14 @@ impl Poly1305 {
         h1 +=     c;
 
         // compute h + -p
-        let mut g0 = h0 + 5; c = g0 >> 26; g0 &= 0x3ffffff;
-        let mut g1 = h1 + c; c = g1 >> 26; g1 &= 0x3ffffff;
-        let mut g2 = h2 + c; c = g2 >> 26; g2 &= 0x3ffffff;
-        let mut g3 = h3 + c; c = g3 >> 26; g3 &= 0x3ffffff;
-        let mut g4 = h4 + c - (1 << 26);
+        let mut g0 = h0.wrapping_add(5); c = g0 >> 26; g0 &= 0x3ffffff;
+        let mut g1 = h1.wrapping_add(c); c = g1 >> 26; g1 &= 0x3ffffff;
+        let mut g2 = h2.wrapping_add(c); c = g2 >> 26; g2 &= 0x3ffffff;
+        let mut g3 = h3.wrapping_add(c); c = g3 >> 26; g3 &= 0x3ffffff;
+        let mut g4 = h4.wrapping_add(c).wrapping_sub(1 << 26);
 
         // select h if h < p, or h + -p if h >= p
-        let mut mask = (g4 >> (32 - 1)) - 1;
+        let mut mask = (g4 >> (32 - 1)).wrapping_sub(1);
         g0 &= mask;
         g1 &= mask;
         g2 &= mask;
