@@ -88,7 +88,7 @@ impl FortunaGenerator {
     /// Increments the counter in place
     fn increment_counter(&mut self) {
         for i in (0..self.ctr.len()) {
-            self.ctr[i] += 1;
+            self.ctr[i] = self.ctr[i].wrapping_add(1);
             // As soon as we don't carry, stop
             if self.ctr[i] != 0 {
                 break;
