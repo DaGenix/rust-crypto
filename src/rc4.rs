@@ -29,16 +29,16 @@ impl Rc4 {
         }
         let mut j: u8 = 0;
         for i in (0..256) {
-            j = j + rc4.state[i] + key[i % key.len()];
+            j = j.wrapping_add(rc4.state[i]).wrapping_add(key[i % key.len()]);
             rc4.state.swap(i, j as usize);
         }
         rc4
     }
     fn next(&mut self) -> u8 {
-        self.i = self.i + 1; // we want this to wrap after 255
-        self.j = self.j + self.state[self.i as usize]; // we want this to wrap after 255
+        self.i = self.i.wrapping_add(1);
+        self.j = self.j.wrapping_add(self.state[self.i as usize]);
         self.state.swap(self.i as usize, self.j as usize);
-        let k = self.state[(self.state[self.i as usize] + self.state[self.j as usize]) as usize];
+        let k = self.state[(self.state[self.i as usize].wrapping_add(self.state[self.j as usize])) as usize];
         k
     }
 }
