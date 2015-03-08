@@ -275,7 +275,7 @@ impl Blowfish {
     }
 
     fn round_function(&self, x: u32) -> u32 {
-        ((self.s[0][(x >> 24) as usize] + self.s[1][((x >> 16) & 0xff) as usize]) ^ self.s[2][((x >> 8) & 0xff) as usize]) + self.s[3][(x & 0xff) as usize]
+        ((self.s[0][(x >> 24) as usize].wrapping_add(self.s[1][((x >> 16) & 0xff) as usize])) ^ self.s[2][((x >> 8) & 0xff) as usize]).wrapping_add(self.s[3][(x & 0xff) as usize])
     }
 
     // Public for bcrypt.
