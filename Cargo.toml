@@ -12,9 +12,6 @@ readme = "README.md"
 [lib]
 name = "crypto"
 
-[profile.test]
-opt-level = 2
-
 [dependencies]
 time = "*"
 rand = "*"
