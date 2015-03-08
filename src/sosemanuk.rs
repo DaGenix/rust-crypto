@@ -201,51 +201,51 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
-        r1 = r2 + (s1 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s1 ^ match r1 & 0x01 {
             0 => 0,
             _ => s8
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v0 = s0;
         s0 = ((s0 << 8) ^ mul_alpha[s0 as usize >> 24])
             ^ ((s3 >> 8) ^ div_alpha[s3 as usize & 0xFF]) ^ s9;
-        f0 = (s9 + r1) ^ r2;
+        f0 = s9.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
-        r1 = r2 + (s2 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s2 ^ match r1 & 0x01 {
             0 => 0,
             _ => s9
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v1 = s1;
         s1 = ((s1 << 8) ^ mul_alpha[s1 as usize >> 24])
             ^ ((s4 >> 8) ^ div_alpha[s4 as usize & 0xFF]) ^ s0;
-        f1 = (s0 + r1) ^ r2;
+        f1 = s0.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
-        r1 = r2 + (s3 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s3 ^ match r1 & 0x01 {
             0 => 0,
             _ => s0
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v2 = s2;
         s2 = ((s2 << 8) ^ mul_alpha[s2 as usize >> 24])
             ^ ((s5 >> 8) ^ div_alpha[s5 as usize & 0xFF]) ^ s1;
-        f2 = (s1 + r1) ^ r2;
+        f2 = s1.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
-        r1 = r2 + (s4 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s4 ^ match r1 & 0x01 {
             0 => 0,
             _ => s1
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v3 = s3;
         s3 = ((s3 << 8) ^ mul_alpha[s3 as usize >> 24])
             ^ ((s6 >> 8) ^ div_alpha[s6 as usize & 0xFF]) ^ s2;
-        f3 = (s2 + r1) ^ r2;
+        f3 = s2.wrapping_add(r1) ^ r2;
  
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
@@ -275,51 +275,51 @@ impl Sosemanuk {
 
         tt = r1;
         //r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
-        r1 = r2 + (s5 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s5 ^ match r1 & 0x01 {
             0 => 0,
             _ => s2
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v0 = s4;
         s4 = ((s4 << 8) ^ mul_alpha[s4 as usize >> 24])
             ^ ((s7 >> 8) ^ div_alpha[s7 as usize & 0xFF]) ^ s3;
-        f0 = (s3 + r1) ^ r2;
+        f0 = s3.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
-        r1 = r2 + (s6 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s6 ^ match r1 & 0x01 {
             0 => 0,
             _ => s3
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v1 = s5;
         s5 = ((s5 << 8) ^ mul_alpha[s5 as usize >> 24])
             ^ ((s8 >> 8) ^ div_alpha[s8 as usize & 0xFF]) ^ s4;
-        f1 = (s4 + r1) ^ r2;
+        f1 = s4.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
-        r1 = r2 + (s7 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s7 ^ match r1 & 0x01 {
             0 => 0,
             _ => s4
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v2 = s6;
         s6 = ((s6 << 8) ^ mul_alpha[s6 as usize >> 24])
             ^ ((s9 >> 8) ^ div_alpha[s9 as usize & 0xFF]) ^ s5;
-        f2 = (s5 + r1) ^ r2;
+        f2 = s5.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
-        r1 = r2 + (s8 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s8 ^ match r1 & 0x01 {
             0 => 0,
             _ => s5
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v3 = s7;
         s7 = ((s7 << 8) ^ mul_alpha[s7 as usize >> 24])
             ^ ((s0 >> 8) ^ div_alpha[s0 as usize & 0xFF]) ^ s6;
-        f3 = (s6 + r1) ^ r2;
+        f3 = s6.wrapping_add(r1) ^ r2;
  
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
@@ -349,51 +349,51 @@ impl Sosemanuk {
 
         tt = r1;
         //r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
-        r1 = r2 + (s9 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s9 ^ match r1 & 0x01 {
             0 => 0,
             _ => s6
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v0 = s8;
         s8 = ((s8 << 8) ^ mul_alpha[s8 as usize >> 24])
             ^ ((s1 >> 8) ^ div_alpha[s1 as usize & 0xFF]) ^ s7;
-        f0 = (s7 + r1) ^ r2;
+        f0 = s7.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
-        r1 = r2 + (s0 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s0 ^ match r1 & 0x01 {
             0 => 0,
             _ => s7
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v1 = s9;
         s9 = ((s9 << 8) ^ mul_alpha[s9 as usize >> 24])
             ^ ((s2 >> 8) ^ div_alpha[s2 as usize & 0xFF]) ^ s8;
-        f1 = (s8 + r1) ^ r2;
+        f1 = s8.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
-        r1 = r2 + (s1 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s1 ^ match r1 & 0x01 {
             0 => 0,
             _ => s8
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v2 = s0;
         s0 = ((s0 << 8) ^ mul_alpha[s0 as usize >> 24])
             ^ ((s3 >> 8) ^ div_alpha[s3 as usize & 0xFF]) ^ s9;
-        f2 = (s9 + r1) ^ r2;
+        f2 = s9.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
-        r1 = r2 + (s2 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s2 ^ match r1 & 0x01 {
             0 => 0,
             _ => s9
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v3 = s1;
         s1 = ((s1 << 8) ^ mul_alpha[s1 as usize >> 24])
             ^ ((s4 >> 8) ^ div_alpha[s4 as usize & 0xFF]) ^ s0;
-        f3 = (s0 + r1) ^ r2;
+        f3 = s0.wrapping_add(r1) ^ r2;
  
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
@@ -423,51 +423,51 @@ impl Sosemanuk {
 
         tt = r1;
         //r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
-        r1 = r2 + (s3 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s3 ^ match r1 & 0x01 {
             0 => 0,
             _ => s0
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v0 = s2;
         s2 = ((s2 << 8) ^ mul_alpha[s2 as usize >> 24])
             ^ ((s5 >> 8) ^ div_alpha[s5 as usize & 0xFF]) ^ s1;
-        f0 = (s1 + r1) ^ r2;
+        f0 = s1.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
-        r1 = r2 + (s4 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s4 ^ match r1 & 0x01 {
             0 => 0,
             _ => s1
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v1 = s3;
         s3 = ((s3 << 8) ^ mul_alpha[s3 as usize >> 24])
             ^ ((s6 >> 8) ^ div_alpha[s6 as usize & 0xFF]) ^ s2;
-        f1 = (s2 + r1) ^ r2;
+        f1 = s2.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
-        r1 = r2 + (s5 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s5 ^ match r1 & 0x01 {
             0 => 0,
             _ => s2
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v2 = s4;
         s4 = ((s4 << 8) ^ mul_alpha[s4 as usize >> 24])
             ^ ((s7 >> 8) ^ div_alpha[s7 as usize & 0xFF]) ^ s3;
-        f2 = (s3 + r1) ^ r2;
+        f2 = s3.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
-        r1 = r2 + (s6 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s6 ^ match r1 & 0x01 {
             0 => 0,
             _ => s3
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v3 = s5;
         s5 = ((s5 << 8) ^ mul_alpha[s5 as usize >> 24])
             ^ ((s8 >> 8) ^ div_alpha[s8 as usize & 0xFF]) ^ s4;
-        f3 = (s4 + r1) ^ r2;
+        f3 = s4.wrapping_add(r1) ^ r2;
  
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
@@ -497,51 +497,51 @@ impl Sosemanuk {
  
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
-        r1 = r2 + (s7 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s7 ^ match r1 & 0x01 {
             0 => 0,
             _ => s4
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v0 = s6;
         s6 = ((s6 << 8) ^ mul_alpha[s6 as usize >> 24])
             ^ ((s9 >> 8) ^ div_alpha[s9 as usize & 0xFF]) ^ s5;
-        f0 = (s5 + r1) ^ r2;
+        f0 = s5.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
-        r1 = r2 + (s8 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s8 ^ match r1 & 0x01 {
             0 => 0,
             _ => s5
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v1 = s7;
         s7 = ((s7 << 8) ^ mul_alpha[s7 as usize >> 24])
             ^ ((s0 >> 8) ^ div_alpha[s0 as usize & 0xFF]) ^ s6;
-        f1 = (s6 + r1) ^ r2;
+        f1 = s6.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
-        r1 = r2 + (s9 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s9 ^ match r1 & 0x01 {
             0 => 0,
             _ => s6
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v2 = s8;
         s8 = ((s8 << 8) ^ mul_alpha[s8 as usize >> 24])
             ^ ((s1 >> 8) ^ div_alpha[s1 as usize & 0xFF]) ^ s7;
-        f2 = (s7 + r1) ^ r2;
+        f2 = s7.wrapping_add(r1) ^ r2;
  
         tt = r1;
         //r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
-        r1 = r2 + (s0 ^ match r1 & 0x01 {
+        r1 = r2.wrapping_add(s0 ^ match r1 & 0x01 {
             0 => 0,
             _ => s7
         });
-        r2 = (tt * 0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
         v3 = s9;
         s9 = ((s9 << 8) ^ mul_alpha[s9 as usize >> 24])
             ^ ( ( s2 >> 8) ^ div_alpha[s2 as usize & 0xFF]) ^ s8;
-        f3 = (s8 + r1) ^ r2;
+        f3 = s8.wrapping_add(r1) ^ r2;
  
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
