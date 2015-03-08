@@ -13,6 +13,7 @@ readme = "README.md"
 name = "crypto"
 
 [profile.dev]
+opt-level = 2
 debug = false
 
 [profile.test]
