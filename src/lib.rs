@@ -7,7 +7,6 @@
 #![feature(asm)]
 #![feature(box_syntax)]
 #![feature(core)]
-#![feature(io)]
 #![feature(simd)]
 #![cfg_attr(test, feature(test))]
 
