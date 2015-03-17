@@ -5,7 +5,6 @@
 // except according to those terms.
 
 #![feature(asm)]
-#![feature(box_syntax)]
 #![feature(core)]
 #![feature(simd)]
 #![cfg_attr(test, feature(test))]

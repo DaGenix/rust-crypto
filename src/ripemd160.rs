@@ -479,7 +479,7 @@ mod tests {
 
         let mut out = [0u8; 20];
 
-        let mut sh = box Ripemd160::new();
+        let mut sh = Box::new(Ripemd160::new());
         for t in tests.iter() {
             (*sh).input_str(t.input);
             sh.result(&mut out);
