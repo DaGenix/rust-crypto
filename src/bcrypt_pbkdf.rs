@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::iter::range_step;
 use blowfish::Blowfish;
 use cryptoutil::{read_u32v_be, write_u32_be, write_u32_le};
 use sha2::Sha512;
@@ -22,7 +21,7 @@ fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     let mut buf = [0u32; 8];
     read_u32v_be(&mut buf, b"OxychromaticBlowfishSwatDynamite");
 
-    for i in range_step(0, 8, 2) {
+    for i in (0..8).step_by(2) {
         for _ in (0..64) {
             let (l, r) = bf.encrypt(buf[i], buf[i+1]);
             buf[i] = l;

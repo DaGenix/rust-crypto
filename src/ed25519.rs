@@ -2,7 +2,6 @@ use digest::Digest;
 use sha2::{Sha512};
 use curve25519::{GeP2, GeP3, ge_scalarmult_base, sc_reduce, sc_muladd, curve25519, Fe};
 use util::{fixed_time_eq};
-use std::iter::range_step;
 use std::ops::{Add, Sub, Mul};
 
 pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
@@ -83,7 +82,7 @@ fn check_s_lt_l(s: &[u8]) -> bool
     let mut c: u8 = 0;
     let mut n: u8 = 1;
 
-    for i in range_step(31, -1, -1) {
+    for i in (31..-1).step_by(-1) {
         c |= ((((s[i] as i32) - (l[i] as i32)) >> 8) as u8) & n;
         n &= (((((s[i] ^ l[i]) as i32)) - 1) >> 8) as u8;
     }

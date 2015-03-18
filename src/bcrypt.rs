@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use blowfish::Blowfish;
-use std::iter::{range_step};
 use cryptoutil::{write_u32_be};
 
 fn setup(cost: u32, salt: &[u8], key: &[u8]) -> Blowfish {
@@ -28,7 +27,7 @@ pub fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
     let state = setup(cost, salt, password);
     // OrpheanBeholderScryDoubt
     let mut ctext = [0x4f727068, 0x65616e42, 0x65686f6c, 0x64657253, 0x63727944, 0x6f756274];
-    for i in range_step(0, 6, 2) {
+    for i in (0..6).step_by(2) {
         for _ in (0..64) {
             let (l, r) = state.encrypt(ctext[i], ctext[i+1]);
             ctext[i] = l;
