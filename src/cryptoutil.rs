@@ -10,7 +10,7 @@
 
 use std;
 use std::{io, mem};
-use std::num::{Int, UnsignedInt};
+use std::num::Int;
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
@@ -274,7 +274,7 @@ pub fn add_bytes_to_bits<T: Int + ToBits>(bits: T, bytes: T) -> T {
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
 /// the high order value. panic!() if this would cause numeric overflow.
 pub fn add_bytes_to_bits_tuple
-        <T: Int + UnsignedInt + ToBits>
+        <T: Int + ToBits>
         (bits: (T, T), bytes: T) -> (T, T) {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
     let (hi, low) = bits;
