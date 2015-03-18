@@ -83,7 +83,7 @@ pub fn write_u32v_le (dst: &mut[u8], input: &[u32]) {
     unsafe {
         let mut x: *mut u8 = dst.get_unchecked_mut(0);
         let mut y: *const u32 = input.get_unchecked(0);
-        for _ in range(0, input.len()) {
+        for _ in 0..input.len() {
             let tmp = (*y).to_le();
             ptr::copy_nonoverlapping(x, &tmp as *const _ as *const u8, 4);
             x = x.offset(4);
