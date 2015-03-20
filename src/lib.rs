@@ -5,10 +5,9 @@
 // except according to those terms.
 
 #![feature(asm)]
-#![feature(box_syntax)]
 #![feature(core)]
-#![feature(io)]
 #![feature(simd)]
+#![feature(step_by)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;

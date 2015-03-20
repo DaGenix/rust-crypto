@@ -1250,7 +1250,7 @@ mod tests {
 
         let tests = wikipedia_tests;
 
-        let mut sh = box Sha512::new();
+        let mut sh = Box::new(Sha512::new());
 
         test_hash(&mut *sh, &tests[..]);
     }
@@ -1275,7 +1275,7 @@ mod tests {
 
         let tests = wikipedia_tests;
 
-        let mut sh = box Sha384::new();
+        let mut sh = Box::new(Sha384::new());
 
         test_hash(&mut *sh, &tests[..]);
     }
@@ -1300,7 +1300,7 @@ mod tests {
 
         let tests = wikipedia_tests;
 
-        let mut sh = box Sha512Trunc256::new();
+        let mut sh = Box::new(Sha512Trunc256::new());
 
         test_hash(&mut *sh, &tests[..]);
     }
@@ -1325,7 +1325,7 @@ mod tests {
 
         let tests = wikipedia_tests;
 
-        let mut sh = box Sha512Trunc224::new();
+        let mut sh = Box::new(Sha512Trunc224::new());
 
         test_hash(&mut *sh, &tests[..]);
     }
@@ -1350,7 +1350,7 @@ mod tests {
 
         let tests = wikipedia_tests;
 
-        let mut sh = box Sha256::new();
+        let mut sh = Box::new(Sha256::new());
 
         test_hash(&mut *sh, &tests[..]);
     }
@@ -1375,7 +1375,7 @@ mod tests {
 
         let tests = wikipedia_tests;
 
-        let mut sh = box Sha224::new();
+        let mut sh = Box::new(Sha224::new());
 
         test_hash(&mut *sh, &tests[..]);
     }

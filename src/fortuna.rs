@@ -281,14 +281,14 @@ mod tests {
     }
 
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_use_unseeded() {
         let mut f: Fortuna = Fortuna::new_unseeded();
         let _ = f.next_u32();
     }
 
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_badly_seeded() {
         let mut f: Fortuna = Fortuna::new_unseeded();
         f.add_random_event(0, 0, &[10; 32]);
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_too_big_event() {
         let mut f: Fortuna = Fortuna::new_unseeded();
         f.add_random_event(0, 0, &[10; 33]);

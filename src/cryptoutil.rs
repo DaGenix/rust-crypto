@@ -10,7 +10,7 @@
 
 use std;
 use std::{io, mem};
-use std::num::{Int, UnsignedInt};
+use std::num::Int;
 use std::ptr;
 use std::slice::bytes::{MutableByteVector, copy_memory};
 
@@ -83,7 +83,7 @@ pub fn write_u32v_le (dst: &mut[u8], input: &[u32]) {
     unsafe {
         let mut x: *mut u8 = dst.get_unchecked_mut(0);
         let mut y: *const u32 = input.get_unchecked(0);
-        for _ in range(0, input.len()) {
+        for _ in 0..input.len() {
             let tmp = (*y).to_le();
             ptr::copy_nonoverlapping(x, &tmp as *const _ as *const u8, 4);
             x = x.offset(4);
@@ -274,7 +274,7 @@ pub fn add_bytes_to_bits<T: Int + ToBits>(bits: T, bytes: T) -> T {
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
 /// the high order value. panic!() if this would cause numeric overflow.
 pub fn add_bytes_to_bits_tuple
-        <T: Int + UnsignedInt + ToBits>
+        <T: Int + ToBits>
         (bits: (T, T), bytes: T) -> (T, T) {
     let (new_high_bits, new_low_bits) = bytes.to_bits();
     let (hi, low) = bits;
@@ -541,7 +541,7 @@ pub mod test {
 
     // A simple failure case - adding 1 to the max value
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_add_bytes_to_bits_overflow() {
         add_bytes_to_bits::<u64>(Int::max_value(), 1);
     }
@@ -566,7 +566,7 @@ pub mod test {
 
     // A simple failure case - adding 1 to the max value
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_add_bytes_to_bits_tuple_overflow() {
         add_bytes_to_bits_tuple::<u64>((Int::max_value(), Int::max_value()), 1);
     }
@@ -574,7 +574,7 @@ pub mod test {
     // The value to add is too large to convert to bytes without overflowing its type, but the high
     // order value from this conversion overflows when added to the existing high order value
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_add_bytes_to_bits_tuple_overflow2() {
         let value: u64 = Int::max_value();
         add_bytes_to_bits_tuple::<u64>((value - 1, 0), 0x8000000000000000);

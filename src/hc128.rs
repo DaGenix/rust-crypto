@@ -37,21 +37,21 @@ impl Hc128 {
 
         let mut w : [u32; 1280] = [0; 1280];
 
-        for i in range(0, 16) {
+        for i in 0..16 {
             w[i >> 2] |= (key[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
             ptr::copy_nonoverlapping(w.as_mut_ptr().offset(4), w.as_ptr(), 4);
         }
 
-        for i in range(0, nonce.len() & 16) {
+        for i in (0..nonce.len() & 16) {
             w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
             ptr::copy_nonoverlapping(w.as_mut_ptr().offset(12), w.as_ptr().offset(8), 4);
         }
 
-        for i in range(16, 1280) {
+        for i in 16..1280 {
             w[i] = (f2(w[i - 2]).wrapping_add(w[i - 7]).wrapping_add(f1(w[i - 15])).wrapping_add(w[i - 16]).wrapping_add(i as u32)) as u32;
         }
 
@@ -61,10 +61,10 @@ impl Hc128 {
             ptr::copy_nonoverlapping(self.q.as_mut_ptr(), w.as_ptr().offset(768), 512);
         }
         
-        for i in range(0, 512) {
+        for i in 0..512 {
             self.p[i] = self.step();
         }
-        for i in range(0, 512) {
+        for i in 0..512 {
             self.q[i] = self.step();
         }  
      
