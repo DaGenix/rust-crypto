@@ -243,8 +243,7 @@ pub fn symm_enc_or_dec<S: SynchronousStreamCipher, R: ReadBuffer, W: WriteBuffer
     }
 }
 
-
-trait ToBits {
+pub trait ToBits {
     /// Convert the value in bytes to the number of bits, a tuple where the 1st item is the
     /// high-order value and the 2nd item is the low order value.
     fn to_bits(self) -> (Self, Self);
@@ -265,10 +264,7 @@ pub fn add_bytes_to_bits<T: Int + ToBits>(bits: T, bytes: T) -> T {
         panic!("Numeric overflow occured.")
     }
 
-    match bits.checked_add(new_low_bits) {
-        Some(x) => return x,
-        None => panic!("Numeric overflow occured.")
-    }
+    bits.checked_add(new_low_bits).expect("Numeric overflow occured.")
 }
 
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
