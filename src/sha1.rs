@@ -38,7 +38,7 @@ hasher.input_str("hello world");
 // read hash digest
 let hex = hasher.result_str();
 
-assert_eq!(hex.as_slice(), "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+assert_eq!(hex, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
 ```
 
 # Mathematics

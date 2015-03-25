@@ -249,7 +249,7 @@ mod test {
             s.push_str("aaaaaaaaaa");
             d.input_str("aaaaaaaaaa");
         }
-        d.input_str(s.as_slice());
+        d.input_str(s.as_ref());
 
         println!("{:?}", d.result_str().to_ascii_uppercase());
         assert!(s.len() == 500000);
