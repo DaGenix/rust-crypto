@@ -62,7 +62,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
 
     {
         let mut hasher = Sha512::new();
-        hasher.input(signature.as_slice());
+        hasher.input(signature.as_ref());
         hasher.input(message);
         let mut hram: [u8; 64] = [0; 64];
         hasher.result(hram.as_mut_slice());
@@ -115,10 +115,10 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
     hasher.result(hash.as_mut_slice());
     sc_reduce(hash.as_mut_slice());
 
-    let r = GeP2::double_scalarmult_vartime(hash.as_slice(), a, &signature[32..64]);
+    let r = GeP2::double_scalarmult_vartime(hash.as_ref(), a, &signature[32..64]);
     let rcheck = r.to_bytes();
 
-    fixed_time_eq(rcheck.as_slice(), &signature[0..32])
+    fixed_time_eq(rcheck.as_ref(), &signature[0..32])
 }
 
 pub fn exchange(public_key: &[u8], private_key: &[u8]) -> [u8; 32] {
@@ -126,7 +126,7 @@ pub fn exchange(public_key: &[u8], private_key: &[u8]) -> [u8; 32] {
     // Produce public key in Montgomery form.
     let mont_x = edwards_to_montgomery_x(ed_y);
 
-    // Produce private key from seed component (bytes 0 to 32) 
+    // Produce private key from seed component (bytes 0 to 32)
     // of the Ed25519 extended private key (64 bytes).
     let mut hasher = Sha512::new();
     hasher.input(&private_key[0..32]);
@@ -138,7 +138,7 @@ pub fn exchange(public_key: &[u8], private_key: &[u8]) -> [u8; 32] {
     hash[31] |= 64;
 
     let shared_mont_x : [u8; 32] = curve25519(&hash, &mont_x.to_bytes()); // priv., pub.
-    
+
     shared_mont_x
 }
 
@@ -161,7 +161,7 @@ mod tests {
     use sha2::{Sha512};
 
     fn do_keypair_case(seed: [u8; 32], expected_secret: [u8; 64], expected_public: [u8; 32]) {
-        let (actual_secret, actual_public) = keypair(seed.as_slice());
+        let (actual_secret, actual_public) = keypair(seed.as_ref());
         assert_eq!(actual_secret.to_vec(), expected_secret.to_vec());
         assert_eq!(actual_public.to_vec(), expected_public.to_vec());
     }
@@ -192,7 +192,7 @@ mod tests {
     fn keypair_matches_mont() {
         let seed = [0x26, 0x27, 0xf6, 0x85, 0x97, 0x15, 0xad, 0x1d, 0xd2, 0x94, 0xdd, 0xc4, 0x76, 0x19, 0x39, 0x31,
                     0xf1, 0xad, 0xb5, 0x58, 0xf0, 0x93, 0x97, 0x32, 0x19, 0x2b, 0xd1, 0xc0, 0xfd, 0x16, 0x8e, 0x4e];
-        let (ed_private, ed_public) = keypair(seed.as_slice());
+        let (ed_private, ed_public) = keypair(seed.as_ref());
 
         let mut hasher = Sha512::new();
         hasher.input(&ed_private[0..32]);
@@ -211,20 +211,20 @@ mod tests {
     }
 
     fn do_sign_verify_case(seed: [u8; 32], message: &[u8], expected_signature: [u8; 64]) {
-        let (secret_key, public_key) = keypair(seed.as_slice());
-        let mut actual_signature = signature(message, secret_key.as_slice());
+        let (secret_key, public_key) = keypair(seed.as_ref());
+        let mut actual_signature = signature(message, secret_key.as_ref());
         assert_eq!(expected_signature.to_vec(), actual_signature.to_vec());
-        assert!(verify(message, public_key.as_slice(), actual_signature.as_slice()));
+        assert!(verify(message, public_key.as_ref(), actual_signature.as_ref()));
 
         for &(index, flip) in [(0, 1), (31, 0x80), (20, 0xff)].iter() {
             actual_signature[index] ^= flip;
-            assert!(!verify(message, public_key.as_slice(), actual_signature.as_slice()));
+            assert!(!verify(message, public_key.as_ref(), actual_signature.as_ref()));
             actual_signature[index] ^= flip;
         }
 
         let mut public_key_corrupt = public_key;
         public_key_corrupt[0] ^= 1;
-        assert!(!verify(message, public_key_corrupt.as_slice(), actual_signature.as_slice()));
+        assert!(!verify(message, public_key_corrupt.as_ref(), actual_signature.as_ref()));
     }
 
     #[test]
@@ -244,7 +244,7 @@ mod tests {
              0x37, 0x31, 0xb0, 0x1c, 0x8e, 0xc7, 0x5d, 0x08, 0x2e, 0xf7, 0xdc, 0x9d, 0x7f, 0x1b, 0x73, 0x15,
              0x9f, 0x63, 0xdb, 0x56, 0xaa, 0x12, 0xa2, 0xca, 0x39, 0xea, 0xce, 0x6b, 0x28, 0xe4, 0xc3, 0x1d,
              0x9d, 0x25, 0x67, 0x41, 0x45, 0x2e, 0x83, 0x87, 0xe1, 0x53, 0x6d, 0x03, 0x02, 0x6e, 0xe4, 0x84,
-             0x10, 0xd4, 0x3b, 0x21, 0x91, 0x88, 0xba, 0x14, 0xa8, 0xaf].as_slice(),
+             0x10, 0xd4, 0x3b, 0x21, 0x91, 0x88, 0xba, 0x14, 0xa8, 0xaf].as_ref(),
             [0x91, 0x20, 0x91, 0x66, 0x1e, 0xed, 0x18, 0xa4, 0x03, 0x4b, 0xc7, 0xdb, 0x4b, 0xd6, 0x0f, 0xe2,
              0xde, 0xeb, 0xf3, 0xff, 0x3b, 0x6b, 0x99, 0x8d, 0xae, 0x20, 0x94, 0xb6, 0x09, 0x86, 0x5c, 0x20,
              0x19, 0xec, 0x67, 0x22, 0xbf, 0xdc, 0x87, 0xbd, 0xa5, 0x40, 0x91, 0x92, 0x2e, 0x11, 0xe3, 0x93,
@@ -258,7 +258,7 @@ mod tests {
              0xec, 0x0e, 0x48, 0x67, 0x93, 0xa5, 0x1c, 0x67, 0x66, 0xf7, 0x06, 0x48, 0x26, 0xd0, 0x74, 0x51,
              0x4d, 0xd0, 0x57, 0x41, 0xf3, 0xbe, 0x27, 0x3e, 0xf2, 0x1f, 0x28, 0x0e, 0x49, 0x07, 0xed, 0x89,
              0xbe, 0x30, 0x1a, 0x4e, 0xc8, 0x49, 0x6e, 0xb6, 0xab, 0x90, 0x00, 0x06, 0xe5, 0xa3, 0xc8, 0xe9,
-             0xc9, 0x93, 0x62, 0x1d, 0x6a, 0x3b, 0x0f, 0x6c, 0xba, 0xd0, 0xfd, 0xde, 0xf3, 0xb9, 0xc8, 0x2d].as_slice(),
+             0xc9, 0x93, 0x62, 0x1d, 0x6a, 0x3b, 0x0f, 0x6c, 0xba, 0xd0, 0xfd, 0xde, 0xf3, 0xb9, 0xc8, 0x2d].as_ref(),
             [0x4b, 0x8d, 0x9b, 0x1e, 0xca, 0x54, 0x00, 0xea, 0xc6, 0xf5, 0xcc, 0x0c, 0x94, 0x39, 0x63, 0x00,
              0x52, 0xf7, 0x34, 0xce, 0x45, 0x3e, 0x94, 0x26, 0xf3, 0x19, 0xdd, 0x96, 0x03, 0xb6, 0xae, 0xae,
              0xb9, 0xd2, 0x3a, 0x5f, 0x93, 0xf0, 0x6a, 0x46, 0x00, 0x18, 0xf0, 0x69, 0xdf, 0x19, 0x44, 0x48,

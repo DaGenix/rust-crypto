@@ -320,10 +320,10 @@ mod test {
         let output_str = "662b9d0e3463029156069b12f918691a98f7dfb2ca0393c96bbfc6b1fbd630a2";
 
         let mut salsa20 = Salsa20::new(&key, &nonce);
-        salsa20.process(input.as_slice(), stream.as_mut_slice());
+        salsa20.process(input.as_ref(), stream.as_mut_slice());
 
         let mut sh = Sha256::new();
-        sh.input(stream.as_slice());
+        sh.input(stream.as_ref());
         let out_str = sh.result_str();
         assert!(&out_str[..] == output_str);
     }

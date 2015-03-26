@@ -41,7 +41,7 @@ hasher.input_str("hello world");
 // read hash digest
 let hex = hasher.result_str();
 
-assert_eq!(hex.as_slice(),
+assert_eq!(hex,
            concat!("b94d27b9934d3e08a52e52d7da7dabfa",
                    "c484efe37a5380ee9088f7ace2efcde9"));
 ```
@@ -61,7 +61,7 @@ hasher.input_str("hello world");
 // read hash digest
 let hex = hasher.result_str();
 
-assert_eq!(hex.as_slice(),
+assert_eq!(hex,
            concat!("309ecc489c12d6eb4cc40f50c902f2b4",
                    "d0ed77ee511a7c7a9bcd3ca86d4cd86f",
                    "989dd35bc5ff499670da34255b45b0cf",

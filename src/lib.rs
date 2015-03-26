@@ -8,10 +8,11 @@
 #![feature(core)]
 #![feature(simd)]
 #![feature(step_by)]
+#![feature(convert)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;
-extern crate "rustc-serialize" as serialize;
+extern crate rustc_serialize as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;
 

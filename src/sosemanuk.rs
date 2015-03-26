@@ -2344,10 +2344,11 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 
     #[test]
@@ -2360,10 +2361,11 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 
     #[test]
@@ -2376,10 +2378,11 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 
     #[test]
@@ -2392,10 +2395,11 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 
     #[test]
@@ -2408,12 +2412,13 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
-   
+
     #[test]
     fn test_sosemanuk_ecrypt_set_6_vector_3() {
         let key = "0F62B5085BAE0154A7FA4DA0F34699EC3F92E5388BDE3184D72A7DD02376C91C".from_hex().unwrap();
@@ -2424,10 +2429,11 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 
     // From TEST_VECTOR_128.txt from reference C implementation
@@ -2442,10 +2448,11 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 160];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 
     #[test]
@@ -2458,19 +2465,20 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 160];
- 
-        let mut sosemanuk = Sosemanuk::new(key.as_slice(), nonce.as_slice());
+
+        let mut sosemanuk = Sosemanuk::new(key.as_ref(), nonce.as_ref());
         sosemanuk.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(output.as_ref() == expected);
     }
 }
- 
+
 #[cfg(test)]
 mod bench {
     use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
     use sosemanuk::Sosemanuk;
- 
+
     #[bench]
     pub fn sosemanuk_10(bh: & mut Bencher) {
         let mut sosemanuk = Sosemanuk::new(&[0; 32], &[0; 16]);

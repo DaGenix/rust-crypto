@@ -195,11 +195,12 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut hc128 = Hc128::new(key.as_slice(), nonce.as_slice());
+
+        let mut hc128 = Hc128::new(key.as_ref(), nonce.as_ref());
         hc128.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
-    }
+        let result: &[u8] = output.as_ref();
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(result == expected);    }
 
     #[test]
     fn test_hc128_ecrypt_set_6_vector_1() {
@@ -211,10 +212,12 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut hc128 = Hc128::new(key.as_slice(), nonce.as_slice());
+
+        let mut hc128 = Hc128::new(key.as_ref(), nonce.as_ref());
         hc128.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let result: &[u8] = output.as_ref();
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(result == expected);
     }
 
     #[test]
@@ -227,10 +230,12 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
-        let mut hc128 = Hc128::new(key.as_slice(), nonce.as_slice());
+
+        let mut hc128 = Hc128::new(key.as_ref(), nonce.as_ref());
         hc128.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        let result: &[u8] = output.as_ref();
+        let expected: &[u8] = expected_output.as_ref();
+        assert!(result == expected);
     }
 
     #[test]

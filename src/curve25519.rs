@@ -1020,7 +1020,7 @@ impl Fe {
     fn is_nonzero(&self) -> bool {
         let bs = self.to_bytes();
         let zero = [0; 32];
-        !fixed_time_eq(bs.as_slice(), zero.as_slice())
+        !fixed_time_eq(bs.as_ref(), zero.as_ref())
     }
 
     fn is_negative(&self) -> bool {
@@ -2157,7 +2157,7 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
 pub fn curve25519_base(x: &[u8]) -> [u8; 32] {
     let mut base : [u8; 32] = [0; 32];
     base[0] = 9;
-    curve25519(x, base.as_slice())
+    curve25519(x, base.as_ref())
 }
 
 #[cfg(test)]
@@ -2171,7 +2171,7 @@ mod tests {
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;
-            let fe = Fe::from_bytes(e.as_slice());
+            let fe = Fe::from_bytes(e.as_ref());
             let e_preserved = fe.to_bytes();
             assert!(e == e_preserved.to_vec());
         }
@@ -2208,7 +2208,7 @@ mod tests {
             e.as_mut_slice()[0] &= 248;
             e.as_mut_slice()[31] &= 127;
             e.as_mut_slice()[31] |= 64;
-            Some(Fe::from_bytes(e.as_slice()))
+            Some(Fe::from_bytes(e.as_ref()))
         }
     }
 
@@ -2246,7 +2246,7 @@ mod tests {
             0x77, 0x07, 0x6d, 0x0a, 0x73, 0x18, 0xa5, 0x7d, 0x3c, 0x16, 0xc1,
             0x72, 0x51, 0xb2, 0x66, 0x45, 0xdf, 0x4c, 0x2f, 0x87, 0xeb, 0xc0,
             0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a ];
-        let pk = curve25519_base(sk.as_slice());
+        let pk = curve25519_base(sk.as_ref());
         let correct : [u8; 32] = [
              0x85,0x20,0xf0,0x09,0x89,0x30,0xa7,0x54
             ,0x74,0x8b,0x7d,0xdc,0xb4,0x3e,0xf7,0x5a
