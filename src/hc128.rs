@@ -52,7 +52,7 @@ impl Hc128 {
         }
 
         for i in 16..1280 {
-            w[i] = (f2(w[i - 2]).wrapping_add(w[i - 7]).wrapping_add(f1(w[i - 15])).wrapping_add(w[i - 16]).wrapping_add(i as u32));
+            w[i] = f2(w[i - 2]).wrapping_add(w[i - 7]).wrapping_add(f1(w[i - 15])).wrapping_add(w[i - 16]).wrapping_add(i as u32);
         }
 
         // Copy contents of w into p and q
