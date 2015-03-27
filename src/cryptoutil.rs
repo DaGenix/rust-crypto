@@ -96,8 +96,8 @@ pub fn write_u32v_le (dst: &mut[u8], input: &[u32]) {
 pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
     assert!(dst.len() * 8 == input.len());
     unsafe {
-        let mut x = dst.get_unchecked_mut(0) as *mut u64;
-        let mut y = input.get_unchecked(0) as *const u8;
+        let mut x: *mut u64 = dst.get_unchecked_mut(0);
+        let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
             ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 8);
@@ -112,8 +112,8 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
 pub fn read_u64v_le(dst: &mut[u64], input: &[u8]) {
     assert!(dst.len() * 8 == input.len());
     unsafe {
-        let mut x = dst.get_unchecked_mut(0) as *mut u64;
-        let mut y = input.get_unchecked(0) as *const u8;
+        let mut x: *mut u64 = dst.get_unchecked_mut(0);
+        let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
             ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 8);
@@ -128,8 +128,8 @@ pub fn read_u64v_le(dst: &mut[u64], input: &[u8]) {
 pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x = dst.get_unchecked_mut(0) as *mut u32;
-        let mut y = input.get_unchecked(0) as *const u8;
+        let mut x: *mut u32 = dst.get_unchecked_mut(0);
+        let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
             ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 4);
@@ -144,8 +144,8 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
 pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
     assert!(dst.len() * 4 == input.len());
     unsafe {
-        let mut x = dst.get_unchecked_mut(0) as *mut u32;
-        let mut y = input.get_unchecked(0) as *const u8;
+        let mut x: *mut u32 = dst.get_unchecked_mut(0);
+        let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
             ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 4);

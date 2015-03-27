@@ -347,7 +347,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
             match fstr {
                 "0" => {
                     if pvec.len() != 3 { return Err(ERR_STR); }
-                    let log_n = pvec[0] as u8;
+                    let log_n = pvec[0];
                     let r = pvec[1] as u32;
                     let p = pvec[2] as u32;
                     params = ScryptParams::new(log_n, r, p);

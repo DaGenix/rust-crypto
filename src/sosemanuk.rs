@@ -205,7 +205,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s8
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v0 = s0;
         s0 = ((s0 << 8) ^ mul_alpha[s0 as usize >> 24])
             ^ ((s3 >> 8) ^ div_alpha[s3 as usize & 0xFF]) ^ s9;
@@ -217,7 +217,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s9
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v1 = s1;
         s1 = ((s1 << 8) ^ mul_alpha[s1 as usize >> 24])
             ^ ((s4 >> 8) ^ div_alpha[s4 as usize & 0xFF]) ^ s0;
@@ -229,7 +229,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s0
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v2 = s2;
         s2 = ((s2 << 8) ^ mul_alpha[s2 as usize >> 24])
             ^ ((s5 >> 8) ^ div_alpha[s5 as usize & 0xFF]) ^ s1;
@@ -241,7 +241,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s1
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v3 = s3;
         s3 = ((s3 << 8) ^ mul_alpha[s3 as usize >> 24])
             ^ ((s6 >> 8) ^ div_alpha[s6 as usize & 0xFF]) ^ s2;
@@ -279,7 +279,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s2
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v0 = s4;
         s4 = ((s4 << 8) ^ mul_alpha[s4 as usize >> 24])
             ^ ((s7 >> 8) ^ div_alpha[s7 as usize & 0xFF]) ^ s3;
@@ -291,7 +291,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s3
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v1 = s5;
         s5 = ((s5 << 8) ^ mul_alpha[s5 as usize >> 24])
             ^ ((s8 >> 8) ^ div_alpha[s8 as usize & 0xFF]) ^ s4;
@@ -303,7 +303,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s4
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v2 = s6;
         s6 = ((s6 << 8) ^ mul_alpha[s6 as usize >> 24])
             ^ ((s9 >> 8) ^ div_alpha[s9 as usize & 0xFF]) ^ s5;
@@ -315,7 +315,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s5
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v3 = s7;
         s7 = ((s7 << 8) ^ mul_alpha[s7 as usize >> 24])
             ^ ((s0 >> 8) ^ div_alpha[s0 as usize & 0xFF]) ^ s6;
@@ -353,7 +353,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s6
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v0 = s8;
         s8 = ((s8 << 8) ^ mul_alpha[s8 as usize >> 24])
             ^ ((s1 >> 8) ^ div_alpha[s1 as usize & 0xFF]) ^ s7;
@@ -365,7 +365,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s7
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v1 = s9;
         s9 = ((s9 << 8) ^ mul_alpha[s9 as usize >> 24])
             ^ ((s2 >> 8) ^ div_alpha[s2 as usize & 0xFF]) ^ s8;
@@ -377,7 +377,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s8
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v2 = s0;
         s0 = ((s0 << 8) ^ mul_alpha[s0 as usize >> 24])
             ^ ((s3 >> 8) ^ div_alpha[s3 as usize & 0xFF]) ^ s9;
@@ -389,7 +389,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s9
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v3 = s1;
         s1 = ((s1 << 8) ^ mul_alpha[s1 as usize >> 24])
             ^ ((s4 >> 8) ^ div_alpha[s4 as usize & 0xFF]) ^ s0;
@@ -427,7 +427,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s0
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v0 = s2;
         s2 = ((s2 << 8) ^ mul_alpha[s2 as usize >> 24])
             ^ ((s5 >> 8) ^ div_alpha[s5 as usize & 0xFF]) ^ s1;
@@ -439,7 +439,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s1
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v1 = s3;
         s3 = ((s3 << 8) ^ mul_alpha[s3 as usize >> 24])
             ^ ((s6 >> 8) ^ div_alpha[s6 as usize & 0xFF]) ^ s2;
@@ -451,7 +451,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s2
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v2 = s4;
         s4 = ((s4 << 8) ^ mul_alpha[s4 as usize >> 24])
             ^ ((s7 >> 8) ^ div_alpha[s7 as usize & 0xFF]) ^ s3;
@@ -463,7 +463,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s3
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v3 = s5;
         s5 = ((s5 << 8) ^ mul_alpha[s5 as usize >> 24])
             ^ ((s8 >> 8) ^ div_alpha[s8 as usize & 0xFF]) ^ s4;
@@ -501,7 +501,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s4
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v0 = s6;
         s6 = ((s6 << 8) ^ mul_alpha[s6 as usize >> 24])
             ^ ((s9 >> 8) ^ div_alpha[s9 as usize & 0xFF]) ^ s5;
@@ -513,7 +513,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s5
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v1 = s7;
         s7 = ((s7 << 8) ^ mul_alpha[s7 as usize >> 24])
             ^ ((s0 >> 8) ^ div_alpha[s0 as usize & 0xFF]) ^ s6;
@@ -525,7 +525,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s6
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v2 = s8;
         s8 = ((s8 << 8) ^ mul_alpha[s8 as usize >> 24])
             ^ ((s1 >> 8) ^ div_alpha[s1 as usize & 0xFF]) ^ s7;
@@ -537,7 +537,7 @@ impl Sosemanuk {
             0 => 0,
             _ => s7
         });
-        r2 = tt.wrapping_mul(0x54655307).rotate_left(7) as u32;
+        r2 = tt.wrapping_mul(0x54655307).rotate_left(7);
         v3 = s9;
         s9 = ((s9 << 8) ^ mul_alpha[s9 as usize >> 24])
             ^ ( ( s2 >> 8) ^ div_alpha[s2 as usize & 0xFF]) ^ s8;
@@ -618,7 +618,7 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     let mut r3 : u32;
     let mut r4 : u32;
     let mut tt : u32;
-    let mut i = 0 as usize;
+    let mut i = 0;
  
     tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0));
     w0 = tt.rotate_left(11);
