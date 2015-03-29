@@ -100,7 +100,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
         idx = idx.checked_add(1).expect("PBKDF2 size limit exceeded.");
 
         if chunk.len() == os {
-            calculate_block(mac, salt, c, idx, scratch.as_mut_slice(), chunk);
+            calculate_block(mac, salt, c, idx, &mut scratch, chunk);
         } else {
             let mut tmp: Vec<u8> = repeat(0).take(os).collect();
             calculate_block(mac, salt, c, idx, &mut scratch[..], &mut tmp[..]);
@@ -321,7 +321,7 @@ mod test {
         for t in tests.iter() {
             let mut mac = Hmac::new(Sha1::new(), &t.password[..]);
             let mut result: Vec<u8> = repeat(0).take(t.expected.len()).collect();
-            pbkdf2(&mut mac, &t.salt[..], t.c, result.as_mut_slice());
+            pbkdf2(&mut mac, &t.salt[..], t.c, &mut result);
             assert!(result == t.expected);
         }
     }

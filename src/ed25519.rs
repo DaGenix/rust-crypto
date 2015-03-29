@@ -9,7 +9,7 @@ pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
         let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
         hasher.input(seed);
-        hasher.result(hash_output.as_mut_slice());
+        hasher.result(&mut hash_output);
         hash_output[0] &= 248;
         hash_output[31] &= 63;
         hash_output[31] |= 64;
@@ -34,7 +34,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
         let mut hash_output: [u8; 64] = [0; 64];
         let mut hasher = Sha512::new();
         hasher.input(seed);
-        hasher.result(hash_output.as_mut_slice());
+        hasher.result(&mut hash_output);
         hash_output[0] &= 248;
         hash_output[31] &= 63;
         hash_output[31] |= 64;
@@ -46,7 +46,7 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
         let mut hasher = Sha512::new();
         hasher.input(&az[32..64]);
         hasher.input(message);
-        hasher.result(hash_output.as_mut_slice());
+        hasher.result(&mut hash_output);
         sc_reduce(&mut hash_output[0..64]);
         hash_output
     };
@@ -65,8 +65,8 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
         hasher.input(signature.as_ref());
         hasher.input(message);
         let mut hram: [u8; 64] = [0; 64];
-        hasher.result(hram.as_mut_slice());
-        sc_reduce(hram.as_mut_slice());
+        hasher.result(&mut hram);
+        sc_reduce(&mut hram);
         sc_muladd(&mut signature[32..64], &hram[0..32], &az[0..32], &nonce[0..32]);
     }
 
@@ -112,8 +112,8 @@ pub fn verify(message: &[u8], public_key: &[u8], signature: &[u8]) -> bool {
     hasher.input(public_key);
     hasher.input(message);
     let mut hash: [u8; 64] = [0; 64];
-    hasher.result(hash.as_mut_slice());
-    sc_reduce(hash.as_mut_slice());
+    hasher.result(&mut hash);
+    sc_reduce(&mut hash);
 
     let r = GeP2::double_scalarmult_vartime(hash.as_ref(), a, &signature[32..64]);
     let rcheck = r.to_bytes();

@@ -2168,9 +2168,9 @@ mod tests {
     fn from_to_bytes_preserves() {
         for i in (0..50) {
             let mut e: Vec<u8> = (0u32..32).map(|idx| (idx*(1289+i*761)) as u8).collect();
-            e.as_mut_slice()[0] &= 248;
-            e.as_mut_slice()[31] &= 127;
-            e.as_mut_slice()[31] |= 64;
+            e[0] &= 248;
+            e[31] &= 127;
+            e[31] |= 64;
             let fe = Fe::from_bytes(e.as_ref());
             let e_preserved = fe.to_bytes();
             assert!(e == e_preserved.to_vec());
@@ -2205,9 +2205,9 @@ mod tests {
 
         fn next(&mut self) -> Option<Fe> {
             let mut e: Vec<u8> = (0..32).map(|idx| (idx*(1289+self.which*761)) as u8).collect();
-            e.as_mut_slice()[0] &= 248;
-            e.as_mut_slice()[31] &= 127;
-            e.as_mut_slice()[31] |= 64;
+            e[0] &= 248;
+            e[31] &= 127;
+            e[31] |= 64;
             Some(Fe::from_bytes(e.as_ref()))
         }
     }
