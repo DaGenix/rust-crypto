@@ -52,7 +52,7 @@ impl Hc128 {
         }
 
         for i in 16..1280 {
-            w[i] = (f2(w[i - 2]).wrapping_add(w[i - 7]).wrapping_add(f1(w[i - 15])).wrapping_add(w[i - 16]).wrapping_add(i as u32)) as u32;
+            w[i] = f2(w[i - 2]).wrapping_add(w[i - 7]).wrapping_add(f1(w[i - 15])).wrapping_add(w[i - 16]).wrapping_add(i as u32);
         }
 
         // Copy contents of w into p and q
@@ -126,7 +126,7 @@ impl SynchronousStreamCipher for Hc128 {
                 *outb = *inb ^ self.next();
             }
         } else {
-            let mut data_index = 0 as usize;
+            let mut data_index = 0;
             let data_index_end = data_index + input.len();
 
             /*  Process any unused keystream (self.buffer) 

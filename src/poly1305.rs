@@ -83,7 +83,7 @@ impl Poly1305 {
         d2 += c as u64; c = (d2 >> 26) as u32; h2 = d2 as u32 & 0x3ffffff;
         d3 += c as u64; c = (d3 >> 26) as u32; h3 = d3 as u32 & 0x3ffffff;
         d4 += c as u64; c = (d4 >> 26) as u32; h4 = d4 as u32 & 0x3ffffff;
-        h0 += c * 5;    c = (h0 >> 26) as u32; h0 = h0 & 0x3ffffff;
+        h0 += c * 5;    c = h0 >> 26; h0 = h0 & 0x3ffffff;
         h1 += c;
 
         self.h[0] = h0;
