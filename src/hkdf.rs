@@ -60,7 +60,7 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
         let nbuf = [n];
         mac.input(info);
         mac.input(&nbuf);
-        mac.raw_result(t.as_mut_slice());
+        mac.raw_result(&mut t);
         mac.reset();
         let chunk_len = chunk.len();
         copy_memory(chunk, &t[..chunk_len]);
@@ -156,12 +156,12 @@ mod test {
 
         for t in test_vectors.iter() {
             let mut prk: Vec<u8> = repeat(0).take(t.prk.len()).collect();
-            hkdf_extract(t.digest, &t.salt[..], &t.ikm[..], prk.as_mut_slice());
+            hkdf_extract(t.digest, &t.salt[..], &t.ikm[..], &mut prk);
             assert!(prk == t.prk);
 
             let mut okm: Vec<u8> = repeat(0).take(t.okm.len()).collect();
             assert!(okm.len() == t.l);
-            hkdf_expand(t.digest, &prk[..], &t.info[..], okm.as_mut_slice());
+            hkdf_expand(t.digest, &prk[..], &t.info[..], &mut okm);
             assert!(okm == t.okm);
         }
     }
@@ -232,12 +232,12 @@ mod test {
 
         for t in test_vectors.iter() {
             let mut prk: Vec<u8> = repeat(0).take(t.prk.len()).collect();
-            hkdf_extract(t.digest, &t.salt[..], &t.ikm[..], prk.as_mut_slice());
+            hkdf_extract(t.digest, &t.salt[..], &t.ikm[..], &mut prk);
             assert!(prk == t.prk);
 
             let mut okm: Vec<u8> = repeat(0).take(t.okm.len()).collect();
             assert!(okm.len() == t.l);
-            hkdf_expand(t.digest, &prk[..], &t.info[..], okm.as_mut_slice());
+            hkdf_expand(t.digest, &prk[..], &t.info[..], &mut okm);
             assert!(okm == t.okm);
         }
     }

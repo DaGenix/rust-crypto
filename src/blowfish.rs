@@ -314,7 +314,7 @@ impl BlockEncryptor for Blowfish {
         assert!(input.len() == 8);
         assert!(output.len() == 8);
         let mut block = [0u32, 0u32];
-        read_u32v_be(block.as_mut_slice(), input);
+        read_u32v_be(&mut block, input);
         let (l, r) = self.encrypt(block[0], block[1]);
         write_u32_be(&mut output[0..4], l);
         write_u32_be(&mut output[4..8], r);
@@ -330,7 +330,7 @@ impl BlockDecryptor for Blowfish {
         assert!(input.len() == 8);
         assert!(output.len() == 8);
         let mut block = [0u32, 0u32];
-        read_u32v_be(block.as_mut_slice(), input);
+        read_u32v_be(&mut block, input);
         let (l, r) = self.decrypt(block[0], block[1]);
         write_u32_be(&mut output[0..4], l);
         write_u32_be(&mut output[4..8], r);

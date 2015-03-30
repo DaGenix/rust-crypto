@@ -38,7 +38,7 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let mut expanded_key: Vec<u8> = repeat(0).take(bs).collect();
 
     if key.len() <= bs {
-        slice::bytes::copy_memory(expanded_key.as_mut_slice(), key);
+        slice::bytes::copy_memory(&mut expanded_key, key);
     } else {
         let output_size = digest.output_bytes();
         digest.input(key);
@@ -53,8 +53,8 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
 fn create_keys<D: Digest>(digest: &mut D, key: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let mut i_key = expand_key(digest, key);
     let mut o_key = i_key.clone();
-    derive_key(i_key.as_mut_slice(), 0x36);
-    derive_key(o_key.as_mut_slice(), 0x5c);
+    derive_key(&mut i_key, 0x36);
+    derive_key(&mut o_key, 0x5c);
     (i_key, o_key)
 }
 
@@ -95,7 +95,7 @@ impl <D: Digest> Mac for Hmac<D> {
         let output_size = self.digest.output_bytes();
         let mut code: Vec<u8> = repeat(0).take(output_size).collect();
 
-        self.raw_result(code.as_mut_slice());
+        self.raw_result(&mut code);
 
         MacResult::new_from_owned(code)
     }

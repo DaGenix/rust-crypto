@@ -573,7 +573,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
-            ghash.raw_result(mac.as_mut_slice());
+            ghash.raw_result(&mut mac);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -586,7 +586,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
-            ghash.raw_result(mac.as_mut_slice());
+            ghash.raw_result(&mut mac);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -599,7 +599,7 @@ mod bench {
         bh.iter( || {
             let mut ghash = Ghash::new(&key);
             ghash.input(&bytes);
-            ghash.raw_result(mac.as_mut_slice());
+            ghash.raw_result(&mut mac);
         });
         bh.bytes = bytes.len() as u64;
     }

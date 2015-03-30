@@ -75,7 +75,7 @@ pub trait Digest {
         use serialize::hex::ToHex;
 
         let mut buf: Vec<u8> = repeat(0).take((self.output_bits()+7)/8).collect();
-        self.result(buf.as_mut_slice());
+        self.result(&mut buf);
         buf[..].to_hex()
     }
 }

@@ -106,7 +106,7 @@ mod test {
         for t in tests.iter() {
             let mut rc4 = Rc4::new(t.key.as_bytes());
             let mut result: Vec<u8> = repeat(0).take(t.output.len()).collect();
-            rc4.process(t.input.as_bytes(), result.as_mut_slice());
+            rc4.process(t.input.as_bytes(), &mut result);
             assert!(result == t.output);
         }
     }

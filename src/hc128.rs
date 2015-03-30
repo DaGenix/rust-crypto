@@ -249,9 +249,9 @@ mod test {
 
         let mut output = [0u8; 64];
  
-        let mut hc128 = Hc128::new(key.as_slice(), nonce.as_slice());
+        let mut hc128 = Hc128::new(&key, &nonce);
         hc128.process(&input, &mut output);
-        assert!(output.as_slice() == expected_output.as_slice());
+        assert!(&output[..] == &expected_output[..]);
     }
 }
  

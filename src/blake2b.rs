@@ -383,7 +383,7 @@ impl Mac for Blake2b {
      */
     fn result(&mut self) -> MacResult {
         let mut mac: Vec<u8> = repeat(0).take(self.digest_length as usize).collect();
-        self.raw_result(mac.as_mut_slice());
+        self.raw_result(&mut mac);
         MacResult::new_from_owned(mac)
     }
 

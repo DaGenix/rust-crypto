@@ -234,16 +234,16 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     let mut mac = Hmac::new(Sha256::new(), password);
 
     let mut b: Vec<u8> = repeat(0).take(pr128).collect();
-    pbkdf2(&mut mac, salt, 1, b.as_mut_slice());
+    pbkdf2(&mut mac, salt, 1, &mut b);
 
     let mut v: Vec<u8> = repeat(0).take(nr128).collect();
     let mut t: Vec<u8> = repeat(0).take(r128).collect();
 
-    for chunk in b.as_mut_slice().chunks_mut(r128) {
-        scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
+    for chunk in &mut b.chunks_mut(r128) {
+        scrypt_ro_mix(chunk, &mut v, &mut t, n);
     }
 
-    pbkdf2(&mut mac, &*b, 1, output.as_mut_slice());
+    pbkdf2(&mut mac, &*b, 1, output);
 }
 
 /**
@@ -396,7 +396,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
     }
 
     let mut output: Vec<u8> = repeat(0).take(hash.len()).collect();
-    scrypt(password.as_bytes(), &*salt, &params, output.as_mut_slice());
+    scrypt(password.as_bytes(), &*salt, &params, &mut output);
 
     // Be careful here - its important that the comparison be done using a fixed time equality
     // check. Otherwise an adversary that can measure how long this step takes can learn about the
@@ -481,7 +481,7 @@ mod test {
         for t in tests.iter() {
             let mut result: Vec<u8> = repeat(0).take(t.expected.len()).collect();
             let params = ScryptParams::new(t.log_n, t.r, t.p);
-            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, result.as_mut_slice());
+            scrypt(t.password.as_bytes(), t.salt.as_bytes(), &params, &mut result);
             assert!(result == t.expected);
         }
     }

@@ -20,7 +20,7 @@ For details see <http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html>.
 # Usage
 
 ```rust
-use self::crypto::whirlpool::Whirlpool;
+use self::crypto::swhirlpool::Whirlpool;
 use self::crypto::digest::Digest;
 
 let mut hasher = Whirlpool::new();
