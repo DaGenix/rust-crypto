@@ -8,7 +8,6 @@
 //! Derivation Function as specified by  https://tools.ietf.org/html/rfc5869.
 
 use std::iter::repeat;
-use std::num::Int;
 use std::slice::bytes::copy_memory;
 
 use digest::Digest;

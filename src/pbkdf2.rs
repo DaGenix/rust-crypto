@@ -11,7 +11,6 @@
 
 use std::iter::repeat;
 use std::io;
-use std::num::Int;
 use std::slice::bytes::copy_memory;
 
 use rand::{OsRng, Rng};

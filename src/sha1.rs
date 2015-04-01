@@ -60,7 +60,6 @@ Some of these functions are commonly found in all hash digest
 algorithms, but some, like "parity" is only found in SHA-1.
  */
 
-use std::num::Int;
 use digest::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
 use simd::u32x4;

@@ -9,7 +9,6 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32v_le};
  
-use std::num::Int;
 use std::slice::bytes::copy_memory;
 
 

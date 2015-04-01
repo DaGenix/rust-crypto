@@ -124,7 +124,6 @@ finite field which allows for efficient computation of the AES S-Boxes. See [7] 
 */
 
 use std::ops::{BitAnd, BitXor, Not};
-use std::num::Int;
 use std::default::Default;
 
 use cryptoutil::{read_u32v_le, write_u32_le};

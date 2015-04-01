@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use std::iter::repeat;
-use std::num::Int;
 use cryptoutil::{read_u64v_le, write_u64v_le};
 use std::slice::bytes::{copy_memory};
 use std::intrinsics::volatile_set_memory;
