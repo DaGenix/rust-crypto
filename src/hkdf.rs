@@ -63,7 +63,7 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
         mac.raw_result(&mut t);
         mac.reset();
         let chunk_len = chunk.len();
-        copy_memory(chunk, &t[..chunk_len]);
+        copy_memory(&t[..chunk_len], chunk);
     }
 }
 

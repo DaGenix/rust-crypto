@@ -161,13 +161,13 @@ fn update(state: &mut Gf128, len: &mut usize, data: &[u8], srest: &mut Option<[u
         None => data,
         Some(mut rest) => {
             if 16 - rest_len > data_len {
-                copy_memory(&mut rest[rest_len..], data);
+                copy_memory(data, &mut rest[rest_len..]);
                 *srest = Some(rest);
                 return;
             }
 
             let (fill, data) = data.split_at(16 - rest_len);
-            copy_memory(&mut rest[rest_len..], fill);
+            copy_memory(fill, &mut rest[rest_len..]);
             state.add_and_mul(Gf128::from_bytes(&rest), hs);
             data
         }
@@ -182,7 +182,7 @@ fn update(state: &mut Gf128, len: &mut usize, data: &[u8], srest: &mut Option<[u
 
     if rest.len() != 0 {
         let mut tmp = [0; 16];
-        copy_memory(&mut tmp, rest);
+        copy_memory(rest, &mut tmp);
         *srest = Some(tmp);
     }
 }
@@ -316,7 +316,7 @@ impl Mac for Ghash {
             self.finished = true;
         }
 
-        copy_memory(output, &self.state.to_bytes());
+        copy_memory(&self.state.to_bytes(), output);
     }
 
     fn output_bytes(&self) -> usize { 16 }

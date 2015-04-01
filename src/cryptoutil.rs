@@ -25,7 +25,7 @@ pub fn write_u64_be(dst: &mut[u8], mut input: u64) {
     input = input.to_be();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping(dst.get_unchecked_mut(0), tmp, 8);
+        ptr::copy_nonoverlapping(tmp, dst.get_unchecked_mut(0), 8);
     }
 }
 
@@ -36,7 +36,7 @@ pub fn write_u64_le(dst: &mut[u8], mut input: u64) {
     input = input.to_le();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping(dst.get_unchecked_mut(0), tmp, 8);
+        ptr::copy_nonoverlapping(tmp, dst.get_unchecked_mut(0), 8);
     }
 }
 
@@ -48,7 +48,7 @@ pub fn write_u64v_le(dst: &mut[u8], input: &[u64]) {
         let mut y: *const u64 = input.get_unchecked(0);
         for _ in (0..input.len()) {
             let tmp = (*y).to_le();
-            ptr::copy_nonoverlapping(x, &tmp as *const _ as *const u8, 8);
+            ptr::copy_nonoverlapping(&tmp as *const _ as *const u8, x, 8);
             x = x.offset(8);
             y = y.offset(1);
         }
@@ -62,7 +62,7 @@ pub fn write_u32_be(dst: &mut [u8], mut input: u32) {
     input = input.to_be();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping(dst.get_unchecked_mut(0), tmp, 4);
+        ptr::copy_nonoverlapping(tmp, dst.get_unchecked_mut(0), 4);
     }
 }
 
@@ -73,7 +73,7 @@ pub fn write_u32_le(dst: &mut[u8], mut input: u32) {
     input = input.to_le();
     unsafe {
         let tmp = &input as *const _ as *const u8;
-        ptr::copy_nonoverlapping(dst.get_unchecked_mut(0), tmp, 4);
+        ptr::copy_nonoverlapping(tmp, dst.get_unchecked_mut(0), 4);
     }
 }
 
@@ -85,7 +85,7 @@ pub fn write_u32v_le (dst: &mut[u8], input: &[u32]) {
         let mut y: *const u32 = input.get_unchecked(0);
         for _ in 0..input.len() {
             let tmp = (*y).to_le();
-            ptr::copy_nonoverlapping(x, &tmp as *const _ as *const u8, 4);
+            ptr::copy_nonoverlapping(&tmp as *const _ as *const u8, x, 4);
             x = x.offset(4);
             y = y.offset(1);
         }
@@ -100,7 +100,7 @@ pub fn read_u64v_be(dst: &mut[u64], input: &[u8]) {
         let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
-            ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 8);
+            ptr::copy_nonoverlapping(y, &mut tmp as *mut _ as *mut u8, 8);
             *x = Int::from_be(tmp);
             x = x.offset(1);
             y = y.offset(8);
@@ -116,7 +116,7 @@ pub fn read_u64v_le(dst: &mut[u64], input: &[u8]) {
         let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u64 = mem::uninitialized();
-            ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 8);
+            ptr::copy_nonoverlapping(y, &mut tmp as *mut _ as *mut u8, 8);
             *x = Int::from_le(tmp);
             x = x.offset(1);
             y = y.offset(8);
@@ -132,7 +132,7 @@ pub fn read_u32v_be(dst: &mut[u32], input: &[u8]) {
         let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
-            ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 4);
+            ptr::copy_nonoverlapping(y, &mut tmp as *mut _ as *mut u8, 4);
             *x = Int::from_be(tmp);
             x = x.offset(1);
             y = y.offset(4);
@@ -148,7 +148,7 @@ pub fn read_u32v_le(dst: &mut[u32], input: &[u8]) {
         let mut y: *const u8 = input.get_unchecked(0);
         for _ in (0..dst.len()) {
             let mut tmp: u32 = mem::uninitialized();
-            ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, y, 4);
+            ptr::copy_nonoverlapping(y, &mut tmp as *mut _ as *mut u8, 4);
             *x = Int::from_le(tmp);
             x = x.offset(1);
             y = y.offset(4);
@@ -161,7 +161,7 @@ pub fn read_u32_le(input: &[u8]) -> u32 {
     assert!(input.len() == 4);
     unsafe {
         let mut tmp: u32 = mem::uninitialized();
-        ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, input.get_unchecked(0), 4);
+        ptr::copy_nonoverlapping(input.get_unchecked(0), &mut tmp as *mut _ as *mut u8, 4);
         Int::from_le(tmp)
     }
 }
@@ -171,7 +171,7 @@ pub fn read_u32_be(input: &[u8]) -> u32 {
     assert!(input.len() == 4);
     unsafe {
         let mut tmp: u32 = mem::uninitialized();
-        ptr::copy_nonoverlapping(&mut tmp as *mut _ as *mut u8, input.get_unchecked(0), 4);
+        ptr::copy_nonoverlapping(input.get_unchecked(0), &mut tmp as *mut _ as *mut u8, 4);
         Int::from_be(tmp)
     }
 }
@@ -364,15 +364,15 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                 let buffer_remaining = size - self.buffer_idx;
                 if input.len() >= buffer_remaining {
                         copy_memory(
-                            &mut self.buffer[self.buffer_idx..size],
-                            &input[..buffer_remaining]);
+                            &input[..buffer_remaining],
+                            &mut self.buffer[self.buffer_idx..size]);
                     self.buffer_idx = 0;
                     func(&self.buffer);
                     i += buffer_remaining;
                 } else {
                     copy_memory(
-                        &mut self.buffer[self.buffer_idx..self.buffer_idx + input.len()],
-                        input);
+                        input,
+                        &mut self.buffer[self.buffer_idx..self.buffer_idx + input.len()]);
                     self.buffer_idx += input.len();
                     return;
                 }
@@ -390,8 +390,8 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
             // be empty.
             let input_remaining = input.len() - i;
             copy_memory(
-                &mut self.buffer[0..input_remaining],
-                &input[i..]);
+                &input[i..],
+                &mut self.buffer[0..input_remaining]);
             self.buffer_idx += input_remaining;
         }
 

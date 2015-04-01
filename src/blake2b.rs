@@ -122,7 +122,7 @@ impl Blake2b {
             key: [0; BLAKE2B_KEYBYTES],
             key_length: key.len() as u8
         };
-        copy_memory(&mut b.key, key);
+        copy_memory(key, &mut b.key);
         b
     }
 
@@ -184,7 +184,7 @@ impl Blake2b {
 
     fn apply_key(&mut self) {
         let mut block : [u8; BLAKE2B_BLOCKBYTES] = [0; BLAKE2B_BLOCKBYTES];
-        copy_memory(&mut block, &self.key[..self.key_length as usize]);
+        copy_memory(&self.key[..self.key_length as usize], &mut block);
         self.update(&block);
         unsafe {
             volatile_set_memory(block.as_mut_ptr(), 0, block.len());
@@ -256,7 +256,7 @@ impl Blake2b {
             let fill = 2 * BLAKE2B_BLOCKBYTES - left;
 
             if input.len() > fill {
-                copy_memory( &mut self.buf[left..], &input[0..fill] ); // Fill buffer
+                copy_memory(&input[0..fill], &mut self.buf[left..]); // Fill buffer
                 self.buflen += fill;
                 self.increment_counter( BLAKE2B_BLOCKBYTES as u64);
                 self.compress();
@@ -264,12 +264,12 @@ impl Blake2b {
                 let mut halves = self.buf.chunks_mut(BLAKE2B_BLOCKBYTES);
                 let first_half = halves.next().unwrap();
                 let second_half = halves.next().unwrap();
-                copy_memory(first_half, second_half);
+                copy_memory(second_half, first_half);
 
                 self.buflen -= BLAKE2B_BLOCKBYTES;
                 input = &input[fill..input.len()];
             } else { // inlen <= fill
-                copy_memory(&mut self.buf[left..], input);
+                copy_memory(input, &mut self.buf[left..]);
                 self.buflen += input.len();
                 break;
             }
@@ -287,7 +287,7 @@ impl Blake2b {
                 let mut halves = self.buf.chunks_mut(BLAKE2B_BLOCKBYTES);
                 let first_half = halves.next().unwrap();
                 let second_half = halves.next().unwrap();
-                copy_memory(first_half, second_half);
+                copy_memory(second_half, first_half);
             }
 
             let incby = self.buflen as u64;
@@ -304,7 +304,7 @@ impl Blake2b {
             self.computed = true;
         }
         let outlen = out.len();
-        copy_memory(out, &self.buf[0..outlen]);
+        copy_memory(&self.buf[0..outlen], out);
     }
 
     pub fn blake2b(out: &mut[u8], input: &[u8], key: &[u8]) {

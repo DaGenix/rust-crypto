@@ -598,10 +598,10 @@ impl Sosemanuk {
 fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     let mut full_key : [u8; 32] = [0; 32];
     if key.len() < 32 {
-        copy_memory(&mut full_key[0..key.len()], &key);
+        copy_memory(&key, &mut full_key[0..key.len()]);
         full_key[key.len()] = 0x01;
     } else {
-        copy_memory(&mut full_key[0..32], &key[0..32]);
+        copy_memory(&key[0..32], &mut full_key[0..32]);
     }
  
     let mut w0 = read_u32_le(&full_key[0..4]);
@@ -1488,9 +1488,9 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
 fn iv_setup(iv : &[u8], subkeys : &mut[u32; 100], lfsr : &mut[u32; 10], fsm_r : &mut[u32; 2]) {
     let mut nonce : [u8; 16] = [0; 16];
     if iv.len() < 16 {
-        copy_memory(&mut nonce[0..iv.len()], &iv);
+        copy_memory(&iv, &mut nonce[0..iv.len()]);
     } else {
-        copy_memory(&mut nonce[0..16], &iv[0..16]);
+        copy_memory(&iv[0..16], &mut nonce[0..16]);
     }
  
     let mut r0 : u32;

@@ -105,7 +105,7 @@ pub fn pbkdf2<M: Mac>(mac: &mut M, salt: &[u8], c: u32, output: &mut [u8]) {
             let mut tmp: Vec<u8> = repeat(0).take(os).collect();
             calculate_block(mac, salt, c, idx, &mut scratch[..], &mut tmp[..]);
             let chunk_len = chunk.len();
-            copy_memory(chunk, &tmp[..chunk_len]);
+            copy_memory(&tmp[..chunk_len], chunk);
         }
     }
 }

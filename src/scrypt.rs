@@ -97,7 +97,7 @@ fn xor(x: &[u8], y: &[u8], output: &mut [u8]) {
 // output - the output vector. Must be the same length as input.
 fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
     let mut x = [0u8; 64];
-    copy_memory(&mut x, &input[input.len() - 64..]);
+    copy_memory(&input[input.len() - 64..], &mut x);
 
     let mut t = [0u8; 64];
 
@@ -105,7 +105,7 @@ fn scrypt_block_mix(input: &[u8], output: &mut [u8]) {
         xor(&x, chunk, &mut t);
         salsa20_8(&t, &mut x);
         let pos = if i % 2 == 0 { (i / 2) * 64 } else { (i / 2) * 64 + input.len() / 2 };
-        copy_memory(&mut output[pos..pos + 64], &x);
+        copy_memory(&x, &mut output[pos..pos + 64]);
     }
 }
 
@@ -128,7 +128,7 @@ fn scrypt_ro_mix(b: &mut [u8], v: &mut [u8], t: &mut [u8], n: usize) {
     let len = b.len();
 
     for chunk in v.chunks_mut(len) {
-        copy_memory(chunk, b);
+        copy_memory(b, chunk);
         scrypt_block_mix(chunk, b);
     }
 
