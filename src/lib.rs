@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(core)]
 #![feature(simd)]
 #![feature(step_by)]
 #![feature(convert)]
