@@ -8,7 +8,6 @@
 //! Derivation Function as specified by  https://tools.ietf.org/html/rfc5869.
 
 use std::iter::repeat;
-use std::num::Int;
 use std::slice::bytes::copy_memory;
 
 use digest::Digest;
@@ -63,7 +62,7 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
         mac.raw_result(&mut t);
         mac.reset();
         let chunk_len = chunk.len();
-        copy_memory(chunk, &t[..chunk_len]);
+        copy_memory(&t[..chunk_len], chunk);
     }
 }
 

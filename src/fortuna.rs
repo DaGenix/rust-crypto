@@ -135,7 +135,7 @@ impl FortunaGenerator {
         if rem > 0 {
             let mut buf = [0; AES_BLOCK_SIZE];
             self.generate_blocks(1, &mut buf);
-            copy_memory(&mut out[(n * AES_BLOCK_SIZE)..], &buf[..rem]);
+            copy_memory(&buf[..rem], &mut out[(n * AES_BLOCK_SIZE)..]);
         }
 
         // Rekey

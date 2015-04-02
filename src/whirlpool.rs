@@ -91,8 +91,8 @@ impl Digest for Whirlpool {
             }
             
             carry = x > 0xff;
-            let pos = self.bit_length.len() -i - 1;
-            self.bit_length[pos] = (x & 0xff) as u8;
+            let length = self.bit_length.len();
+            self.bit_length[length - i - 1] = (x & 0xff) as u8;
         }
 
         // process the data itself

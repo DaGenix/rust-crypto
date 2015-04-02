@@ -70,7 +70,6 @@ assert_eq!(hex,
 
  */
 
-use std::num::Int;
 use digest::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be,
                  write_u64_be, read_u64v_be,
