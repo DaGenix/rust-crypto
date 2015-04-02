@@ -37,7 +37,7 @@ pub trait ReadBuffer {
 
     fn push_to<W: WriteBuffer>(&mut self, output: &mut W) {
         let count = cmp::min(output.remaining(), self.remaining());
-        slice::bytes::copy_memory(output.take_next(count), self.take_next(count));
+        slice::bytes::copy_memory(self.take_next(count), output.take_next(count));
     }
 }
 

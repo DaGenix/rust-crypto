@@ -33,7 +33,7 @@ impl<'a> AesGcm<'a> {
         // earlier preventing the use of generic CTR mode.
 
         let mut iv = [0u8; 16];
-        copy_memory(&mut iv, nonce);
+        copy_memory(nonce, &mut iv);
         iv[15] = 1u8;
         let mut cipher = ctr(key_size,key,&iv);
         let temp_block = [0u8; 16];

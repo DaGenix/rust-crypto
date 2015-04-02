@@ -9,7 +9,6 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
  
-use std::num::Int;
 use std::ptr;
 
 
@@ -41,14 +40,14 @@ impl Hc128 {
             w[i >> 2] |= (key[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
-            ptr::copy_nonoverlapping(w.as_mut_ptr().offset(4), w.as_ptr(), 4);
+            ptr::copy_nonoverlapping(w.as_ptr(), w.as_mut_ptr().offset(4), 4);
         }
 
         for i in (0..nonce.len() & 16) {
             w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
-            ptr::copy_nonoverlapping(w.as_mut_ptr().offset(12), w.as_ptr().offset(8), 4);
+            ptr::copy_nonoverlapping(w.as_ptr().offset(8), w.as_mut_ptr().offset(12), 4);
         }
 
         for i in 16..1280 {
@@ -57,8 +56,8 @@ impl Hc128 {
 
         // Copy contents of w into p and q
         unsafe {
-            ptr::copy_nonoverlapping(self.p.as_mut_ptr(), w.as_ptr().offset(256), 512);
-            ptr::copy_nonoverlapping(self.q.as_mut_ptr(), w.as_ptr().offset(768), 512);
+            ptr::copy_nonoverlapping(w.as_ptr().offset(256), self.p.as_mut_ptr(),  512);
+            ptr::copy_nonoverlapping(w.as_ptr().offset(768), self.q.as_mut_ptr(), 512);
         }
         
         for i in 0..512 {
