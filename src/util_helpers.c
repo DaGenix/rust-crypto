@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #if defined(__i386__) || defined(__x86_64__)
 uint32_t rust_crypto_util_supports_aesni() {
@@ -70,3 +71,9 @@ uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t
     return result;
 }
 #endif
+
+void rust_crypto_util_secure_memset(uint8_t* dst, uint8_t val, size_t count) {
+    memset(dst, val, count);
+    asm("" : : "g" (dst) : "memory");
+}
+
