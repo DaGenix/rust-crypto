@@ -16,7 +16,7 @@ use std::iter::repeat;
 use std::io;
 use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 use rand::{OsRng, Rng};
 use serialize::base64;

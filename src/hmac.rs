@@ -9,8 +9,8 @@
  */
 
 use std::iter::repeat;
-use std::slice;
 
+use cryptoutil;
 use digest::Digest;
 use mac::{Mac, MacResult};
 
@@ -38,7 +38,7 @@ fn expand_key<D: Digest>(digest: &mut D, key: &[u8]) -> Vec<u8> {
     let mut expanded_key: Vec<u8> = repeat(0).take(bs).collect();
 
     if key.len() <= bs {
-        slice::bytes::copy_memory(key, &mut expanded_key);
+        cryptoutil::copy_memory(key, &mut expanded_key);
     } else {
         let output_size = digest.output_bytes();
         digest.input(key);

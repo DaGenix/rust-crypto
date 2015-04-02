@@ -5,8 +5,7 @@
 // except according to those terms.
 
 use std::iter::repeat;
-use cryptoutil::{read_u64v_le, write_u64v_le};
-use std::slice::bytes::{copy_memory};
+use cryptoutil::{copy_memory, read_u64v_le, write_u64v_le};
 use std::intrinsics::volatile_set_memory;
 use digest::Digest;
 use mac::{Mac, MacResult};

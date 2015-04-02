@@ -11,7 +11,7 @@
 use std;
 use std::{io, mem};
 use std::ptr;
-use std::slice::bytes::{MutableByteVector, copy_memory};
+use std::slice::bytes::MutableByteVector;
 
 use buffer::{ReadBuffer, WriteBuffer, BufferResult};
 use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
@@ -186,6 +186,17 @@ pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
     let d = dst.as_mut_ptr();
     for i in (0isize..plaintext.len() as isize) {
         unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
+    }
+}
+
+/// Copy bytes from src to dest
+#[inline]
+pub fn copy_memory(src: &[u8], dst: &mut [u8]) {
+    assert!(dst.len() >= src.len());
+    unsafe {
+        let srcp = src.as_ptr();
+        let dstp = dst.as_mut_ptr();
+        ptr::copy_nonoverlapping(srcp, dstp, src.len());
     }
 }
 

@@ -44,7 +44,7 @@
  * say) then you need to EXPLICITLY RESEED THE RNG AFTER FORKING.
  */
 
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 use rand::{Rng, SeedableRng};
 use time::precise_time_s;

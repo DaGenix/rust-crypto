@@ -17,7 +17,7 @@
 
 use std::ops::BitXor;
 use std::mem;
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 use cryptoutil::{read_u32_be, write_u32_be};
 use mac::{Mac, MacResult};
