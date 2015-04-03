@@ -12,7 +12,7 @@ use std::cmp::min;
 use cryptoutil::{read_u32_le, write_u32_le};
 use mac::{Mac, MacResult};
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Poly1305 {
     r         : [u32; 5],
     h         : [u32; 5],

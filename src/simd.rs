@@ -23,7 +23,7 @@ impl SimdExt for fake::u32x4 {
 mod fake {
     use std::ops::{Add, BitAnd, BitOr, BitXor, Shl, Shr, Sub};
 
-    #[derive(Copy, PartialEq, Eq)]
+    #[derive(Clone, Copy, PartialEq, Eq)]
     #[allow(non_camel_case_types)]
     pub struct u32x4(pub u32, pub u32, pub u32, pub u32);
 
@@ -107,7 +107,7 @@ mod fake {
         }
     }
 
-    #[derive(Copy)]
+    #[derive(Clone, Copy)]
     #[allow(non_camel_case_types)]
     pub struct u64x2(pub u64, pub u64);
 
@@ -119,4 +119,3 @@ mod fake {
         }
     }
 }
-

@@ -52,6 +52,8 @@ pub struct Blake2b {
     computed: bool, // whether the final digest has been computed
 }
 
+impl Clone for Blake2b { fn clone(&self) -> Blake2b { *self } }
+
 struct Blake2bParam {
     digest_length: u8,
     key_length: u8,

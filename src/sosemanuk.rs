@@ -3,16 +3,16 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
- 
- 
+
+
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32v_le};
- 
+
 use cryptoutil::copy_memory;
 
 
-const ALPHA_MUL_TABLE : [u32; 256] = 
+const ALPHA_MUL_TABLE : [u32; 256] =
 [
     0x00000000, 0xE19FCF13, 0x6B973726, 0x8A08F835,
     0xD6876E4C, 0x3718A15F, 0xBD10596A, 0x5C8F9679,
@@ -80,7 +80,7 @@ const ALPHA_MUL_TABLE : [u32; 256] =
     0xB55B4DDE, 0x54C482CD, 0xDECC7AF8, 0x3F53B5EB
 ];
 
-const ALPHA_DIV_TABLE : [u32; 256] = 
+const ALPHA_DIV_TABLE : [u32; 256] =
 [
     0x00000000, 0x180F40CD, 0x301E8033, 0x2811C0FE,
     0x603CA966, 0x7833E9AB, 0x50222955, 0x482D6998,
@@ -157,20 +157,22 @@ pub struct Sosemanuk {
     output: [u8; 80],
     offset: u32
 }
- 
+
+impl Clone for Sosemanuk { fn clone(&self) -> Sosemanuk { *self } }
+
 impl Sosemanuk {
     pub fn new(key: &[u8], nonce: &[u8]) -> Sosemanuk {
         let mut sosemanuk = Sosemanuk { lfsr: [0; 10], fsm_r: [0; 2], subkeys: [0; 100], output: [0; 80], offset: 80 };
- 
+
         assert!(key.len() <= 32);
         assert!(nonce.len() <= 16);
-       
+
         key_setup(&key, &mut sosemanuk.subkeys);
         iv_setup(&nonce, &mut sosemanuk.subkeys, &mut sosemanuk.lfsr, &mut sosemanuk.fsm_r);
- 
+
         sosemanuk
     }
- 
+
     fn advance_state(&mut self) {
         let mut s0 = self.lfsr[0];
         let mut s1 = self.lfsr[1];
@@ -194,10 +196,10 @@ impl Sosemanuk {
         let mut v2 : u32;
         let mut v3 : u32;
         let mut tt : u32;
- 
+
         let ref mul_alpha = ALPHA_MUL_TABLE;
         let ref div_alpha = ALPHA_DIV_TABLE;
- 
+
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
         r1 = r2.wrapping_add(s1 ^ match r1 & 0x01 {
@@ -209,7 +211,7 @@ impl Sosemanuk {
         s0 = ((s0 << 8) ^ mul_alpha[s0 as usize >> 24])
             ^ ((s3 >> 8) ^ div_alpha[s3 as usize & 0xFF]) ^ s9;
         f0 = s9.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
         r1 = r2.wrapping_add(s2 ^ match r1 & 0x01 {
@@ -221,7 +223,7 @@ impl Sosemanuk {
         s1 = ((s1 << 8) ^ mul_alpha[s1 as usize >> 24])
             ^ ((s4 >> 8) ^ div_alpha[s4 as usize & 0xFF]) ^ s0;
         f1 = s0.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s3 ^ ((r1 & 0x01) != 0 ? s0 : 0));
         r1 = r2.wrapping_add(s3 ^ match r1 & 0x01 {
@@ -233,7 +235,7 @@ impl Sosemanuk {
         s2 = ((s2 << 8) ^ mul_alpha[s2 as usize >> 24])
             ^ ((s5 >> 8) ^ div_alpha[s5 as usize & 0xFF]) ^ s1;
         f2 = s1.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
         r1 = r2.wrapping_add(s4 ^ match r1 & 0x01 {
@@ -245,7 +247,7 @@ impl Sosemanuk {
         s3 = ((s3 << 8) ^ mul_alpha[s3 as usize >> 24])
             ^ ((s6 >> 8) ^ div_alpha[s6 as usize & 0xFF]) ^ s2;
         f3 = s2.wrapping_add(r1) ^ r2;
- 
+
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
          */
@@ -265,7 +267,7 @@ impl Sosemanuk {
         f1 ^= f3;
         f1 ^= f4;
         f4 = !f4;
- 
+
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
@@ -283,7 +285,7 @@ impl Sosemanuk {
         s4 = ((s4 << 8) ^ mul_alpha[s4 as usize >> 24])
             ^ ((s7 >> 8) ^ div_alpha[s7 as usize & 0xFF]) ^ s3;
         f0 = s3.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
         r1 = r2.wrapping_add(s6 ^ match r1 & 0x01 {
@@ -295,7 +297,7 @@ impl Sosemanuk {
         s5 = ((s5 << 8) ^ mul_alpha[s5 as usize >> 24])
             ^ ((s8 >> 8) ^ div_alpha[s8 as usize & 0xFF]) ^ s4;
         f1 = s4.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
         r1 = r2.wrapping_add(s7 ^ match r1 & 0x01 {
@@ -307,7 +309,7 @@ impl Sosemanuk {
         s6 = ((s6 << 8) ^ mul_alpha[s6 as usize >> 24])
             ^ ((s9 >> 8) ^ div_alpha[s9 as usize & 0xFF]) ^ s5;
         f2 = s5.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
         r1 = r2.wrapping_add(s8 ^ match r1 & 0x01 {
@@ -319,7 +321,7 @@ impl Sosemanuk {
         s7 = ((s7 << 8) ^ mul_alpha[s7 as usize >> 24])
             ^ ((s0 >> 8) ^ div_alpha[s0 as usize & 0xFF]) ^ s6;
         f3 = s6.wrapping_add(r1) ^ r2;
- 
+
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
          */
@@ -339,7 +341,7 @@ impl Sosemanuk {
         f1 ^= f3;
         f1 ^= f4;
         f4 = !f4;
- 
+
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
@@ -357,7 +359,7 @@ impl Sosemanuk {
         s8 = ((s8 << 8) ^ mul_alpha[s8 as usize >> 24])
             ^ ((s1 >> 8) ^ div_alpha[s1 as usize & 0xFF]) ^ s7;
         f0 = s7.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
         r1 = r2.wrapping_add(s0 ^ match r1 & 0x01 {
@@ -369,7 +371,7 @@ impl Sosemanuk {
         s9 = ((s9 << 8) ^ mul_alpha[s9 as usize >> 24])
             ^ ((s2 >> 8) ^ div_alpha[s2 as usize & 0xFF]) ^ s8;
         f1 = s8.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
         r1 = r2.wrapping_add(s1 ^ match r1 & 0x01 {
@@ -381,7 +383,7 @@ impl Sosemanuk {
         s0 = ((s0 << 8) ^ mul_alpha[s0 as usize >> 24])
             ^ ((s3 >> 8) ^ div_alpha[s3 as usize & 0xFF]) ^ s9;
         f2 = s9.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s2 ^ ((r1 & 0x01) != 0 ? s9 : 0));
         r1 = r2.wrapping_add(s2 ^ match r1 & 0x01 {
@@ -393,7 +395,7 @@ impl Sosemanuk {
         s1 = ((s1 << 8) ^ mul_alpha[s1 as usize >> 24])
             ^ ((s4 >> 8) ^ div_alpha[s4 as usize & 0xFF]) ^ s0;
         f3 = s0.wrapping_add(r1) ^ r2;
- 
+
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
          */
@@ -413,7 +415,7 @@ impl Sosemanuk {
         f1 ^= f3;
         f1 ^= f4;
         f4 = !f4;
- 
+
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
@@ -431,7 +433,7 @@ impl Sosemanuk {
         s2 = ((s2 << 8) ^ mul_alpha[s2 as usize >> 24])
             ^ ((s5 >> 8) ^ div_alpha[s5 as usize & 0xFF]) ^ s1;
         f0 = s1.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s4 ^ ((r1 & 0x01) != 0 ? s1 : 0));
         r1 = r2.wrapping_add(s4 ^ match r1 & 0x01 {
@@ -443,7 +445,7 @@ impl Sosemanuk {
         s3 = ((s3 << 8) ^ mul_alpha[s3 as usize >> 24])
             ^ ((s6 >> 8) ^ div_alpha[s6 as usize & 0xFF]) ^ s2;
         f1 = s2.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s5 ^ ((r1 & 0x01) != 0 ? s2 : 0));
         r1 = r2.wrapping_add(s5 ^ match r1 & 0x01 {
@@ -455,7 +457,7 @@ impl Sosemanuk {
         s4 = ((s4 << 8) ^ mul_alpha[s4 as usize >> 24])
             ^ ((s7 >> 8) ^ div_alpha[s7 as usize & 0xFF]) ^ s3;
         f2 = s3.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s6 ^ ((r1 & 0x01) != 0 ? s3 : 0));
         r1 = r2.wrapping_add(s6 ^ match r1 & 0x01 {
@@ -467,7 +469,7 @@ impl Sosemanuk {
         s5 = ((s5 << 8) ^ mul_alpha[s5 as usize >> 24])
             ^ ((s8 >> 8) ^ div_alpha[s8 as usize & 0xFF]) ^ s4;
         f3 = s4.wrapping_add(r1) ^ r2;
- 
+
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
          */
@@ -487,13 +489,13 @@ impl Sosemanuk {
         f1 ^= f3;
         f1 ^= f4;
         f4 = !f4;
- 
+
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
         let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
         write_u32v_le(&mut self.output[48..64], &sbox_res);
- 
+
         tt = r1;
         //r1 = r2 + (s7 ^ ((r1 & 0x01) != 0 ? s4 : 0));
         r1 = r2.wrapping_add(s7 ^ match r1 & 0x01 {
@@ -505,7 +507,7 @@ impl Sosemanuk {
         s6 = ((s6 << 8) ^ mul_alpha[s6 as usize >> 24])
             ^ ((s9 >> 8) ^ div_alpha[s9 as usize & 0xFF]) ^ s5;
         f0 = s5.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s8 ^ ((r1 & 0x01) != 0 ? s5 : 0));
         r1 = r2.wrapping_add(s8 ^ match r1 & 0x01 {
@@ -517,7 +519,7 @@ impl Sosemanuk {
         s7 = ((s7 << 8) ^ mul_alpha[s7 as usize >> 24])
             ^ ((s0 >> 8) ^ div_alpha[s0 as usize & 0xFF]) ^ s6;
         f1 = s6.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s9 ^ ((r1 & 0x01) != 0 ? s6 : 0));
         r1 = r2.wrapping_add(s9 ^ match r1 & 0x01 {
@@ -529,7 +531,7 @@ impl Sosemanuk {
         s8 = ((s8 << 8) ^ mul_alpha[s8 as usize >> 24])
             ^ ((s1 >> 8) ^ div_alpha[s1 as usize & 0xFF]) ^ s7;
         f2 = s7.wrapping_add(r1) ^ r2;
- 
+
         tt = r1;
         //r1 = r2 + (s0 ^ ((r1 & 0x01) != 0 ? s7 : 0));
         r1 = r2.wrapping_add(s0 ^ match r1 & 0x01 {
@@ -541,7 +543,7 @@ impl Sosemanuk {
         s9 = ((s9 << 8) ^ mul_alpha[s9 as usize >> 24])
             ^ ( ( s2 >> 8) ^ div_alpha[s2 as usize & 0xFF]) ^ s8;
         f3 = s8.wrapping_add(r1) ^ r2;
- 
+
         /*
          * Apply the third S-box (number 2) on (f3, f2, f1, f0).
          */
@@ -561,13 +563,13 @@ impl Sosemanuk {
         f1 ^= f3;
         f1 ^= f4;
         f4 = !f4;
- 
+
         /*
          * S-box result is in (f2, f3, f1, f4).
          */
         let sbox_res = [(f2 ^ v0), (f3 ^ v1), (f1 ^ v2), (f4 ^ v3)];
         write_u32v_le(&mut self.output[64..80], &sbox_res);
- 
+
         self.lfsr[0] = s0;
         self.lfsr[1] = s1;
         self.lfsr[2] = s2;
@@ -582,7 +584,7 @@ impl Sosemanuk {
         self.fsm_r[1] = r2;
         self.offset = 0;
     }
- 
+
     fn next(&mut self) -> u8 {
         if self.offset == 80 {
             self.advance_state();
@@ -593,7 +595,7 @@ impl Sosemanuk {
     }
 }
 
- 
+
 fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     let mut full_key : [u8; 32] = [0; 32];
     if key.len() < 32 {
@@ -602,7 +604,7 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     } else {
         copy_memory(&key[0..32], &mut full_key[0..32]);
     }
- 
+
     let mut w0 = read_u32_le(&full_key[0..4]);
     let mut w1 = read_u32_le(&full_key[4..8]);
     let mut w2 = read_u32_le(&full_key[8..12]);
@@ -618,7 +620,7 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     let mut r4 : u32;
     let mut tt : u32;
     let mut i = 0;
- 
+
     tt = w0 ^ w3 ^ w5 ^ w7 ^ (0x9E3779B9 ^ (0));
     w0 = tt.rotate_left(11);
     tt = w1 ^ w4 ^ w6 ^ w0 ^ (0x9E3779B9 ^ (0 + 1));
@@ -1483,7 +1485,7 @@ fn key_setup(key : &[u8], subkeys : &mut[u32; 100]) {
     subkeys[i] = r3; i+=1;
     subkeys[i] = r4;
 }
- 
+
 fn iv_setup(iv : &[u8], subkeys : &mut[u32; 100], lfsr : &mut[u32; 10], fsm_r : &mut[u32; 2]) {
     let mut nonce : [u8; 16] = [0; 16];
     if iv.len() < 16 {
@@ -1491,7 +1493,7 @@ fn iv_setup(iv : &[u8], subkeys : &mut[u32; 100], lfsr : &mut[u32; 10], fsm_r : 
     } else {
         copy_memory(&iv[0..16], &mut nonce[0..16]);
     }
- 
+
     let mut r0 : u32;
     let mut r1 : u32;
     let mut r2 : u32;
@@ -1501,7 +1503,7 @@ fn iv_setup(iv : &[u8], subkeys : &mut[u32; 100], lfsr : &mut[u32; 10], fsm_r : 
     r1 = read_u32_le(&nonce[4..8]);
     r2 = read_u32_le(&nonce[8..12]);
     r3 = read_u32_le(&nonce[12..16]);
- 
+
     r0 ^= subkeys[0];
     r1 ^= subkeys[0 + 1];
     r2 ^= subkeys[0 + 2];
@@ -2300,7 +2302,7 @@ fn iv_setup(iv : &[u8], subkeys : &mut[u32; 100], lfsr : &mut[u32; 10], fsm_r : 
     lfsr[0] = r3;
 }
 
- 
+
 impl SynchronousStreamCipher for Sosemanuk {
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
         assert!(input.len() == output.len());
@@ -2309,14 +2311,14 @@ impl SynchronousStreamCipher for Sosemanuk {
         }
     }
 }
- 
+
 impl Encryptor for Sosemanuk {
     fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
 }
- 
+
 impl Decryptor for Sosemanuk {
     fn decrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
@@ -2324,7 +2326,7 @@ impl Decryptor for Sosemanuk {
     }
 }
 
- 
+
 #[cfg(test)]
 mod test {
     use sosemanuk::Sosemanuk;
@@ -2488,7 +2490,7 @@ mod bench {
         });
         bh.bytes = input.len() as u64;
     }
-   
+
     #[bench]
     pub fn sosemanuk_1k(bh: & mut Bencher) {
         let mut sosemanuk = Sosemanuk::new(&[0; 32], &[0; 16]);
@@ -2499,7 +2501,7 @@ mod bench {
         });
         bh.bytes = input.len() as u64;
     }
- 
+
     #[bench]
     pub fn sosemanuk_64k(bh: & mut Bencher) {
         let mut sosemanuk = Sosemanuk::new(&[0; 32], &[0; 16]);

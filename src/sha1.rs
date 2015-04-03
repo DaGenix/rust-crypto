@@ -379,7 +379,7 @@ fn mk_result(st: &mut Sha1, rs: &mut [u8]) {
 }
 
 /// Structure representing the state of a Sha1 computation
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Sha1 {
     h: [u32; STATE_LEN],
     length_bits: u64,

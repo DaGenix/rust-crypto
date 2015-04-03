@@ -12,7 +12,7 @@ use poly1305::Poly1305;
 use mac::Mac;
 use cryptoutil::{write_u64_le};
 use util::fixed_time_eq;
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct ChaCha20Poly1305 {
     cipher  : ChaCha20,
     mac: Poly1305,
@@ -99,7 +99,7 @@ mod test {
     aad: Vec<u8>,
     tag: Vec<u8>
   }
-  
+
   #[test]
   fn test_chacha20_256_poly1305_boringssl_vectors_encrypt() {
 
@@ -748,17 +748,17 @@ mod bench {
       bh.iter( || {
           let mut cipher = ChaCha20Poly1305::new(&[0; 32], &[0; 8], &aad);
           let mut decipher = ChaCha20Poly1305::new(&[0; 32], &[0; 8], &aad);
-          
+
           let mut output = [0u8; 10];
           let mut tag = [0u8; 16];
           let mut output2 = [0u8; 10];
           cipher.encrypt(&input, &mut output, &mut tag);
           decipher.decrypt(&output, &mut output2, &tag);
-            
+
         });
         bh.bytes = 10u64;
     }
-        
+
 
     #[bench]
     pub fn chacha20poly1305_1k(bh: & mut Bencher) {
@@ -767,16 +767,16 @@ mod bench {
       bh.iter( || {
         let mut cipher = ChaCha20Poly1305::new(&[0; 32], &[0; 8], &aad);
         let mut decipher = ChaCha20Poly1305::new(&[0; 32], &[0; 8], &aad);
-        
+
         let mut output = [0u8; 1024];
         let mut tag = [0u8; 16];
         let mut output2 = [0u8; 1024];
-        
+
         cipher.encrypt(&input, &mut output, &mut tag);
         decipher.decrypt(&output, &mut output2, &tag);
         });
       bh.bytes = 1024u64;
-        
+
     }
 
     #[bench]
@@ -786,16 +786,16 @@ mod bench {
         bh.iter( || {
           let mut cipher = ChaCha20Poly1305::new(&[0; 32], &[0; 8], &aad);
           let mut decipher = ChaCha20Poly1305::new(&[0; 32], &[0; 8], &aad);
-        
+
           let mut output = [0u8; 65536];
           let mut tag = [0u8; 16];
           let mut output2 = [0u8; 65536];
-      
+
           cipher.encrypt(&input, &mut output, &mut tag);
           decipher.decrypt(&output, &mut output2, &tag);
 
         });
          bh.bytes = 65536u64;
-        
+
     }
 }
