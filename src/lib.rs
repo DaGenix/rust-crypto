@@ -6,7 +6,6 @@
 
 #![feature(simd)]
 #![feature(step_by)]
-#![feature(convert)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;
