@@ -700,7 +700,7 @@ mod test {
             let mut result: Vec<u8> = repeat(0).take(test.plain.len()).collect();
             aes_enc.process(&test.plain[..], &mut result[..]);
             let res: &[u8] = result.as_ref();
-            assert!(res == test.cipher);
+            assert!(res == &test.cipher[..]);
         }
     }
 }
