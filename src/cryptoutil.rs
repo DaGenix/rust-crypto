@@ -446,6 +446,8 @@ pub struct FixedBuffer64 {
     buffer_idx: usize,
 }
 
+impl Clone for FixedBuffer64 { fn clone(&self) -> FixedBuffer64 { *self } }
+
 impl FixedBuffer64 {
     /// Create a new buffer
     pub fn new() -> FixedBuffer64 {

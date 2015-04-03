@@ -20,6 +20,8 @@ pub struct Rc4 {
     state: [u8; 256]
 }
 
+impl Clone for Rc4 { fn clone(&self) -> Rc4 { *self } }
+
 impl Rc4 {
     pub fn new(key: &[u8]) -> Rc4 {
         assert!(key.len() >= 1 && key.len() <= 256);

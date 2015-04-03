@@ -8,7 +8,7 @@ use cryptoutil::{read_u32v_be, write_u32_be};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 use step_by::RangeExt;
 
-#[derive(Copy)]
+#[derive(Clone,Copy)]
 pub struct Blowfish {
     s: [[u32; 256]; 4],
     p: [u32; 18]
@@ -240,7 +240,7 @@ impl Blowfish {
             }
         }
     }
-    
+
     // Bcrypt key schedule.
     pub fn salted_expand_key(&mut self, salt: &[u8], key: &[u8]) {
         let mut key_pos = 0;
@@ -264,7 +264,7 @@ impl Blowfish {
                 r = new_r;
                 self.s[i][j] = l;
                 self.s[i][j+1] = r;
-                
+
                 let (new_l, new_r) = self.encrypt(l ^ next_u32_wrap(salt, &mut salt_pos), r ^ next_u32_wrap(salt, &mut salt_pos));
                 l = new_l;
                 r = new_r;
@@ -533,7 +533,7 @@ mod test {
             assert!(test.ciphertext[..] == output[..]);
         }
     }
-    
+
     #[test]
     fn decrypt_eay_test_vectors() {
         let tests = eay_test_vectors();
@@ -558,7 +558,7 @@ mod bench {
         let plaintext = [1u8; 8];
         let state = Blowfish::new(&key);
         let mut ciphertext = [0u8; 8];
-        
+
         bh.iter(|| {
             state.encrypt_block(&plaintext, &mut ciphertext);
         });

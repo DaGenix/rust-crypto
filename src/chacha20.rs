@@ -10,7 +10,7 @@ use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCi
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
 use simd::u32x4;
 
-#[derive(Copy)]
+#[derive(Clone,Copy)]
 struct ChaChaState {
   a: u32x4,
   b: u32x4,
@@ -24,6 +24,8 @@ pub struct ChaCha20 {
     output : [u8; 64],
     offset : usize,
 }
+
+impl Clone for ChaCha20 { fn clone(&self) -> ChaCha20 { *self } }
 
 macro_rules! swizzle{
     ($b: expr, $c: expr, $d: expr) => {{
@@ -69,7 +71,7 @@ macro_rules! round{
 
 macro_rules! rotate {
     ($a: expr, $b: expr, $c:expr) => {{
-      let v = $a ^ $b; 
+      let v = $a ^ $b;
       let r = S32 - $c;
       let right = v >> r;
       $a = (v << $c) ^ right
@@ -112,7 +114,7 @@ impl ChaCha20 {
     }
 
     fn expand(key: &[u8], nonce: &[u8]) -> ChaChaState {
-        
+
         let constant = match key.len() {
             16 => b"expand 16-byte k",
             32 => b"expand 32-byte k",

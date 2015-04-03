@@ -20,7 +20,7 @@
  * is designed to be timing-attack resistant. The speed hit from this
  * is in line with a "safety first" API, but be aware of it.
  *
- * Fortuna was originally described in 
+ * Fortuna was originally described in
  *   Practical Cryptography, Niels Ferguson and Bruce Schneier.
  *   John Wiley & Sons, 2003.
  *
@@ -147,7 +147,7 @@ impl FortunaGenerator {
 
 
 /// A single entropy pool (not public)
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct Pool {
     state: Sha256,
     count: usize
@@ -194,7 +194,7 @@ impl Fortuna {
         }
     }
 
-    /// Adds a random event `e` from source `s` to entropy pool `i` (PC 9.5.6) 
+    /// Adds a random event `e` from source `s` to entropy pool `i` (PC 9.5.6)
     pub fn add_random_event(&mut self, s: u8, i: usize, e: &[u8]) {
         assert!(i <= NUM_POOLS);
         // These restrictions (and `s` in [0, 255]) are part of the Fortuna spec.
@@ -352,7 +352,7 @@ mod tests {
                          50,  68, 236, 107, 133,  18, 217, 219,  46, 134,
                         169, 156, 211,  74, 163,  17, 100, 173,  26,  70,
                         246, 193,  57, 164, 167, 175, 233, 220, 160, 114,
-                          2, 200, 215,  80, 207, 218,  85,  58, 235, 117, 
+                          2, 200, 215,  80, 207, 218,  85,  58, 235, 117,
                         177, 223,  87, 192,  50, 251,  61,  65, 141, 100,
                          59, 228,  23, 215,  58, 107, 248, 248, 103,  57,
                         127,  31, 241,  91, 230,  33,   0, 164,  77, 46];
@@ -411,7 +411,7 @@ mod tests {
 
         // from Crypto.Random.Fortuna import FortunaAccumulator
         // x = FortunaAccumulator.FortunaAccumulator()
-        // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")  
+        // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         // x.add_random_event(1, 0, "\1\2")
         // x.add_random_event(1, 1, "\1\2")
@@ -433,7 +433,7 @@ mod tests {
         f.add_random_event(0, 0, &[0; 32]);
         f.add_random_event(0, 0, &[0; 32]);
 
-        // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")  
+        // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         // x.add_random_event(0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         // print list(bytearray(x.random_data(100)))
         let expected = [101, 123, 175, 157, 142, 202, 211,  47, 149, 214,
@@ -513,4 +513,3 @@ mod bench {
         bh.bytes = bytes.len() as u64;
     }
 }
-

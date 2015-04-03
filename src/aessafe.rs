@@ -139,7 +139,7 @@ macro_rules! define_aes_struct(
         $name:ident,
         $rounds:expr
     ) => (
-        #[derive(Copy)]
+        #[derive(Clone, Copy)]
         pub struct $name {
             sk: [Bs8State<u16>; ($rounds + 1)]
         }
@@ -227,7 +227,7 @@ macro_rules! define_aes_struct_x8(
         $name:ident,
         $rounds:expr
     ) => (
-        #[derive(Copy)]
+        #[derive(Clone, Copy)]
         pub struct $name {
             sk: [Bs8State<u32x4>; ($rounds + 1)]
         }
@@ -453,7 +453,7 @@ fn decrypt_core<S: AesOps + Copy>(state: &S, sk: &[S]) -> S {
     tmp
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct Bs8State<T>(T, T, T, T, T, T, T, T);
 
 impl <T: Copy> Bs8State<T> {
@@ -634,7 +634,7 @@ impl <T: Not<Output = T> + Copy> Bs8State<T> {
     }
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct Bs4State<T>(T, T, T, T);
 
 impl <T: Copy> Bs4State<T> {
@@ -658,7 +658,7 @@ impl <T: BitXor<Output = T> + Copy> Bs4State<T> {
     }
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct Bs2State<T>(T, T);
 
 impl <T> Bs2State<T> {

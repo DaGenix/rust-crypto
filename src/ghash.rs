@@ -25,7 +25,7 @@ use simd;
 
 // A struct representing an element in GF(2^128)
 // x^0 is the msb, while x^127 is the lsb
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct Gf128 { d: simd::u32x4 }
 
 impl Gf128 {
@@ -108,6 +108,8 @@ pub struct Ghash {
     finished: bool
 }
 
+impl Clone for Ghash { fn clone(&self) -> Ghash { *self } }
+
 /// A structure representing the state of a GHASH computation, after input for C was provided
 #[derive(Copy)]
 pub struct GhashWithC {
@@ -117,6 +119,8 @@ pub struct GhashWithC {
     c_len: usize,
     rest: Option<[u8; 16]>
 }
+
+impl Clone for GhashWithC { fn clone(&self) -> GhashWithC { *self } }
 
 fn update(state: &mut Gf128, len: &mut usize, data: &[u8], srest: &mut Option<[u8; 16]>,
           hs: &[Gf128; 128]) {

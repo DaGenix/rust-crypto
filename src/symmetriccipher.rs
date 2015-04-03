@@ -27,7 +27,7 @@ pub trait BlockDecryptorX8 {
     fn decrypt_block_x8(&self, input: &[u8], output: &mut [u8]);
 }
 
-#[derive(Debug, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum SymmetricCipherError {
     InvalidLength,
     InvalidPadding

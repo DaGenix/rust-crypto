@@ -11,7 +11,7 @@ use simd::u32x4;
 
 use std::cmp;
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct SalsaState {
   a: u32x4,
   b: u32x4,
@@ -25,6 +25,8 @@ pub struct Salsa20 {
     output: [u8; 64],
     offset: usize,
 }
+
+impl Clone for Salsa20 { fn clone(&self) -> Salsa20 { *self } }
 
 const S7:u32x4 = u32x4(7, 7, 7, 7);
 const S9:u32x4 = u32x4(9, 9, 9, 9);
@@ -271,16 +273,16 @@ mod test {
              0x9A, 0x31, 0x02, 0x20, 0x50, 0x85, 0x99, 0x36,
              0xDA, 0x52, 0xFC, 0xEE, 0x21, 0x80, 0x05, 0x16,
              0x4F, 0x26, 0x7C, 0xB6, 0x5F, 0x5C, 0xFD, 0x7F,
-             0x2B, 0x4F, 0x97, 0xE0, 0xFF, 0x16, 0x92, 0x4A, 
+             0x2B, 0x4F, 0x97, 0xE0, 0xFF, 0x16, 0x92, 0x4A,
              0x52, 0xDF, 0x26, 0x95, 0x15, 0x11, 0x0A, 0x07,
-             0xF9, 0xE4, 0x60, 0xBC, 0x65, 0xEF, 0x95, 0xDA, 
+             0xF9, 0xE4, 0x60, 0xBC, 0x65, 0xEF, 0x95, 0xDA,
              0x58, 0xF7, 0x40, 0xB7, 0xD1, 0xDB, 0xB0, 0xAA];
 
         let mut salsa20 = Salsa20::new(&key, &nonce);
         salsa20.process(&input, &mut stream);
         assert!(stream[..] == result[..]);
     }
-    
+
     #[test]
     fn test_salsa20_256bit_ecrypt_set_1_vector_0() {
         let key =
@@ -330,7 +332,7 @@ mod test {
 
     #[test]
     fn test_xsalsa20_cryptopp() {
-        let key = 
+        let key =
             [0x1b, 0x27, 0x55, 0x64, 0x73, 0xe9, 0x85, 0xd4,
              0x62, 0xcd, 0x51, 0x19, 0x7a, 0x9a, 0x46, 0xc7,
              0x60, 0x09, 0x54, 0x9e, 0xac, 0x64, 0x74, 0xf2,
@@ -383,7 +385,7 @@ mod bench {
         });
         bh.bytes = input.len() as u64;
     }
-    
+
     #[bench]
     pub fn salsa20_1k(bh: & mut Bencher) {
         let mut salsa20 = Salsa20::new(&[0; 32], &[0; 8]);
@@ -394,7 +396,7 @@ mod bench {
         });
         bh.bytes = input.len() as u64;
     }
- 
+
     #[bench]
     pub fn salsa20_64k(bh: & mut Bencher) {
         let mut salsa20 = Salsa20::new(&[0; 32], &[0; 8]);

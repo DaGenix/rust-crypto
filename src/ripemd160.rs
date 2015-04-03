@@ -32,7 +32,7 @@ const DIGEST_BUF_LEN: usize = 5;
 const WORK_BUF_LEN: usize = 16;
 
 /// Structure representing the state of a Ripemd160 computation
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Ripemd160 {
     h: [u32; DIGEST_BUF_LEN],
     length_bits: u64,
@@ -366,7 +366,7 @@ impl Digest for Ripemd160 {
      * Adds the input `msg` to the hash. This method can be called repeatedly
      * for use with streaming messages.
      */
-    fn input(&mut self, msg: &[u8]) { 
+    fn input(&mut self, msg: &[u8]) {
         assert!(!self.computed);
         // Assumes that msg.len() can be converted to u64 without overflow
         self.length_bits = add_bytes_to_bits(self.length_bits, msg.len() as u64);
@@ -374,13 +374,13 @@ impl Digest for Ripemd160 {
         self.buffer.input(msg, |d: &[u8]| {process_msg_block(d, &mut *st_h);}
         );
     }
-    
+
     /**
      * Returns the resulting digest of the entire message.
      * Note: `out` must be at least 20 bytes (160 bits)
      */
-    fn result(&mut self, out: &mut [u8]) { 
-        
+    fn result(&mut self, out: &mut [u8]) {
+
         if !self.computed {
             let st_h = &mut self.h;
             self.buffer.standard_padding(8, |d: &[u8]| { process_msg_block(d, &mut *st_h) });
@@ -391,7 +391,7 @@ impl Digest for Ripemd160 {
 
             self.computed = true;
         }
-        
+
         write_u32_le(&mut out[0..4], self.h[0]);
         write_u32_le(&mut out[4..8], self.h[1]);
         write_u32_le(&mut out[8..12], self.h[2]);
@@ -446,7 +446,7 @@ mod tests {
                     0x4au8, 0x9cu8, 0x0cu8, 0x88u8,
                     0xe4u8, 0x05u8, 0xa0u8, 0x6cu8,
                     0x27u8, 0xdcu8, 0xf4u8, 0x9au8,
-                    0xdau8, 0x62u8, 0xebu8, 0x2bu8, 
+                    0xdau8, 0x62u8, 0xebu8, 0x2bu8,
                 ],
                 output_str: "12a053384a9c0c88e405a06c27dcf49ada62eb2b"
             },
@@ -469,7 +469,7 @@ mod tests {
                     0x69u8, 0x09u8, 0x33u8, 0x83u8,
                     0x5eu8, 0xb8u8, 0xb6u8, 0xadu8,
                     0x0bu8, 0x77u8, 0xe7u8, 0xb6u8,
-                    0xf1u8, 0x4au8, 0xcau8, 0xd7u8, 
+                    0xf1u8, 0x4au8, 0xcau8, 0xd7u8,
                 ],
                 output_str: "132072df690933835eb8b6ad0b77e7b6f14acad7",
             },
