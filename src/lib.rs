@@ -5,7 +5,6 @@
 // except according to those terms.
 
 #![feature(simd)]
-#![feature(step_by)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;
@@ -47,6 +46,7 @@ pub mod sha1;
 pub mod sha2;
 mod simd;
 pub mod sosemanuk;
+mod step_by;
 pub mod symmetriccipher;
 pub mod util;
 pub mod whirlpool;

@@ -127,6 +127,7 @@ use std::ops::{BitAnd, BitXor, Not};
 use std::default::Default;
 
 use cryptoutil::{read_u32v_le, write_u32_le};
+use step_by::RangeExt;
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDecryptorX8};
 
 // Using std::unstable::simd::u32x4 results in issues creating static arrays of u32x4 values.
@@ -373,7 +374,7 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]])
 
     // The key is copied directly into the first few round keys
     let mut j = 0;
-    for i in (0..key.len()).step_by(4) {
+    for i in (0..key.len()).step_up(4) {
         round_keys[j / 4][j % 4] =
             (key[i] as u32) |
             ((key[i+1] as u32) << 8) |

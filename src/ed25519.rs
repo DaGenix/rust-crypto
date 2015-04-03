@@ -82,9 +82,15 @@ fn check_s_lt_l(s: &[u8]) -> bool
     let mut c: u8 = 0;
     let mut n: u8 = 1;
 
-    for i in (31..-1).step_by(-1) {
+    let mut i = 31;
+    loop {
         c |= ((((s[i] as i32) - (l[i] as i32)) >> 8) as u8) & n;
         n &= (((((s[i] ^ l[i]) as i32)) - 1) >> 8) as u8;
+        if i == 0 {
+            break;
+        } else {
+            i -= 1;
+        }
     }
 
     c == 0
