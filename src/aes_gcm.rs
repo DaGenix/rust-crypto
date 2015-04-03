@@ -6,7 +6,7 @@
 
 use aes::{ctr, KeySize};
 use aead::{AeadEncryptor,AeadDecryptor};
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 use symmetriccipher::SynchronousStreamCipher;
 use ghash::{Ghash};
 use util::fixed_time_eq;

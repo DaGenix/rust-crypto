@@ -9,7 +9,7 @@ use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32v_le};
  
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 
 const ALPHA_MUL_TABLE : [u32; 256] = 

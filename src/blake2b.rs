@@ -5,11 +5,10 @@
 // except according to those terms.
 
 use std::iter::repeat;
-use cryptoutil::{read_u64v_le, write_u64v_le};
-use std::slice::bytes::{copy_memory};
-use std::intrinsics::volatile_set_memory;
+use cryptoutil::{copy_memory, read_u64v_le, write_u64v_le};
 use digest::Digest;
 use mac::{Mac, MacResult};
+use util::secure_memset;
 
 static IV : [u64; 8] = [
   0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
@@ -185,9 +184,7 @@ impl Blake2b {
         let mut block : [u8; BLAKE2B_BLOCKBYTES] = [0; BLAKE2B_BLOCKBYTES];
         copy_memory(&self.key[..self.key_length as usize], &mut block);
         self.update(&block);
-        unsafe {
-            volatile_set_memory(block.as_mut_ptr(), 0, block.len());
-        }
+        secure_memset(&mut block[..], 0);
     }
 
     pub fn new_keyed(outlen: usize, key: &[u8] ) -> Blake2b {

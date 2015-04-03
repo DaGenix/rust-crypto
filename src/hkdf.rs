@@ -8,7 +8,7 @@
 //! Derivation Function as specified by  https://tools.ietf.org/html/rfc5869.
 
 use std::iter::repeat;
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 use digest::Digest;
 use hmac::Hmac;
@@ -68,7 +68,7 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
 
 #[cfg(test)]
 mod test {
-    use std::iter::{repeat, range_inclusive};
+    use std::iter::repeat;
 
     use digest::Digest;
     use sha1::Sha1;
@@ -92,8 +92,8 @@ mod test {
             TestVector{
                 digest: Sha256::new(),
                 ikm: repeat(0x0b).take(22).collect(),
-                salt: range_inclusive(0x00, 0x0c).collect(),
-                info: range_inclusive(0xf0, 0xf9).collect(),
+                salt: (0x00..0x0c + 1).collect(),
+                info: (0xf0..0xf9 + 1).collect(),
                 l: 42,
                 prk: vec![
                     0x07, 0x77, 0x09, 0x36, 0x2c, 0x2e, 0x32, 0xdf,
@@ -110,9 +110,9 @@ mod test {
             },
             TestVector{
                 digest: Sha256::new(),
-                ikm: range_inclusive(0x00, 0x4f).collect(),
-                salt: range_inclusive(0x60, 0xaf).collect(),
-                info: range_inclusive(0xb0, 0xff).collect(),
+                ikm: (0x00..0x4f + 1).collect(),
+                salt: (0x60..0xaf + 1).collect(),
+                info: (0xb0..0xff + 1).map(|x| x as u8).collect(),
                 l: 82,
                 prk: vec![
                     0x06, 0xa6, 0xb8, 0x8c, 0x58, 0x53, 0x36, 0x1a,
@@ -171,8 +171,8 @@ mod test {
             TestVector{
                 digest: Sha1::new(),
                 ikm: repeat(0x0b).take(11).collect(),
-                salt: range_inclusive(0x00, 0x0c).collect(),
-                info: range_inclusive(0xf0, 0xf9).collect(),
+                salt: (0x00..0x0c + 1).collect(),
+                info: (0xf0..0xf9 + 1).collect(),
                 l: 42,
                 prk: vec![
                     0x9b, 0x6c, 0x18, 0xc4, 0x32, 0xa7, 0xbf, 0x8f,
@@ -188,9 +188,9 @@ mod test {
             },
             TestVector{
                 digest: Sha1::new(),
-                ikm: range_inclusive(0x00, 0x4f).collect(),
-                salt: range_inclusive(0x60, 0xaf).collect(),
-                info: range_inclusive(0xb0, 0xff).collect(),
+                ikm: (0x00..0x4f + 1).collect(),
+                salt: (0x60..0xaf + 1).collect(),
+                info: (0xb0..0xff + 1).map(|x| x as u8).collect(),
                 l: 82,
                 prk: vec![
                     0x8a, 0xda, 0xe0, 0x9a, 0x2a, 0x30, 0x70, 0x59,

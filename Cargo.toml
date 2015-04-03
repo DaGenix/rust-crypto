@@ -1,6 +1,6 @@
 [package]
 name = "rust-crypto"
-version = "0.2.29"
+version = "0.2.30"
 authors = ["The Rust-Crypto Project Developers"]
 license = "MIT/Apache-2.0"
 homepage = "https://github.com/DaGenix/rust-crypto/"
@@ -8,11 +8,17 @@ repository = "https://github.com/DaGenix/rust-crypto/"
 description = "A (mostly) pure-Rust implementation of various common cryptographic algorithms."
 keywords = [ "Crypto", "MD5", "Sha1", "Sha2", "AES" ]
 readme = "README.md"
+build = "build.rs"
 
 [lib]
 name = "crypto"
 
+[build-dependencies]
+gcc = "*"
+
 [dependencies]
+libc = "*"
 time = "*"
 rand = "*"
 rustc-serialize = "*"
+

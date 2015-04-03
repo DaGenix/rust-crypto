@@ -1,6 +1,7 @@
 use std::ops::{Add, Sub, Mul};
 use std::cmp::{Eq, PartialEq,min};
 use util::{fixed_time_eq};
+use step_by::RangeExt;
 
 /*
 fe means field element.
@@ -1479,7 +1480,7 @@ pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
     /* each es[i] is between -8 and 8 */
 
     let mut h = GeP3::zero();
-    for i in (1..64).step_by(2) {
+    for i in (1..64).step_up(2) {
         t = GePrecomp::select(i/2, es[i]);
         r = h + t;
         h = r.to_p3();
@@ -1490,7 +1491,7 @@ pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
     r = s.dbl(); s = r.to_p2();
     r = s.dbl(); h = r.to_p3();
 
-    for i in (0..64).step_by(2) {
+    for i in (0..64).step_up(2) {
         t = GePrecomp::select(i/2, es[i]);
         r = h + t;
         h = r.to_p3();

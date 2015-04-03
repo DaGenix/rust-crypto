@@ -12,11 +12,11 @@
  *       http://www.tarsnap.com/scrypt/scrypt.pdf
  */
 
+use std;
 use std::iter::repeat;
 use std::io;
-use std::num::{Int, ToPrimitive};
 use std::mem::size_of;
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 use rand::{OsRng, Rng};
 use serialize::base64;
@@ -165,9 +165,10 @@ impl ScryptParams {
         assert!(p > 0);
         assert!(log_n > 0);
         assert!((log_n as usize) < size_of::<usize>() * 8);
+        assert!(size_of::<usize>() >= size_of::<u32>() || (r <= std::usize::MAX as u32 && p < std::usize::MAX as u32));
 
-        let r = r.to_usize().unwrap();
-        let p = p.to_usize().unwrap();
+        let r = r as usize;
+        let p = p as usize;
 
         let n: usize = 1 << log_n;
 

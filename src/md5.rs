@@ -10,6 +10,7 @@
 
 use cryptoutil::{write_u32_le, read_u32v_le, FixedBuffer, FixedBuffer64, StandardPadding};
 use digest::Digest;
+use step_by::RangeExt;
 
 
 // A structure that represents that state of a digest computation for the MD5 digest function
@@ -80,7 +81,7 @@ impl Md5State {
         read_u32v_le(&mut data, input);
 
         // round 1
-        for i in (0..16).step_by(4) {
+        for i in (0..16).step_up(4) {
             a = op_f(a, b, c, d, data[i].wrapping_add(C1[i]), 7);
             d = op_f(d, a, b, c, data[i + 1].wrapping_add(C1[i + 1]), 12);
             c = op_f(c, d, a, b, data[i + 2].wrapping_add(C1[i + 2]), 17);
@@ -89,7 +90,7 @@ impl Md5State {
 
         // round 2
         let mut t = 1;
-        for i in (0..16).step_by(4) {
+        for i in (0..16).step_up(4) {
             a = op_g(a, b, c, d, data[t & 0x0f].wrapping_add(C2[i]), 5);
             d = op_g(d, a, b, c, data[(t + 5) & 0x0f].wrapping_add(C2[i + 1]), 9);
             c = op_g(c, d, a, b, data[(t + 10) & 0x0f].wrapping_add(C2[i + 2]), 14);
@@ -99,7 +100,7 @@ impl Md5State {
 
         // round 3
         t = 5;
-        for i in (0..16).step_by(4) {
+        for i in (0..16).step_up(4) {
             a = op_h(a, b, c, d, data[t & 0x0f].wrapping_add(C3[i]), 4);
             d = op_h(d, a, b, c, data[(t + 3) & 0x0f].wrapping_add(C3[i + 1]), 11);
             c = op_h(c, d, a, b, data[(t + 6) & 0x0f].wrapping_add(C3[i + 2]), 16);
@@ -109,7 +110,7 @@ impl Md5State {
 
         // round 4
         t = 0;
-        for i in (0..16).step_by(4) {
+        for i in (0..16).step_up(4) {
             a = op_i(a, b, c, d, data[t & 0x0f].wrapping_add(C4[i]), 6);
             d = op_i(d, a, b, c, data[(t + 7) & 0x0f].wrapping_add(C4[i + 1]), 10);
             c = op_i(c, d, a, b, data[(t + 14) & 0x0f].wrapping_add(C4[i + 2]), 15);

@@ -4,17 +4,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(not(ndebug))]
 pub use self::fake::*;
-
-#[cfg(ndebug)]
-pub use self::real::*;
 
 pub trait SimdExt {
     fn simd_eq(self, rhs: Self) -> Self;
 }
 
-#[cfg(not(ndebug))]
 impl SimdExt for fake::u32x4 {
     fn simd_eq(self, rhs: Self) -> Self {
         if self == rhs {
@@ -25,14 +20,6 @@ impl SimdExt for fake::u32x4 {
     }
 }
 
-#[cfg(ndebug)]
-impl SimdExt for real::u32x4 {
-    fn simd_eq(self, rhs: Self) -> Self {
-        self == rhs
-    }
-}
-
-#[cfg(not(ndebug))]
 mod fake {
     use std::ops::{Add, BitAnd, BitOr, BitXor, Shl, Shr, Sub};
 
@@ -131,11 +118,5 @@ mod fake {
             u64x2(self.0.wrapping_add(rhs.0), self.1.wrapping_add(rhs.1))
         }
     }
-}
-
-#[cfg(ndebug)]
-mod real {
-    pub use std::simd::u32x4;
-    pub use std::simd::u64x2;
 }
 
