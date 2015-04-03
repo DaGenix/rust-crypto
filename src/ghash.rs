@@ -17,7 +17,7 @@
 
 use std::ops::BitXor;
 use std::mem;
-use std::slice::bytes::copy_memory;
+use cryptoutil::copy_memory;
 
 use cryptoutil::{read_u32_be, write_u32_be};
 use mac::{Mac, MacResult};
@@ -56,21 +56,6 @@ impl Gf128 {
 
     // Multiply the element by x modulo x^128
     // This is equivalent to a rightshift in the bit representation
-    #[cfg(all(target_arch = "x86_64",ndebug))]
-    fn times_x(mut self) -> Gf128 {
-        unsafe {
-            asm!("
-                movdqa $0, %xmm1
-                psrlq $$1, $0
-                psllq $$63, %xmm1
-                pshufd $$0x0c, %xmm1, %xmm1
-                por %xmm1, $0
-                " : "+x" (self.d) : : "xmm1" );
-        }
-        self
-    }
-
-    #[cfg(any(not(target_arch = "x86_64"),not(ndebug)))]
     fn times_x(self) -> Gf128 {
         let simd::u32x4(a, b, c, d) = self.d;
         Gf128::new(a >> 1 | b << 31, b >> 1 | c << 31, c >> 1 |  d << 31, d >> 1)
@@ -96,24 +81,6 @@ impl Gf128 {
     }
 
     // This XORs the value of y with x if the LSB of self is set, otherwise y is returned
-    #[cfg(all(target_arch = "x86_64",ndebug))]
-    fn cond_xor(self, x: Gf128, mut y: Gf128) -> Gf128 {
-        let lsb = simd::u32x4(1, 0, 0, 0);
-        unsafe {
-            asm!("
-                movdqa $1, %xmm1
-                pand $3, %xmm1
-                pcmpeqd $3, %xmm1
-                pshufd $$0x00, %xmm1, %xmm1
-                pand $2, %xmm1
-                pxor %xmm1, $0
-                " : "+x" (y.d) : "x" (self.d), "x" (x.d), "x" (lsb) : "xmm1"
-            );
-        }
-        y
-    }
-
-    #[cfg(any(not(target_arch = "x86_64"),not(ndebug)))]
     fn cond_xor(self, x: Gf128, y: Gf128) -> Gf128 {
         use simd::SimdExt;
         let lsb = simd::u32x4(1, 0, 0, 0);

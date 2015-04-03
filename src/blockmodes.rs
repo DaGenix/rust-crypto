@@ -10,12 +10,11 @@
 
 use std::cmp;
 use std::iter::repeat;
-use std::slice;
 
 use buffer::{ReadBuffer, WriteBuffer, OwnedReadBuffer, OwnedWriteBuffer, BufferResult,
     RefReadBuffer, RefWriteBuffer};
 use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
-use cryptoutil::symm_enc_or_dec;
+use cryptoutil::{self, symm_enc_or_dec};
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, Encryptor, BlockDecryptor, Decryptor,
     SynchronousStreamCipher, SymmetricCipherError};
 use symmetriccipher::SymmetricCipherError::{InvalidPadding, InvalidLength};
@@ -93,13 +92,13 @@ struct BlockEngine<P, X> {
 fn update_history(in_hist: &mut [u8], out_hist: &mut [u8], last_in: &[u8], last_out: &[u8]) {
     let in_hist_len = in_hist.len();
     if in_hist_len > 0 {
-        slice::bytes::copy_memory(
+        cryptoutil::copy_memory(
             &last_in[last_in.len() - in_hist_len..],
             in_hist);
     }
     let out_hist_len = out_hist.len();
     if out_hist_len > 0 {
-        slice::bytes::copy_memory(
+        cryptoutil::copy_memory(
             &last_out[last_out.len() - out_hist_len..],
             out_hist);
     }
@@ -412,8 +411,8 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
     }
     fn reset_with_history(&mut self, in_hist: &[u8], out_hist: &[u8]) {
         self.reset();
-        slice::bytes::copy_memory(in_hist, &mut self.in_hist);
-        slice::bytes::copy_memory(out_hist, &mut self.out_hist);
+        cryptoutil::copy_memory(in_hist, &mut self.in_hist);
+        cryptoutil::copy_memory(out_hist, &mut self.out_hist);
     }
 }
 
@@ -690,7 +689,7 @@ impl <A: BlockEncryptor> CtrMode<A> {
         }
     }
     pub fn reset(&mut self, ctr: &[u8]) {
-        slice::bytes::copy_memory(ctr, &mut self.ctr);
+        cryptoutil::copy_memory(ctr, &mut self.ctr);
         self.bytes.reset();
     }
     fn process(&mut self, input: &[u8], output: &mut [u8]) {
@@ -744,7 +743,7 @@ pub struct CtrModeX8<A> {
 
 fn construct_ctr_x8(in_ctr: &[u8], out_ctr_x8: &mut [u8]) {
     for (i, ctr_i) in out_ctr_x8.chunks_mut(in_ctr.len()).enumerate() {
-        slice::bytes::copy_memory(in_ctr, ctr_i);
+        cryptoutil::copy_memory(in_ctr, ctr_i);
         add_ctr(ctr_i, i as u8);
     }
 }

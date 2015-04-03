@@ -11,7 +11,6 @@
 use std;
 use std::{io, mem};
 use std::ptr;
-use std::slice::bytes::{MutableByteVector, copy_memory};
 
 use buffer::{ReadBuffer, WriteBuffer, BufferResult};
 use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
@@ -186,6 +185,25 @@ pub fn xor_keystream(dst: &mut[u8], plaintext: &[u8], keystream: &[u8]) {
     let d = dst.as_mut_ptr();
     for i in (0isize..plaintext.len() as isize) {
         unsafe{ *d.offset(i) = *p.offset(i) ^ *k.offset(i) };
+    }
+}
+
+/// Copy bytes from src to dest
+#[inline]
+pub fn copy_memory(src: &[u8], dst: &mut [u8]) {
+    assert!(dst.len() >= src.len());
+    unsafe {
+        let srcp = src.as_ptr();
+        let dstp = dst.as_mut_ptr();
+        ptr::copy_nonoverlapping(srcp, dstp, src.len());
+    }
+}
+
+/// Zero all bytes in dst
+#[inline]
+pub fn zero(dst: &mut [u8]) {
+    unsafe {
+        ptr::write_bytes(dst.as_mut_ptr(), 0, dst.len());
     }
 }
 
@@ -392,7 +410,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
 
         fn zero_until(&mut self, idx: usize) {
             assert!(idx >= self.buffer_idx);
-            &mut self.buffer[self.buffer_idx..idx].set_memory(0);
+            zero(&mut self.buffer[self.buffer_idx..idx]);
             self.buffer_idx = idx;
         }
 

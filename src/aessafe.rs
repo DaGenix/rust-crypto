@@ -127,15 +127,9 @@ use std::ops::{BitAnd, BitXor, Not};
 use std::default::Default;
 
 use cryptoutil::{read_u32v_le, write_u32_le};
+use simd::u32x4;
+use step_by::RangeExt;
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDecryptorX8};
-
-// Using std::unstable::simd::u32x4 results in issues creating static arrays of u32x4 values.
-// Defining the type here avoids that problem. Additionally, we need to implement various trait from
-// libstd which wouldn't be possible if we used that type directly.
-#[simd]
-#[derive(Copy, Eq, PartialEq)]
-#[allow(non_camel_case_types)]
-pub struct u32x4(u32, u32, u32, u32);
 
 const U32X4_0: u32x4 = u32x4(0, 0, 0, 0);
 const U32X4_1: u32x4 = u32x4(-1, -1, -1, -1);
@@ -373,7 +367,7 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]])
 
     // The key is copied directly into the first few round keys
     let mut j = 0;
-    for i in (0..key.len()).step_by(4) {
+    for i in (0..key.len()).step_up(4) {
         round_keys[j / 4][j % 4] =
             (key[i] as u32) |
             ((key[i+1] as u32) << 8) |
@@ -1192,22 +1186,6 @@ impl u32x4 {
             (a1 >> s) | (a2 << (32 - s)),
             (a2 >> s) | (a3 << (32 - s)),
             a3 >> s)
-    }
-}
-
-impl BitXor for u32x4 {
-    type Output = u32x4;
-
-    fn bitxor(self, rhs: u32x4) -> u32x4 {
-        self ^ rhs
-    }
-}
-
-impl BitAnd for u32x4 {
-    type Output = u32x4;
-
-    fn bitand(self, rhs: u32x4) -> u32x4 {
-        self & rhs
     }
 }
 

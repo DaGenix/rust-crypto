@@ -6,6 +6,7 @@
 
 use cryptoutil::{read_u32v_be, write_u32_be};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
+use step_by::RangeExt;
 
 #[derive(Copy)]
 pub struct Blowfish {
@@ -222,7 +223,7 @@ impl Blowfish {
         }
         let mut l = 0u32;
         let mut r = 0u32;
-        for i in (0..18).step_by(2) {
+        for i in (0..18).step_up(2) {
             let (new_l, new_r) = self.encrypt(l, r);
             l = new_l;
             r = new_r;
@@ -230,7 +231,7 @@ impl Blowfish {
             self.p[i+1] = r;
         }
         for i in (0..4) {
-            for j in (0..256).step_by(2) {
+            for j in (0..256).step_up(2) {
                 let (new_l, new_r) = self.encrypt(l, r);
                 l = new_l;
                 r = new_r;
@@ -249,7 +250,7 @@ impl Blowfish {
         let mut l = 0u32;
         let mut r = 0u32;
         let mut salt_pos = 0;
-        for i in (0..18).step_by(2) {
+        for i in (0..18).step_up(2) {
             let (new_l, new_r) = self.encrypt(l ^ next_u32_wrap(salt, &mut salt_pos), r ^ next_u32_wrap(salt, &mut salt_pos));
             l = new_l;
             r = new_r;
@@ -257,7 +258,7 @@ impl Blowfish {
             self.p[i+1] = r;
         }
         for i in (0..4) {
-            for j in (0..256).step_by(4) {
+            for j in (0..256).step_up(4) {
                 let (new_l, new_r) = self.encrypt(l ^ next_u32_wrap(salt, &mut salt_pos), r ^ next_u32_wrap(salt, &mut salt_pos));
                 l = new_l;
                 r = new_r;
@@ -279,7 +280,7 @@ impl Blowfish {
 
     // Public for bcrypt.
     pub fn encrypt(&self, mut l: u32, mut r: u32) -> (u32, u32) {
-        for i in (0..16).step_by(2) {
+        for i in (0..16).step_up(2) {
             l ^= self.p[i];
             r ^= self.round_function(l);
             r ^= self.p[i+1];

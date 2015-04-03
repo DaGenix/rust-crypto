@@ -4,17 +4,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(asm)]
-#![feature(core)]
-#![feature(simd)]
-#![feature(step_by)]
-#![feature(convert)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;
 extern crate rustc_serialize as serialize;
 extern crate time;
 #[cfg(test)] extern crate test;
+extern crate libc;
 
 pub mod aead;
 pub mod aes;
@@ -49,6 +45,7 @@ pub mod sha1;
 pub mod sha2;
 mod simd;
 pub mod sosemanuk;
+mod step_by;
 pub mod symmetriccipher;
 pub mod util;
 pub mod whirlpool;

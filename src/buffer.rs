@@ -5,7 +5,8 @@
 // except according to those terms.
 
 use std::cmp;
-use std::slice;
+
+use cryptoutil;
 
 #[derive(Copy)]
 pub enum BufferResult {
@@ -37,7 +38,7 @@ pub trait ReadBuffer {
 
     fn push_to<W: WriteBuffer>(&mut self, output: &mut W) {
         let count = cmp::min(output.remaining(), self.remaining());
-        slice::bytes::copy_memory(self.take_next(count), output.take_next(count));
+        cryptoutil::copy_memory(self.take_next(count), output.take_next(count));
     }
 }
 
