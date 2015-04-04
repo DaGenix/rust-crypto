@@ -14,11 +14,15 @@ pub struct AesNiEncryptor {
     round_keys: [u8; 240]
 }
 
+impl Clone for AesNiEncryptor { fn clone(&self) -> AesNiEncryptor { *self } }
+
 #[derive(Copy)]
 pub struct AesNiDecryptor {
     rounds: u8,
     round_keys: [u8; 240]
 }
+
+impl Clone for AesNiDecryptor { fn clone(&self) -> AesNiDecryptor { *self } }
 
 /// The number of rounds as well as a function to setup an appropriately sized key.
 type RoundSetupInfo = (u8, fn(&[u8], KeyType, &mut [u8]));

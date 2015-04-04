@@ -42,7 +42,7 @@ pub trait PaddingProcessor {
 
 /// The BlockEngine is implemented as a state machine with the following states. See comments in the
 /// BlockEngine code for more information on the states.
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 enum BlockEngineState {
     FastMode,
     NeedInput,
@@ -417,7 +417,7 @@ impl <P: BlockProcessor, X: PaddingProcessor> BlockEngine<P, X> {
 }
 
 /// No padding mode for ECB and CBC encryption
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct NoPadding;
 
 impl PaddingProcessor for NoPadding {
@@ -426,7 +426,7 @@ impl PaddingProcessor for NoPadding {
 }
 
 /// PKCS padding mode for ECB and CBC encryption
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct PkcsPadding;
 
 // This class implements both encryption padding, where padding is added, and decryption padding,

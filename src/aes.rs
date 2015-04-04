@@ -14,7 +14,7 @@ use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher};
 use util;
 
 /// AES key size
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum KeySize {
     KeySize128,
     KeySize192,

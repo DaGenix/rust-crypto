@@ -11,7 +11,7 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct Fe(pub [i32; 10]);
 
 impl PartialEq for Fe {
@@ -1062,14 +1062,14 @@ impl Fe {
     }
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct GeP2 {
     x: Fe,
     y: Fe,
     z: Fe,
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct GeP3 {
     x: Fe,
     y: Fe,
@@ -1077,7 +1077,7 @@ pub struct GeP3 {
     t: Fe,
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct GeP1P1 {
     x: Fe,
     y: Fe,
@@ -1085,14 +1085,14 @@ pub struct GeP1P1 {
     t: Fe,
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct GePrecomp {
     y_plus_x: Fe,
     y_minus_x: Fe,
     xy2d: Fe,
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct GeCached {
     y_plus_x: Fe,
     y_minus_x: Fe,

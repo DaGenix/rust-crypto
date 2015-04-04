@@ -8,7 +8,7 @@ use std::cmp;
 
 use cryptoutil;
 
-#[derive(Copy)]
+#[derive(Clone,Copy)]
 pub enum BufferResult {
     BufferUnderflow,
     BufferOverflow

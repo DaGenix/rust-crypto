@@ -3,12 +3,12 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
- 
- 
+
+
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le};
- 
+
 use std::ptr;
 
 
@@ -20,14 +20,16 @@ pub struct Hc128 {
     output: [u8; 4],
     output_index: usize
 }
- 
+
+impl Clone for Hc128 { fn clone(&self) -> Hc128 { *self } }
+
 impl Hc128 {
     pub fn new(key: &[u8], nonce: &[u8]) -> Hc128 {
         assert!(key.len() == 16);
         assert!(nonce.len() == 16);
         let mut hc128 = Hc128 { p: [0; 512], q: [0; 512], cnt: 0, output: [0; 4], output_index: 0 };
         hc128.init(&key, &nonce);
- 
+
         hc128
     }
 
@@ -59,17 +61,17 @@ impl Hc128 {
             ptr::copy_nonoverlapping(w.as_ptr().offset(256), self.p.as_mut_ptr(),  512);
             ptr::copy_nonoverlapping(w.as_ptr().offset(768), self.q.as_mut_ptr(), 512);
         }
-        
+
         for i in 0..512 {
             self.p[i] = self.step();
         }
         for i in 0..512 {
             self.q[i] = self.step();
-        }  
-     
+        }
+
         self.cnt = 0;
     }
- 
+
     fn step(&mut self) -> u32 {
         let j : usize = self.cnt & 0x1FF;
 
@@ -89,10 +91,10 @@ impl Hc128 {
             ret = (self.p[(self.q[dim_j12] & 0xFF) as usize].wrapping_add(self.p[(((self.q[dim_j12] >> 16) & 0xFF) + 256) as usize])) ^ self.q[j];
         }
 
-        self.cnt = (self.cnt + 1) & 0x3FF;    
+        self.cnt = (self.cnt + 1) & 0x3FF;
         ret
     }
- 
+
     fn next(&mut self) -> u8 {
         if self.output_index == 0 {
             let step = self.step();
@@ -128,15 +130,15 @@ impl SynchronousStreamCipher for Hc128 {
             let mut data_index = 0;
             let data_index_end = data_index + input.len();
 
-            /*  Process any unused keystream (self.buffer) 
+            /*  Process any unused keystream (self.buffer)
              *  remaining from previous operations */
             while self.output_index > 0 && data_index < data_index_end {
                 output[data_index] = input[data_index] ^ self.next();
                 data_index += 1;
             }
 
-            /*  Process input data blockwise until depleted, 
-             *  or remaining length less than block size 
+            /*  Process input data blockwise until depleted,
+             *  or remaining length less than block size
              *  (size of the keystream buffer, self.buffer : 4 bytes) */
             while data_index + 4 <= data_index_end {
                 let data_index_inc = data_index + 4;
@@ -151,7 +153,7 @@ impl SynchronousStreamCipher for Hc128 {
                 data_index = data_index_inc;
             }
 
-            /*  Process remaining data, if any 
+            /*  Process remaining data, if any
              *  (e.g. input length not divisible by 4) */
             while data_index < data_index_end {
                 output[data_index] = input[data_index] ^ self.next();
@@ -160,14 +162,14 @@ impl SynchronousStreamCipher for Hc128 {
         }
     }
 }
- 
+
 impl Encryptor for Hc128 {
     fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
 }
- 
+
 impl Decryptor for Hc128 {
     fn decrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
@@ -175,7 +177,7 @@ impl Decryptor for Hc128 {
     }
 }
 
- 
+
 #[cfg(test)]
 mod test {
     use hc128::Hc128;
@@ -247,19 +249,19 @@ mod test {
         let expected_output = expected_output_hex.from_hex().unwrap();
 
         let mut output = [0u8; 64];
- 
+
         let mut hc128 = Hc128::new(&key, &nonce);
         hc128.process(&input, &mut output);
         assert!(&output[..] == &expected_output[..]);
     }
 }
- 
+
 #[cfg(test)]
 mod bench {
     use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
     use hc128::Hc128;
- 
+
     #[bench]
     pub fn hc128_10(bh: & mut Bencher) {
         let mut hc128 = Hc128::new(&[0; 16], &[0; 16]);
@@ -270,7 +272,7 @@ mod bench {
         });
         bh.bytes = input.len() as u64;
     }
-   
+
     #[bench]
     pub fn hc128_1k(bh: & mut Bencher) {
         let mut hc128 = Hc128::new(&[0; 16], &[0; 16]);
@@ -281,7 +283,7 @@ mod bench {
         });
         bh.bytes = input.len() as u64;
     }
- 
+
     #[bench]
     pub fn hc128_64k(bh: & mut Bencher) {
         let mut hc128 = Hc128::new(&[0; 16], &[0; 16]);
