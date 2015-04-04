@@ -1323,17 +1323,13 @@ mod test {
 
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
-    use std::iter::repeat;
-
     use aessafe;
-    use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8,
+    use blockmodes::{EcbEncryptor, CbcEncryptor, CtrMode, CtrModeX8,
         NoPadding, PkcsPadding};
-    use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
+    use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer};
     use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
-    use symmetriccipher::{Encryptor, Decryptor};
-    use symmetriccipher::SymmetricCipherError::{self, InvalidLength, InvalidPadding};
+    use symmetriccipher::{Encryptor};
 
-    use std::cmp;
     use test::Bencher;
 
     #[bench]
