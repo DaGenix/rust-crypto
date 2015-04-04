@@ -132,7 +132,7 @@ use step_by::RangeExt;
 use symmetriccipher::{BlockEncryptor, BlockEncryptorX8, BlockDecryptor, BlockDecryptorX8};
 
 const U32X4_0: u32x4 = u32x4(0, 0, 0, 0);
-const U32X4_1: u32x4 = u32x4(-1, -1, -1, -1);
+const U32X4_1: u32x4 = u32x4(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 
 macro_rules! define_aes_struct(
     (

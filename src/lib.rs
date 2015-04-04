@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(negate_unsigned)]
 #![cfg_attr(test, feature(test))]
 
 extern crate rand;
