@@ -13,6 +13,9 @@ build = "build.rs"
 [lib]
 name = "crypto"
 
+[features]
+with-bench = []
+
 [build-dependencies]
 gcc = "*"
 

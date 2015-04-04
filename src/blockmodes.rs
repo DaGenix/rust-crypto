@@ -822,7 +822,6 @@ mod test {
     use symmetriccipher::SymmetricCipherError::{self, InvalidLength, InvalidPadding};
 
     use std::cmp;
-    use test::Bencher;
 
     trait CipherTest {
         fn get_plain<'a>(&'a self) -> &'a [u8];
@@ -1320,6 +1319,22 @@ mod test {
                 });
         }
     }
+}
+
+#[cfg(all(test, feature = "with-bench"))]
+mod bench {
+    use std::iter::repeat;
+
+    use aessafe;
+    use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8,
+        NoPadding, PkcsPadding};
+    use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
+    use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
+    use symmetriccipher::{Encryptor, Decryptor};
+    use symmetriccipher::SymmetricCipherError::{self, InvalidLength, InvalidPadding};
+
+    use std::cmp;
+    use test::Bencher;
 
     #[bench]
     pub fn aes_ecb_no_padding_bench(bh: &mut Bencher) {
