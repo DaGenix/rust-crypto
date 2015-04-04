@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(collections)]
-
 extern crate crypto;
 extern crate rand;
 
@@ -63,7 +61,7 @@ fn encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symmetricciphe
         // from the writable buffer, create a new readable buffer which
         // contains all data that has been written, and then access all
         // of that data as a slice.
-        final_result.push_all(write_buffer.take_read_buffer().take_remaining());
+        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
 
         match result {
             BufferResult::BufferUnderflow => break,
@@ -95,7 +93,7 @@ fn decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symm
 
     loop {
         let result = try!(decryptor.decrypt(&mut read_buffer, &mut write_buffer, true));
-        final_result.push_all(write_buffer.take_read_buffer().take_remaining());
+        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
         match result {
             BufferResult::BufferUnderflow => break,
             BufferResult::BufferOverflow => { }

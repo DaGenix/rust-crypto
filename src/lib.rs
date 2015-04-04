@@ -4,14 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(negate_unsigned)]
-#![cfg_attr(test, feature(test))]
+#![cfg_attr(feature = "with-bench", feature(test))]
 
 extern crate rand;
 extern crate rustc_serialize as serialize;
 extern crate time;
-#[cfg(test)] extern crate test;
 extern crate libc;
+
+#[cfg(all(test, feature = "with-bench"))]
+extern crate test;
 
 pub mod aead;
 pub mod aes;

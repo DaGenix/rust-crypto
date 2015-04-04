@@ -146,7 +146,7 @@ mod test {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
     use bcrypt::bcrypt;

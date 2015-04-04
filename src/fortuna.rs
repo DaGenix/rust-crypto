@@ -468,7 +468,7 @@ mod tests {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use rand::{SeedableRng, Rng};
     use test::Bencher;

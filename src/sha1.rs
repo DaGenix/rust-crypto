@@ -531,7 +531,7 @@ mod tests {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
     use digest::Digest;
