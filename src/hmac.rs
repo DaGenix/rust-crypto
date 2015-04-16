@@ -11,7 +11,7 @@
 use std::iter::repeat;
 
 use cryptoutil;
-use hash::digest::Digest;
+use hash::Digest;
 use mac::{Mac, MacResult};
 
 /**
@@ -121,7 +121,7 @@ impl <D: Digest> Mac for Hmac<D> {
 mod test {
     use std::iter::repeat;
 
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::md5::Md5;
     use hmac::Hmac;
     use mac::{Mac, MacResult};

@@ -25,7 +25,7 @@
 
 use cryptoutil::{write_u32_le, read_u32v_le, add_bytes_to_bits, FixedBuffer,
     FixedBuffer64, StandardPadding};
-use hash::digest::Digest;
+use hash::Digest;
 
 // Some unexported constants
 const DIGEST_BUF_LEN: usize = 5;
@@ -413,7 +413,7 @@ impl Digest for Ripemd160 {
 #[cfg(test)]
 mod tests {
     use cryptoutil::test::test_digest_1million_random;
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::ripemd160::Ripemd160;
 
     #[derive(Clone)]
@@ -526,7 +526,7 @@ mod tests {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::ripemd160::Ripemd160;
 
     #[bench]

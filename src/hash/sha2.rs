@@ -29,7 +29,7 @@ values, and truncated to different digest bit lengths.
 An example of using `Sha256` is:
 
 ```rust
-use self::crypto::hash::digest::Digest;
+use self::crypto::hash::Digest;
 use self::crypto::hash::sha2::Sha256;
 
 // create a Sha256 object
@@ -49,7 +49,7 @@ assert_eq!(hex,
 An example of using `Sha512` is:
 
 ```rust
-use self::crypto::hash::digest::Digest;
+use self::crypto::hash::Digest;
 use self::crypto::hash::sha2::Sha512;
 
 // create a Sha512 object
@@ -70,7 +70,7 @@ assert_eq!(hex,
 
  */
 
-use hash::digest::Digest;
+use hash::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be,
                  write_u64_be, read_u64v_be,
                  add_bytes_to_bits, add_bytes_to_bits_tuple,
@@ -1193,7 +1193,7 @@ static H224: [u32; STATE_LEN] = [
 #[cfg(test)]
 mod tests {
     use cryptoutil::test::test_digest_1million_random;
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::sha2::{Sha512, Sha384, Sha512Trunc256, Sha512Trunc224, Sha256, Sha224};
 
     struct Test {
@@ -1403,7 +1403,7 @@ mod tests {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::sha2::{STATE_LEN, BLOCK_LEN};
     use hash::sha2::{Sha256, Sha512, sha256_digest_block_u32, sha512_digest_block_u64};
 

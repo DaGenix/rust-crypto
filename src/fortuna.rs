@@ -51,7 +51,7 @@ use time::precise_time_s;
 
 use symmetriccipher::aessafe::AesSafe256Encryptor;
 use cryptoutil::read_u32_le;
-use hash::digest::Digest;
+use hash::Digest;
 use hash::sha2::Sha256;
 use symmetriccipher::BlockEncryptor;
 

@@ -259,7 +259,7 @@ mod test {
     use symmetriccipher::SynchronousStreamCipher;
     use symmetriccipher::salsa20::Salsa20;
 
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::sha2::Sha256;
 
     #[test]

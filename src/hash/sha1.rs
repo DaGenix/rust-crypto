@@ -26,7 +26,7 @@ the `reset()` method. These traits are implemented by all hash digest
 algorithms that implement the `Digest` trait. An example of use is:
 
 ```rust
-use self::crypto::hash::digest::Digest;
+use self::crypto::hash::Digest;
 use self::crypto::hash::sha1::Sha1;
 
 // create a Sha1 object
@@ -60,7 +60,7 @@ Some of these functions are commonly found in all hash digest
 algorithms, but some, like "parity" is only found in SHA-1.
  */
 
-use hash::digest::Digest;
+use hash::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
 use simd::u32x4;
 
@@ -421,7 +421,7 @@ impl Digest for Sha1 {
 #[cfg(test)]
 mod tests {
     use cryptoutil::test::test_digest_1million_random;
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::sha1::Sha1;
 
     #[derive(Clone)]
@@ -534,7 +534,7 @@ mod tests {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::sha1::{STATE_LEN, BLOCK_LEN};
     use hash::sha1::{Sha1, sha1_digest_block_u32};
 

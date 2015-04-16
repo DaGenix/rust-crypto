@@ -10,7 +10,7 @@
 use std::iter::repeat;
 use cryptoutil::copy_memory;
 
-use hash::digest::Digest;
+use hash::Digest;
 use hmac::Hmac;
 use mac::Mac;
 
@@ -70,7 +70,7 @@ pub fn hkdf_expand<D: Digest>(mut digest: D, prk: &[u8], info: &[u8], okm: &mut 
 mod test {
     use std::iter::repeat;
 
-    use hash::digest::Digest;
+    use hash::Digest;
     use hash::hkdf::{hkdf_extract, hkdf_expand};
     use hash::sha1::Sha1;
     use hash::sha2::Sha256;

@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use cryptoutil::{read_u32v_be, write_u32_be, write_u32_le};
-use hash::digest::Digest;
+use hash::Digest;
 use hash::sha2::Sha512;
 use step_by::RangeExt;
 use symmetriccipher::blowfish::Blowfish;
