@@ -49,10 +49,10 @@ use cryptoutil::copy_memory;
 use rand::{Rng, SeedableRng};
 use time::precise_time_s;
 
-use aessafe::AesSafe256Encryptor;
+use symmetriccipher::aessafe::AesSafe256Encryptor;
 use cryptoutil::read_u32_le;
-use digest::Digest;
-use sha2::Sha256;
+use hash::digest::Digest;
+use hash::sha2::Sha256;
 use symmetriccipher::BlockEncryptor;
 
 /// Length in bytes that the first pool must be before a "catastrophic

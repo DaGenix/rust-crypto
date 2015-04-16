@@ -4,11 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use blowfish::Blowfish;
 use cryptoutil::{read_u32v_be, write_u32_be, write_u32_le};
-use sha2::Sha512;
-use digest::Digest;
+use hash::digest::Digest;
+use hash::sha2::Sha512;
 use step_by::RangeExt;
+use symmetriccipher::blowfish::Blowfish;
 
 fn bcrypt_hash(hpass: &[u8], hsalt: &[u8], output: &mut [u8; 32]) {
     let mut bf = Blowfish::init_state();
@@ -88,7 +88,7 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: u32, output: &mut [u8]
 mod test {
     use std::iter::repeat;
 
-    use bcrypt_pbkdf::{bcrypt_pbkdf, bcrypt_hash};
+    use hash::bcrypt_pbkdf::{bcrypt_pbkdf, bcrypt_hash};
 
     #[test]
     fn test_bcrypt_hash() {
@@ -268,7 +268,7 @@ mod test {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use bcrypt_pbkdf::bcrypt_pbkdf;
+    use hash::bcrypt_pbkdf::bcrypt_pbkdf;
 
     #[bench]
     fn bench_bcrypt_pbkdf_5_32(b: &mut Bencher) {

@@ -2329,8 +2329,8 @@ impl Decryptor for Sosemanuk {
 
 #[cfg(test)]
 mod test {
-    use sosemanuk::Sosemanuk;
     use symmetriccipher::SynchronousStreamCipher;
+    use symmetriccipher::sosemanuk::Sosemanuk;
     use serialize::hex::{FromHex};
 
     // Vectors from http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/sosemanuk/unverified.test-vectors?rev=108&view=markup
@@ -2478,7 +2478,7 @@ mod test {
 mod bench {
     use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
-    use sosemanuk::Sosemanuk;
+    use symmetriccipher::sosemanuk::Sosemanuk;
 
     #[bench]
     pub fn sosemanuk_10(bh: & mut Bencher) {

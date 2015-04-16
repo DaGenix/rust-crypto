@@ -278,8 +278,8 @@ impl Decryptor for ChaCha20 {
 mod test {
     use std::iter::repeat;
 
-    use chacha20::ChaCha20;
     use symmetriccipher::SynchronousStreamCipher;
+    use symmetriccipher::chacha20::ChaCha20;
 
     #[test]
     fn test_chacha20_256_tls_vectors() {
@@ -597,7 +597,7 @@ mod test {
 mod bench {
     use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
-    use chacha20::ChaCha20;
+    use symmetriccipher::chacha20::ChaCha20;
 
     #[bench]
     pub fn chacha20_10(bh: & mut Bencher) {

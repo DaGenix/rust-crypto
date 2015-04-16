@@ -256,11 +256,11 @@ pub fn hsalsa20(key: &[u8], nonce: &[u8], out: &mut [u8]) {
 mod test {
     use std::iter::repeat;
 
-    use salsa20::Salsa20;
     use symmetriccipher::SynchronousStreamCipher;
+    use symmetriccipher::salsa20::Salsa20;
 
-    use digest::Digest;
-    use sha2::Sha256;
+    use hash::digest::Digest;
+    use hash::sha2::Sha256;
 
     #[test]
     fn test_salsa20_128bit_ecrypt_set_1_vector_0() {
@@ -373,7 +373,7 @@ mod test {
 mod bench {
     use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
-    use salsa20::Salsa20;
+    use symmetriccipher::salsa20::Salsa20;
 
     #[bench]
     pub fn salsa20_10(bh: & mut Bencher) {

@@ -4,9 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use blowfish::Blowfish;
 use cryptoutil::{write_u32_be};
 use step_by::RangeExt;
+use symmetriccipher::blowfish::Blowfish;
 
 fn setup(cost: u32, salt: &[u8], key: &[u8]) -> Blowfish {
     let mut state = Blowfish::init_state();
@@ -41,7 +41,7 @@ pub fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
 
 #[cfg(test)]
 mod test {
-    use bcrypt::bcrypt;
+    use hash::bcrypt::bcrypt;
 
     struct Test {
         cost: u32,
@@ -149,7 +149,7 @@ mod test {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use bcrypt::bcrypt;
+    use hash::bcrypt::bcrypt;
 
     #[bench]
     pub fn bcrypt_16_5(bh: & mut Bencher) {

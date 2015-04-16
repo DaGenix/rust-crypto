@@ -295,7 +295,7 @@ impl Mac for Ghash {
 
 #[cfg(test)]
 mod test {
-    use ghash::Ghash;
+    use symmetriccipher::ghash::Ghash;
 
     // Test cases from:
     // <http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-spec.pdf>
@@ -534,7 +534,7 @@ mod test {
 mod bench {
     use test::Bencher;
     use mac::Mac;
-    use ghash::Ghash;
+    use symmetriccipher::ghash::Ghash;
 
     #[bench]
     pub fn ghash_10(bh: & mut Bencher) {

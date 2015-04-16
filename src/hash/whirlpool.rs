@@ -20,8 +20,8 @@ For details see <http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html>.
 # Usage
 
 ```rust
-use self::crypto::whirlpool::Whirlpool;
-use self::crypto::digest::Digest;
+use self::crypto::hash::whirlpool::Whirlpool;
+use self::crypto::hash::digest::Digest;
 
 let mut hasher = Whirlpool::new();
 hasher.input_str("Hello Whirlpool");
@@ -37,7 +37,7 @@ assert_eq!(result,
 
 use std::mem::uninitialized;
 use cryptoutil::{write_u64_be, FixedBuffer64, FixedBuffer};
-use digest::Digest;
+use hash::digest::Digest;
 
 pub struct Whirlpool {
     bit_length: [u8; 32],
@@ -205,7 +205,7 @@ fn process_buffer(hash: &mut[u64; 8], buffer: &[u8]) {
 #[cfg(test)]
 mod test {
     use super::*;
-    use digest::Digest;
+    use hash::digest::Digest;
     use std::ascii::AsciiExt;
 
     static TESTS: [(&'static str, &'static str); 18] = [
