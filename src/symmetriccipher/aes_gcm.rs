@@ -4,11 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use aes::{ctr, KeySize};
-use aead::{AeadEncryptor,AeadDecryptor};
+use symmetriccipher::aes::{ctr, KeySize};
 use cryptoutil::copy_memory;
 use symmetriccipher::SynchronousStreamCipher;
-use ghash::{Ghash};
+use symmetriccipher::aead::{AeadEncryptor,AeadDecryptor};
+use symmetriccipher::ghash::Ghash;
 use util::fixed_time_eq;
 
 pub struct AesGcm<'a> {
@@ -85,11 +85,11 @@ impl<'a> AeadDecryptor for AesGcm<'static> {
 
 #[cfg(test)]
 mod test {
-    use aes::KeySize;
-    use aes_gcm::AesGcm;
-    use aead::{AeadEncryptor, AeadDecryptor};
     use serialize::hex::FromHex;
     use std::iter::repeat;
+    use symmetriccipher::aead::{AeadEncryptor, AeadDecryptor};
+    use symmetriccipher::aes::KeySize;
+    use symmetriccipher::aes_gcm::AesGcm;
     fn hex_to_bytes(raw_hex: &str) -> Vec<u8> {
         raw_hex.from_hex().ok().unwrap()
     }
@@ -210,9 +210,9 @@ mod test {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use aes::KeySize;
-    use aes_gcm::AesGcm;
-    use aead::{AeadEncryptor, AeadDecryptor};
+    use symmetriccipher::aes::KeySize;
+    use symmetriccipher::aes_gcm::AesGcm;
+    use symmetriccipher::aead::{AeadEncryptor, AeadDecryptor};
 
     #[bench]
     pub fn gsm_10(bh: & mut Bencher) {

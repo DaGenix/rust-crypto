@@ -4,8 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use aes::KeySize;
-use aes::KeySize::{KeySize128, KeySize192, KeySize256};
+use symmetriccipher::aes::KeySize::{self, KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 
 #[derive(Copy)]

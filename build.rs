@@ -9,6 +9,6 @@ extern crate gcc;
 fn main() {
     gcc::compile_library(
         "lib_rust_crypto_helpers.a",
-        &["src/util_helpers.c", "src/aesni_helpers.c"]);
+        &["src/util_helpers.c", "src/symmetriccipher/aesni_helpers.c"]);
 }
 

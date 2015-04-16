@@ -5,9 +5,9 @@
 // except according to those terms.
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-use aesni;
+use symmetriccipher::aesni;
 
-use aessafe;
+use symmetriccipher::aessafe;
 use blockmodes::{PaddingProcessor, EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode,
     CtrModeX8};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher};
@@ -310,14 +310,13 @@ mod test {
     use std::iter::repeat;
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    use aesni;
+    use symmetriccipher::aesni;
 
-    use aessafe;
+    use symmetriccipher::{aes, aessafe};
     use symmetriccipher::{BlockEncryptor, BlockDecryptor, BlockEncryptorX8, BlockDecryptorX8,
             SynchronousStreamCipher};
+    use symmetriccipher::aes::KeySize::{KeySize128, KeySize192, KeySize256};
     use util;
-    use aes;
-    use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 
     // Test vectors from:
     // http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
@@ -710,12 +709,12 @@ mod bench {
     use test::Bencher;
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    use aesni;
+    use symmetriccipher::aesni;
 
-    use aessafe;
+    use symmetriccipher::aessafe;
     use symmetriccipher::{BlockEncryptor, BlockEncryptorX8};
     use util;
-    use aes::KeySize::{self, KeySize128, KeySize192, KeySize256};
+    use symmetriccipher::aes::KeySize::{self, KeySize128, KeySize192, KeySize256};
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[bench]

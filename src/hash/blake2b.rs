@@ -6,7 +6,7 @@
 
 use std::iter::repeat;
 use cryptoutil::{copy_memory, read_u64v_le, write_u64v_le};
-use digest::Digest;
+use hash::Digest;
 use mac::{Mac, MacResult};
 use util::secure_memset;
 
@@ -403,8 +403,8 @@ impl Mac for Blake2b {
 #[cfg(test)]
 mod digest_tests {
     //use cryptoutil::test::test_digest_1million_random;
-    use blake2b::Blake2b;
-    use digest::Digest;
+    use hash::blake2b::Blake2b;
+    use hash::Digest;
 
 
     struct Test {
@@ -467,7 +467,7 @@ mod digest_tests {
 
 #[cfg(test)]
 mod mac_tests {
-    use blake2b::Blake2b;
+    use hash::blake2b::Blake2b;
     use mac::Mac;
 
     #[test]
@@ -493,8 +493,8 @@ mod mac_tests {
 mod bench {
     use test::Bencher;
 
-    use digest::Digest;
-    use blake2b::Blake2b;
+    use hash::Digest;
+    use hash::blake2b::Blake2b;
 
 
     #[bench]

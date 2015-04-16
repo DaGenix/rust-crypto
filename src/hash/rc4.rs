@@ -73,7 +73,7 @@ mod test {
     use std::iter::repeat;
 
     use symmetriccipher::SynchronousStreamCipher;
-    use rc4::Rc4;
+    use hash::rc4::Rc4;
 
     struct Test {
         key: &'static str,
@@ -118,7 +118,7 @@ mod test {
 mod bench {
     use test::Bencher;
     use symmetriccipher::SynchronousStreamCipher;
-    use rc4::Rc4;
+    use hash::rc4::Rc4;
 
     #[bench]
     pub fn rc4_10(bh: & mut Bencher) {

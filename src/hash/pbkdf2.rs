@@ -18,9 +18,9 @@ use serialize::base64;
 use serialize::base64::{FromBase64, ToBase64};
 
 use cryptoutil::{read_u32_be, write_u32_be};
+use hash::sha2::Sha256;
 use hmac::Hmac;
 use mac::Mac;
-use sha2::Sha256;
 use util::fixed_time_eq;
 
 // Calculate a block of the output of size equal to the output_bytes of the underlying Mac function
@@ -251,9 +251,9 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 mod test {
     use std::iter::repeat;
 
-    use pbkdf2::{pbkdf2, pbkdf2_simple, pbkdf2_check};
+    use hash::pbkdf2::{pbkdf2, pbkdf2_simple, pbkdf2_check};
+    use hash::sha1::Sha1;
     use hmac::Hmac;
-    use sha1::Sha1;
 
     struct Test {
         password: Vec<u8>,

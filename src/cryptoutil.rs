@@ -514,7 +514,7 @@ pub mod test {
     use rand::distributions::{IndependentSample, Range};
 
     use cryptoutil::{add_bytes_to_bits, add_bytes_to_bits_tuple};
-    use digest::Digest;
+    use hash::Digest;
 
     /// Feed 1,000,000 'a's into the digest with varying input sizes and check that the result is
     /// correct.

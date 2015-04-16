@@ -26,8 +26,8 @@ the `reset()` method. These traits are implemented by all hash digest
 algorithms that implement the `Digest` trait. An example of use is:
 
 ```rust
-use self::crypto::digest::Digest;
-use self::crypto::sha1::Sha1;
+use self::crypto::hash::Digest;
+use self::crypto::hash::sha1::Sha1;
 
 // create a Sha1 object
 let mut hasher = Sha1::new();
@@ -60,7 +60,7 @@ Some of these functions are commonly found in all hash digest
 algorithms, but some, like "parity" is only found in SHA-1.
  */
 
-use digest::Digest;
+use hash::Digest;
 use cryptoutil::{write_u32_be, read_u32v_be, add_bytes_to_bits, FixedBuffer, FixedBuffer64, StandardPadding};
 use simd::u32x4;
 
@@ -421,8 +421,8 @@ impl Digest for Sha1 {
 #[cfg(test)]
 mod tests {
     use cryptoutil::test::test_digest_1million_random;
-    use digest::Digest;
-    use sha1::Sha1;
+    use hash::Digest;
+    use hash::sha1::Sha1;
 
     #[derive(Clone)]
     struct Test {
@@ -534,9 +534,9 @@ mod tests {
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
     use test::Bencher;
-    use digest::Digest;
-    use sha1::{STATE_LEN, BLOCK_LEN};
-    use sha1::{Sha1, sha1_digest_block_u32};
+    use hash::Digest;
+    use hash::sha1::{STATE_LEN, BLOCK_LEN};
+    use hash::sha1::{Sha1, sha1_digest_block_u32};
 
     #[bench]
     pub fn sha1_block(bh: & mut Bencher) {

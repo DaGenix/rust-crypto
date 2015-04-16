@@ -9,7 +9,7 @@
 // except according to those terms.
 
 use cryptoutil::{write_u32_le, read_u32v_le, FixedBuffer, FixedBuffer64, StandardPadding};
-use digest::Digest;
+use hash::Digest;
 use step_by::RangeExt;
 
 
@@ -213,8 +213,8 @@ impl Digest for Md5 {
 #[cfg(test)]
 mod tests {
     use cryptoutil::test::test_digest_1million_random;
-    use digest::Digest;
-    use md5::Md5;
+    use hash::Digest;
+    use hash::md5::Md5;
 
 
     struct Test {
@@ -290,8 +290,8 @@ mod tests {
 mod bench {
     use test::Bencher;
 
-    use digest::Digest;
-    use md5::Md5;
+    use hash::Digest;
+    use hash::md5::Md5;
 
 
     #[bench]

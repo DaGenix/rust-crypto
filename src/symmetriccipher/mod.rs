@@ -4,6 +4,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+pub mod aead;
+pub mod aes;
+pub mod aes_gcm;
+pub mod aessafe;
+pub mod blowfish;
+pub mod chacha20;
+pub mod chacha20poly1305;
+pub mod ghash;
+pub mod hc128;
+pub mod salsa20;
+pub mod sosemanuk;
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub mod aesni;
+
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use cryptoutil::symm_enc_or_dec;
 

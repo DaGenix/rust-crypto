@@ -340,7 +340,7 @@ impl BlockDecryptor for Blowfish {
 
 #[cfg(test)]
 mod test {
-    use blowfish::Blowfish;
+    use symmetriccipher::blowfish::Blowfish;
     use symmetriccipher::{BlockEncryptor, BlockDecryptor};
     struct Test {
         key: Vec<u8>,
@@ -548,7 +548,7 @@ mod test {
 
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
-    use blowfish::Blowfish;
+    use symmetriccipher::blowfish::Blowfish;
     use symmetriccipher::BlockEncryptor;
     use test::Bencher;
 

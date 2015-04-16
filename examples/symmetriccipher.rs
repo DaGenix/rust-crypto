@@ -7,7 +7,8 @@
 extern crate crypto;
 extern crate rand;
 
-use crypto::{ symmetriccipher, buffer, aes, blockmodes };
+use crypto::{ buffer, blockmodes };
+use crypto::symmetriccipher::{ self, aes };
 use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
 
 use rand::{ Rng, OsRng };

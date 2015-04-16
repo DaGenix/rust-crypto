@@ -813,11 +813,11 @@ impl <A: BlockEncryptorX8> Decryptor for CtrModeX8<A> {
 mod test {
     use std::iter::repeat;
 
-    use aessafe;
     use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8,
         NoPadding, PkcsPadding};
     use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
     use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
+    use symmetriccipher::aessafe;
     use symmetriccipher::{Encryptor, Decryptor};
     use symmetriccipher::SymmetricCipherError::{self, InvalidLength, InvalidPadding};
 
@@ -1323,12 +1323,11 @@ mod test {
 
 #[cfg(all(test, feature = "with-bench"))]
 mod bench {
-    use aessafe;
     use blockmodes::{EcbEncryptor, CbcEncryptor, CtrMode, CtrModeX8,
         NoPadding, PkcsPadding};
     use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer};
     use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
-    use symmetriccipher::{Encryptor};
+    use symmetriccipher::{aessafe, Encryptor};
 
     use test::Bencher;
 
