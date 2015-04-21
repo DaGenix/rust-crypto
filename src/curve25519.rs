@@ -2094,6 +2094,25 @@ pub fn sc_muladd(s: &mut[u8], a: &[u8], b: &[u8], c: &[u8]) {
     s[31] = (s11 >> 17) as u8;
 }
 
+/// Generate a 32-byte curve25519 key, given a 32-byte curve25519 secret key
+/// and a 32-byte curve22519 public key.  If the public argument is the
+/// predefined basepoint value (9 followed by all zeros), then this function
+/// will calculate a curve25519 public key.
+///
+/// ```
+/// use self::crypto::curve25519::curve25519;
+///
+/// let my_secretkey: [u8; 32] = [0; 32];     // Don't really use all zeros as a sk.
+/// let their_publickey: [u8; 32] = [0; 32];  // or a public key of all zeros.
+/// let mut basepoint : [u8; 32] = [0; 32];
+/// basepoint[0] = 9;
+///
+/// // Generate a 32-byte curve25519 shared secret key
+/// let shared_secret = curve25519(my_secretkey, their_publickey);
+///
+/// // Generate a 32-byte curve25519 public key.
+/// let my_publickey = curve25519(my_secretkey, basepoint);
+/// ```
 pub fn curve25519(secret: [u8; 32], public: [u8; 32]) -> [u8; 32] {
     let e = secret.as_ref();
     let mut x2;
@@ -2148,8 +2167,27 @@ pub fn curve25519(secret: [u8; 32], public: [u8; 32]) -> [u8; 32] {
     (z2.invert() * x2).to_bytes()
 }
 
+/// Generate a 32-byte curve25519 secret key.  If you supply a random 32-byte
+/// value, that is used as the base.  If you don't (i.e. use None for the arg),
+/// then a random 32-byte number will be generated with the best OS random
+/// number generator available.
+///
+/// ```
+/// use self::crypto::curve25519::curve25519_sk;
+///
+/// // Let curve25519_sk generate the random 32-byte value.
+/// let sk1 = curve25519_sk(None);
+///
+/// let myrand: [u8; 32] = [0; 32];  // Don't use all zeros as a random value!
+///
+/// // Give curve25519_sk a random 32-byte value.
+/// let sk2 = curve25519_sk(Some(myrand));
+/// ```
 pub fn curve25519_sk(rand: Option<[u8; 32]>) -> [u8; 32] {
     let mut buf: [u8; 32] = [0; 32];
+
+    // Fill a 32-byte buffer with random values if necessary.  Otherwise,
+    // use the given 32-byte value.
     let mut rand: [u8; 32]  = match rand {
         Some(r) => r,
         None    => {
@@ -2163,6 +2201,7 @@ pub fn curve25519_sk(rand: Option<[u8; 32]>) -> [u8; 32] {
         }
     };
 
+    // curve25519 secret key bit manip.
     rand[0] &= 248;
     rand[31] &= 127;
     rand[31] |= 64;
@@ -2170,6 +2209,16 @@ pub fn curve25519_sk(rand: Option<[u8; 32]>) -> [u8; 32] {
     rand
 }
 
+/// Generate a 32-byte curve25519 public key.  Calls curve25519 with the public
+/// key set to the basepoint value of 9 followed by all zeros.
+///
+/// ```
+/// use self::crypto::curve25519::curve25519_pk;
+///
+/// let mysk: [u8; 32] = [0; 32];  // Don't use all zeros as a secret key!
+///
+/// let my_pk = curve25519_pk(mysk);
+/// ```
 pub fn curve25519_pk(sk: [u8; 32]) -> [u8; 32] {
     let mut basepoint : [u8; 32] = [0; 32];
     basepoint[0] = 9;
