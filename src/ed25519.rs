@@ -143,7 +143,13 @@ pub fn exchange(public_key: &[u8], private_key: &[u8]) -> [u8; 32] {
     hash[31] &= 127;
     hash[31] |= 64;
 
-    let shared_mont_x : [u8; 32] = curve25519(&hash, &mont_x.to_bytes()); // priv., pub.
+    let mut sk: [u8; 32] = [0; 32];
+
+    for (dst, src) in sk.iter_mut().zip(hash.iter()) {
+        *dst = *src
+    }
+
+    let shared_mont_x : [u8; 32] = curve25519(sk, mont_x.to_bytes()); // priv., pub.
 
     shared_mont_x
 }
@@ -162,7 +168,7 @@ fn edwards_to_montgomery_x(ed_y: Fe) -> Fe {
 #[cfg(test)]
 mod tests {
     use ed25519::{keypair, signature, verify, exchange};
-    use curve25519::{curve25519_base, curve25519};
+    use curve25519::{curve25519, curve25519_pk};
     use digest::Digest;
     use sha2::{Sha512};
 
@@ -208,10 +214,16 @@ mod tests {
         hash[31] &= 127;
         hash[31] |= 64;
 
-        let cv_public = curve25519_base(&hash);
+        let mut sk: [u8; 32] = [0; 32];
+
+        for (dst, src) in sk.iter_mut().zip(hash.iter()) {
+            *dst = *src
+        }
+
+        let cv_public = curve25519_pk(sk);
 
         let edx_ss = exchange(&ed_public, &ed_private);
-        let cv_ss = curve25519(&hash, &cv_public);
+        let cv_ss = curve25519(sk, cv_public);
 
         assert_eq!(edx_ss.to_vec(), cv_ss.to_vec());
     }

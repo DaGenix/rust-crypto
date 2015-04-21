@@ -1,3 +1,4 @@
+use rand::{OsRng,Rng};
 use std::ops::{Add, Sub, Mul};
 use std::cmp::{Eq, PartialEq,min};
 use util::{fixed_time_eq};
@@ -2093,23 +2094,15 @@ pub fn sc_muladd(s: &mut[u8], a: &[u8], b: &[u8], c: &[u8]) {
     s[31] = (s11 >> 17) as u8;
 }
 
-
-pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
-    let mut e = [0u8; 32];
+pub fn curve25519(secret: [u8; 32], public: [u8; 32]) -> [u8; 32] {
+    let e = secret.as_ref();
     let mut x2;
     let mut z2;
     let mut x3;
     let mut z3;
     let mut swap: i32;
     let mut b: i32;
-
-    for (d,s) in e.iter_mut().zip(n.iter()) {
-      *d = *s;
-    }
-    e[0] &= 248;
-    e[31] &= 127;
-    e[31] |= 64;
-    let x1 = Fe::from_bytes(p);
+    let x1 = Fe::from_bytes(public.as_ref());
     x2 = FE_ONE;
     z2 = FE_ZERO;
     x3 = x1;
@@ -2155,15 +2148,37 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
     (z2.invert() * x2).to_bytes()
 }
 
-pub fn curve25519_base(x: &[u8]) -> [u8; 32] {
-    let mut base : [u8; 32] = [0; 32];
-    base[0] = 9;
-    curve25519(x, base.as_ref())
+pub fn curve25519_sk(rand: Option<[u8; 32]>) -> [u8; 32] {
+    let mut buf: [u8; 32] = [0; 32];
+    let mut rand: [u8; 32]  = match rand {
+        Some(r) => r,
+        None    => {
+            let mut rng = match OsRng::new() {
+                Ok(rng) => rng,
+                Err(e)  => panic!("Failed to create rng! {}", e),
+            };
+
+            rng.fill_bytes(&mut buf);
+            buf
+        }
+    };
+
+    rand[0] &= 248;
+    rand[31] &= 127;
+    rand[31] |= 64;
+
+    rand
+}
+
+pub fn curve25519_pk(sk: [u8; 32]) -> [u8; 32] {
+    let mut basepoint : [u8; 32] = [0; 32];
+    basepoint[0] = 9;
+    curve25519(sk, basepoint)
 }
 
 #[cfg(test)]
 mod tests {
-    use curve25519::{Fe, curve25519_base};
+    use curve25519::{Fe, curve25519_pk, curve25519_sk};
 
     #[test]
     fn from_to_bytes_preserves() {
@@ -2243,11 +2258,11 @@ mod tests {
 
     #[test]
     fn base_example() {
-        let sk : [u8; 32] = [
+        let sk: [u8; 32] = [
             0x77, 0x07, 0x6d, 0x0a, 0x73, 0x18, 0xa5, 0x7d, 0x3c, 0x16, 0xc1,
             0x72, 0x51, 0xb2, 0x66, 0x45, 0xdf, 0x4c, 0x2f, 0x87, 0xeb, 0xc0,
-            0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a ];
-        let pk = curve25519_base(sk.as_ref());
+            0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a];
+        let pk = curve25519_pk(curve25519_sk(Some(sk)));
         let correct : [u8; 32] = [
              0x85,0x20,0xf0,0x09,0x89,0x30,0xa7,0x54
             ,0x74,0x8b,0x7d,0xdc,0xb4,0x3e,0xf7,0x5a
