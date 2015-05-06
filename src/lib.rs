@@ -39,6 +39,7 @@ pub mod mac;
 pub mod md5;
 pub mod pbkdf2;
 pub mod poly1305;
+pub mod poly1305aes;
 pub mod rc4;
 pub mod ripemd160;
 pub mod salsa20;
