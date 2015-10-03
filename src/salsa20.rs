@@ -6,6 +6,7 @@
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
+use symmetriccipher::{SeekableStreamCipher, SeekError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
 use simd::u32x4;
 
@@ -180,7 +181,7 @@ impl Salsa20 {
         }
 
         self.state.b = self.state.b + u32x4(1, 0, 0, 0);
-        let u32x4(_, _, _, ctr_lo) = self.state.b;
+        let u32x4(ctr_lo, _, _, _) = self.state.b;
         if ctr_lo == 0 {
             self.state.a = self.state.a + u32x4(0, 1, 0, 0);
         }
@@ -231,6 +232,25 @@ impl SynchronousStreamCipher for Salsa20 {
     }
 }
 
+impl SeekableStreamCipher for Salsa20 {
+    fn seek(&mut self, byte_offset: u64) -> Result<(), SeekError> {
+        let offset_in_block = (byte_offset % 64) as usize;
+        let block_number = byte_offset / 64;
+        let block_number_minor = (block_number & 0xffff_ffff) as u32;
+        let block_number_major = (block_number >> 32) as u32;
+
+        let u32x4(a1, a2, a3, a4) = self.state.a;
+        let u32x4(b1, b2, b3, b4) = self.state.b;
+        println!("Switching from {} {} to {} {}", b1, a2, block_number_minor, block_number_major);
+        self.state.a = u32x4(a1, block_number_major, a3, a4);
+        self.state.b = u32x4(block_number_minor, b2, b3, b4);
+        self.hash();
+        self.offset = offset_in_block;
+
+        Ok( () )
+    }
+}
+
 impl Encryptor for Salsa20 {
     fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
@@ -257,7 +277,8 @@ mod test {
     use std::iter::repeat;
 
     use salsa20::Salsa20;
-    use symmetriccipher::SynchronousStreamCipher;
+    use symmetriccipher::{SynchronousStreamCipher, SeekableStreamCipher};
+    use symmetriccipher::test::test_seek;
 
     use digest::Digest;
     use sha2::Sha256;
@@ -365,6 +386,52 @@ mod test {
 
         let mut xsalsa20 = Salsa20::new_xsalsa20(&key, &nonce);
         xsalsa20.process(&input, &mut stream);
+        assert!(stream[..] == result[..]);
+    }
+
+    #[test]
+    fn test_salsa20_seek() {
+        let key = [
+            0x9c, 0xb1, 0xb2, 0x8e, 0x35, 0xda, 0xc4, 0xbc,
+            0xff, 0x64, 0x22, 0x85, 0x3f, 0x12, 0x90, 0xd6,
+            0x08, 0x4c, 0x57, 0xb1, 0x8e, 0x7c, 0x0d, 0x99,
+            0x07, 0x5e, 0x4e, 0xc9, 0xdc, 0x46, 0x8e, 0x4e,
+        ];
+        let nonce = [
+            0xac, 0x9f, 0x86, 0x0f, 0x63, 0xad, 0xb4, 0x11,
+        ];
+
+        let mut salsa20 = Salsa20::new(&key, &nonce);
+        test_seek(&mut salsa20);
+    }
+
+    #[test]
+    fn test_salsa20_offset_wrap() {
+        let key = [
+            0x1d, 0xd4, 0xb2, 0xaf, 0x8d, 0x96, 0x42, 0x3e,
+            0x16, 0xec, 0x0c, 0x90, 0xbc, 0x3b, 0x6b, 0xb3,
+            0x15, 0x35, 0x47, 0x47, 0x05, 0xe0, 0x59, 0xb1,
+            0xb2, 0x90, 0x6b, 0xd9, 0x95, 0xb5, 0xdc, 0x05,
+        ];
+        let nonce = [
+            0x6b, 0xbb, 0xfc, 0x42, 0xe1, 0x8a, 0xbe, 0xa3,
+        ];
+        let stream = [
+            0xbd, 0xd9, 0x86, 0xdb, 0x59, 0xc2, 0x84, 0x24,
+            0x97, 0xcf, 0xde, 0x3c, 0x30, 0x1f, 0x36, 0xe1,
+        ];
+
+        let mut salsa20 = Salsa20::new(&key, &nonce);
+        let input = [0u8; 16];
+        let mut result = [0u8; 16];
+
+        salsa20.seek(0x1_0000_0000*64 - 5).unwrap();
+        salsa20.process(&input, &mut result);
+        println!("{:?}", result.to_vec());
+        assert!(stream[..] == result[..]);
+
+        salsa20.seek(0x1_0000_0000*64 + 1).unwrap();
+        salsa20.process(&input[6..], &mut result[6..]);
         assert!(stream[..] == result[..]);
     }
 }

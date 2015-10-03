@@ -7,6 +7,7 @@ use std::cmp;
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
+use symmetriccipher::{SeekableStreamCipher, SeekError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};
 use simd::u32x4;
 
@@ -260,6 +261,22 @@ impl SynchronousStreamCipher for ChaCha20 {
     }
 }
 
+impl SeekableStreamCipher for ChaCha20 {
+    fn seek(&mut self, byte_offset: u64) -> Result<(), SeekError> {
+        let offset_in_block = (byte_offset % 64) as usize;
+        let block_number = byte_offset / 64;
+        let block_number_minor = (block_number & 0xffff_ffff) as u32;
+        let block_number_major = (block_number >> 32) as u32;
+
+        let u32x4(_, _, d3, d4) = self.state.d;
+        self.state.d = u32x4(block_number_minor, block_number_major, d3, d4);
+        self.update();
+        self.offset = offset_in_block;
+
+        Ok( () )
+    }
+}
+
 impl Encryptor for ChaCha20 {
     fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
             -> Result<BufferResult, SymmetricCipherError> {
@@ -280,6 +297,7 @@ mod test {
 
     use chacha20::ChaCha20;
     use symmetriccipher::SynchronousStreamCipher;
+    use symmetriccipher::test::test_seek;
 
     #[test]
     fn test_chacha20_256_tls_vectors() {
@@ -590,6 +608,21 @@ mod test {
             c.process(&input[..], &mut output[..]);
             assert_eq!(output, tv.keystream);
         }
+    }
+
+    #[test]
+    fn test_chacha20_seek() {
+        let key = [
+            0x88, 0xa8, 0x35, 0x0b, 0xe6, 0xdc, 0x00, 0x71,
+            0x63, 0x98, 0x38, 0xa9, 0x14, 0xbf, 0xb1, 0x78,
+            0x40, 0xee, 0xba, 0xe7, 0xb0, 0x15, 0xa2, 0x0f,
+            0x36, 0x2b, 0x89, 0x86, 0x05, 0xa4, 0xce, 0x2f,
+        ];
+        let nonce = [
+            0x45, 0x92, 0xfd, 0x97, 0x3e, 0x10, 0x72, 0xd4,
+        ];
+        let mut c = ChaCha20::new(&key, &nonce);
+        test_seek(&mut c);
     }
 }
 
