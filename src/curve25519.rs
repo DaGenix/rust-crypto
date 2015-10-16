@@ -335,15 +335,15 @@ impl Mul for Fe {
         let mut h8 = f0g8+f1g7_2 +f2g6   +f3g5_2 +f4g4   +f5g3_2 +f6g2   +f7g1_2 +f8g0   +f9g9_38;
         let mut h9 = f0g9+f1g8   +f2g7   +f3g6   +f4g5   +f5g4   +f6g3   +f7g2   +f8g1   +f9g0   ;
         let mut carry0;
-        let mut carry1;
-        let mut carry2;
-        let mut carry3;
+        let carry1;
+        let carry2;
+        let carry3;
         let mut carry4;
-        let mut carry5;
-        let mut carry6;
-        let mut carry7;
-        let mut carry8;
-        let mut carry9;
+        let carry5;
+        let carry6;
+        let carry7;
+        let carry8;
+        let carry9;
 
         /*
         |h0| <= (1.1*1.1*2^52*(1+19+19+19+19)+1.1*1.1*2^50*(38+38+38+38+38))
@@ -899,15 +899,15 @@ impl Fe {
         let mut h8 = f0f8_2+f1f7_4 +f2f6_2 +f3f5_4 +f4f4   +f9f9_38;
         let mut h9 = f0f9_2+f1f8_2 +f2f7_2 +f3f6_2 +f4f5_2;
         let mut carry0: i64;
-        let mut carry1: i64;
-        let mut carry2: i64;
-        let mut carry3: i64;
+        let carry1: i64;
+        let carry2: i64;
+        let carry3: i64;
         let mut carry4: i64;
-        let mut carry5: i64;
-        let mut carry6: i64;
-        let mut carry7: i64;
-        let mut carry8: i64;
-        let mut carry9: i64;
+        let carry5: i64;
+        let carry6: i64;
+        let carry7: i64;
+        let carry8: i64;
+        let carry9: i64;
 
         h0 += h0;
         h1 += h1;
@@ -1545,11 +1545,11 @@ pub fn sc_reduce(s: &mut [u8]) {
     let mut carry9: i64;
     let mut carry10: i64;
     let mut carry11: i64;
-    let mut carry12: i64;
-    let mut carry13: i64;
-    let mut carry14: i64;
-    let mut carry15: i64;
-    let mut carry16: i64;
+    let carry12: i64;
+    let carry13: i64;
+    let carry14: i64;
+    let carry15: i64;
+    let carry16: i64;
 
     s11 += s23 * 666643;
     s12 += s23 * 470296;
@@ -1838,12 +1838,12 @@ pub fn sc_muladd(s: &mut[u8], a: &[u8], b: &[u8], c: &[u8]) {
     let mut carry14: i64;
     let mut carry15: i64;
     let mut carry16: i64;
-    let mut carry17: i64;
-    let mut carry18: i64;
-    let mut carry19: i64;
-    let mut carry20: i64;
-    let mut carry21: i64;
-    let mut carry22: i64;
+    let carry17: i64;
+    let carry18: i64;
+    let carry19: i64;
+    let carry20: i64;
+    let carry21: i64;
+    let carry22: i64;
 
     s0 = c0 + a0*b0;
     s1 = c1 + a0*b1 + a1*b0;
