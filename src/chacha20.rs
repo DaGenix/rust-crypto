@@ -50,7 +50,7 @@ macro_rules! state_to_buffer {
             c1,c2,c3,c4,
             d1,d2,d3,d4
         ];
-        for i in (0..lens.len()) {
+        for i in 0..lens.len() {
             write_u32_le(&mut $output[i*4..(i+1)*4], lens[i]);
         }
     }}
@@ -178,7 +178,7 @@ impl ChaCha20 {
 
         // Apply r/2 iterations of the same "double-round" function,
         // obtaining (z0, z1, ... z15) = doubleround r/2 (x0, x1, ... x15).
-        for _ in (0..10) {
+        for _ in 0..10 {
             round!(state);
             let u32x4(b10, b11, b12, b13) = state.b;
             state.b = u32x4(b11, b12, b13, b10);
@@ -204,7 +204,7 @@ impl ChaCha20 {
             a1,a2,a3,a4,
             d1,d2,d3,d4
         ];
-        for i in (0..lens.len()) {
+        for i in 0..lens.len() {
             write_u32_le(&mut out[i*4..(i+1)*4], lens[i]);
         }
     }
@@ -213,7 +213,7 @@ impl ChaCha20 {
     fn update(&mut self) {
         let mut state = self.state;
 
-        for _ in (0..10) {
+        for _ in 0..10 {
             round!(state);
             swizzle!(state.b, state.c, state.d);
             round!(state);
