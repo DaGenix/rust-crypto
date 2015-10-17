@@ -81,7 +81,7 @@ impl Hc128 {
         let dim_j511 : usize = (j.wrapping_sub(511)) & 0x1FF;
         let dim_j12 : usize = (j.wrapping_sub(12)) & 0x1FF;
 
-        let mut ret : u32;
+        let ret : u32;
 
         if self.cnt < 512 {
             self.p[j] = self.p[j].wrapping_add(self.p[dim_j3].rotate_right(10) ^ self.p[dim_j511].rotate_right(23)).wrapping_add(self.p[dim_j10].rotate_right(8));
