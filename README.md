@@ -52,6 +52,7 @@ as the Rust compiler.
 Rust-Crypto already supports a significant number of algorithms and with your help
 it will support even more in the future. Currently supported algorithms include:
 
+* MD4
 * MD5
 * RIPEMD-160
 * Sha1
