@@ -8,7 +8,22 @@
 #include <stdint.h>
 #include <string.h>
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(__i386__)
+uint32_t rust_crypto_util_supports_aesni() {
+    uint32_t flags;
+    asm(
+        "pushl %%ebx; \
+         mov $1, %%eax; cpuid; \
+         popl %%ebx;"
+        : "=c" (flags) // output
+        : // input
+        : "eax", "edx" // clobbers
+    );
+    return flags & 0x02000000;
+}
+#endif
+
+#if defined(__x86_64__)
 uint32_t rust_crypto_util_supports_aesni() {
     uint32_t flags;
     asm(
