@@ -96,7 +96,7 @@ impl Poly1305 {
     fn finish(&mut self) {
         if self.leftover > 0 {
             self.buffer[self.leftover] = 1;
-            for i in (self.leftover+1..16) {
+            for i in self.leftover+1..16 {
                 self.buffer[i] = 0;
             }
             self.finalized = true;
@@ -167,7 +167,7 @@ impl Mac for Poly1305 {
 
         if self.leftover > 0 {
             let want = min(16 - self.leftover, m.len());
-            for i in (0..want) {
+            for i in 0..want {
                 self.buffer[self.leftover+i] = m[i];
             }
             m = &m[want..];
@@ -189,7 +189,7 @@ impl Mac for Poly1305 {
             m = &m[16..];
         }
 
-        for i in (0..m.len()) {
+        for i in 0..m.len() {
             self.buffer[i] = m[i];
         }
         self.leftover = m.len();
@@ -324,7 +324,7 @@ mod test {
         ];
 
         let mut tpoly = Poly1305::new(&total_key);
-        for i in (0..256) {
+        for i in 0..256 {
             let key: Vec<u8> = repeat(i as u8).take(32).collect();
             let msg: Vec<u8> = repeat(i as u8).take(256).collect();
             let mut mac = [0u8; 16];

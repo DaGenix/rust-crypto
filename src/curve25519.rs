@@ -1155,18 +1155,18 @@ impl GeP2 {
 
     fn slide(a: &[u8]) -> [i8; 256] {
         let mut r = [0i8; 256];
-        for i in (0..256) {
+        for i in 0..256 {
             r[i] = (1 & (a[i >> 3] >> (i & 7))) as i8;
         }
-        for i in (0..256) {
+        for i in 0..256 {
             if r[i]!=0 {
-                for b in (1..min(7, 256-i)) {
+                for b in 1..min(7, 256-i) {
                     if r[i + b] != 0 {
                         if r[i] + (r[i + b] << b) <= 15 {
                             r[i] += r[i + b] << b; r[i + b] = 0;
                         } else if r[i] - (r[i + b] << b) >= -15 {
                             r[i] -= r[i + b] << b;
-                            for k in (i+b..256) {
+                            for k in i+b..256 {
                                 if r[k]==0 {
                                     r[k] = 1;
                                     break;
@@ -1462,7 +1462,7 @@ pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
     let mut s: GeP2;
     let mut t: GePrecomp;
 
-    for i in (0..32) {
+    for i in 0..32 {
         es[2 * i + 0] = ((a[i] >> 0) & 15) as i8;
         es[2 * i + 1] = ((a[i] >> 4) & 15) as i8;
     }
@@ -1470,7 +1470,7 @@ pub fn ge_scalarmult_base(a: &[u8]) -> GeP3 {
     /* es[63] is between 0 and 7 */
 
     let mut carry: i8 = 0;
-    for i in (0..63) {
+    for i in 0..63 {
         es[i] += carry;
         carry = es[i] + 8;
         carry >>= 4;
@@ -2167,7 +2167,7 @@ mod tests {
 
     #[test]
     fn from_to_bytes_preserves() {
-        for i in (0..50) {
+        for i in 0..50 {
             let mut e: Vec<u8> = (0u32..32).map(|idx| (idx*(1289+i*761)) as u8).collect();
             e[0] &= 248;
             e[31] &= 127;

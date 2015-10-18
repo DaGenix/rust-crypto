@@ -160,7 +160,7 @@ macro_rules! define_aes_impl(
                 };
                 let mut tmp = [[0u32; 4]; ($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
-                for i in (0..$rounds + 1) {
+                for i in 0..$rounds + 1 {
                     a.sk[i] = bit_slice_4x4_with_u16(tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);
                 }
                 a
@@ -258,7 +258,7 @@ macro_rules! define_aes_impl_x8(
                 };
                 let mut tmp = [[0u32; 4]; ($rounds + 1)];
                 create_round_keys(key, KeyType::$mode, &mut tmp);
-                for i in (0..$rounds + 1) {
+                for i in 0..$rounds + 1 {
                     a.sk[i] = bit_slice_fill_4x4_with_u32x4(
                         tmp[i][0],
                         tmp[i][1],
@@ -377,7 +377,7 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]])
     };
 
     // Calculate the rest of the round keys
-    for i in (key_words..(rounds + 1) * 4) {
+    for i in key_words..(rounds + 1) * 4 {
         let mut tmp = round_keys[(i - 1) / 4][(i - 1) % 4];
         if (i % key_words) == 0 {
             tmp = sub_word(tmp.rotate_right(8)) ^ RCON[(i / key_words) - 1];
@@ -391,8 +391,8 @@ fn create_round_keys(key: &[u8], key_type: KeyType, round_keys: &mut [[u32; 4]])
     // Decryption round keys require extra processing
     match key_type {
         KeyType::Decryption => {
-            for j in (1..rounds) {
-                for i in (0..4) {
+            for j in 1..rounds {
+                for i in 0..4 {
                     round_keys[j][i] = inv_mcol(round_keys[j][i]);
                 }
             }
@@ -418,7 +418,7 @@ fn encrypt_core<S: AesOps + Copy>(state: &S, sk: &[S]) -> S {
     let mut tmp = state.add_round_key(&sk[0]);
 
     // Remaining rounds (except last round)
-    for i in (1..sk.len() - 1) {
+    for i in 1..sk.len() - 1 {
         tmp = tmp.sub_bytes();
         tmp = tmp.shift_rows();
         tmp = tmp.mix_columns();
@@ -438,7 +438,7 @@ fn decrypt_core<S: AesOps + Copy>(state: &S, sk: &[S]) -> S {
     let mut tmp = state.add_round_key(&sk[sk.len() - 1]);
 
     // Remaining rounds (except last round)
-    for i in (1..sk.len() - 1) {
+    for i in 1..sk.len() - 1 {
         tmp = tmp.inv_sub_bytes();
         tmp = tmp.inv_shift_rows();
         tmp = tmp.inv_mix_columns();
@@ -474,8 +474,8 @@ impl <T: BitXor<Output = T> + Copy> Bs8State<T> {
     // basis. That transformation could be done via pseudocode that roughly looks like the
     // following:
     //
-    // for x in (0..8) {
-    //     for y in (0..8) {
+    // for x in 0..8 {
+    //     for y in 0..8 {
     //         result.x ^= input.y & MATRIX[7 - y][x]
     //     }
     // }
@@ -836,7 +836,7 @@ fn bit_slice_1x128_with_u32x4(data: &[u8]) -> Bs8State<u32x4> {
 // is used as part of bit slicing the round keys.
 fn bit_slice_fill_4x4_with_u32x4(a: u32, b: u32, c: u32, d: u32) -> Bs8State<u32x4> {
     let mut tmp = [0u8; 128];
-    for i in (0..8) {
+    for i in 0..8 {
         write_u32_le(&mut tmp[i * 16..i * 16 + 4], a);
         write_u32_le(&mut tmp[i * 16 + 4..i * 16 + 8], b);
         write_u32_le(&mut tmp[i * 16 + 8..i * 16 + 12], c);
@@ -1125,7 +1125,7 @@ impl <T: AesBitValueOps + Copy + 'static> AesOps for Bs8State<T> {
     }
 }
 
-trait AesBitValueOps: BitXor<Output = Self> + BitAnd<Output = Self> + Not<Output = Self> + Default {
+trait AesBitValueOps: BitXor<Output = Self> + BitAnd<Output = Self> + Not<Output = Self> + Default + Sized {
     fn shift_row(self) -> Self;
     fn inv_shift_row(self) -> Self;
     fn ror1(self) -> Self;

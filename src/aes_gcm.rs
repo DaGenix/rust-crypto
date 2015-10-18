@@ -59,7 +59,7 @@ impl<'a> AeadEncryptor for AesGcm<'static> {
         self.cipher.process(input, output);
         let result = self.mac.input_c(output).result();
         self.finished = true;
-        for i in (0..16) {
+        for i in 0..16 {
             tag[i] = result[i] ^ self.end_tag[i];
         }
     }
@@ -71,7 +71,7 @@ impl<'a> AeadDecryptor for AesGcm<'static> {
         assert!(!self.finished);
         self.finished = true;
         let mut calc_tag = self.mac.input_c(input).result();
-        for i in (0..16) {
+        for i in 0..16 {
             calc_tag[i] ^= self.end_tag[i];
         }
         if fixed_time_eq(&calc_tag, tag) {

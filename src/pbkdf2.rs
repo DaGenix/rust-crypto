@@ -58,7 +58,7 @@ fn calculate_block<M: Mac>(
     }
 
     // Perform all remaining iterations
-    for _ in (2..c) {
+    for _ in 2..c {
         mac.input(scratch);
         mac.raw_result(scratch);
         mac.reset();

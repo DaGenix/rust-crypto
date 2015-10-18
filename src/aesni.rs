@@ -106,7 +106,7 @@ fn setup_working_key_aesni_128(key: &[u8], key_type: KeyType, round_key: &mut [u
         match key_type {
             KeyType::Decryption => {
                 // range of rounds keys from #1 to #9; skip the first and last key
-                for i in (1..10) {
+                for i in 1..10 {
                     rust_crypto_aesni_aesimc(round_key.get_unchecked_mut(16 * i));
                 }
             }
@@ -122,7 +122,7 @@ fn setup_working_key_aesni_192(key: &[u8], key_type: KeyType, round_key: &mut [u
         match key_type {
             KeyType::Decryption => {
                 // range of rounds keys from #1 to #11; skip the first and last key
-                for i in (1..12) {
+                for i in 1..12 {
                     rust_crypto_aesni_aesimc(round_key.get_unchecked_mut(16 * i));
                 }
             }
@@ -138,7 +138,7 @@ fn setup_working_key_aesni_256(key: &[u8], key_type: KeyType, round_key: &mut [u
         match key_type {
             KeyType::Decryption => {
                 // range of rounds keys from #1 to #13; skip the first and last key
-                for i in (1..14) {
+                for i in 1..14 {
                     rust_crypto_aesni_aesimc(round_key.get_unchecked_mut(16 * i));
                 }
             }

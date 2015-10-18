@@ -12,7 +12,7 @@ fn setup(cost: u32, salt: &[u8], key: &[u8]) -> Blowfish {
     let mut state = Blowfish::init_state();
     
     state.salted_expand_key(salt, key);
-    for _ in (0..1 << cost) {
+    for _ in 0..1 << cost {
         state.expand_key(key);
         state.expand_key(salt);
     }
@@ -29,7 +29,7 @@ pub fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
     // OrpheanBeholderScryDoubt
     let mut ctext = [0x4f727068, 0x65616e42, 0x65686f6c, 0x64657253, 0x63727944, 0x6f756274];
     for i in (0..6).step_up(2) {
-        for _ in (0..64) {
+        for _ in 0..64 {
             let (l, r) = state.encrypt(ctext[i], ctext[i+1]);
             ctext[i] = l;
             ctext[i+1] = r;

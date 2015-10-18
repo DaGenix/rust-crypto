@@ -45,7 +45,7 @@ impl Hc128 {
             ptr::copy_nonoverlapping(w.as_ptr(), w.as_mut_ptr().offset(4), 4);
         }
 
-        for i in (0..nonce.len() & 16) {
+        for i in 0..nonce.len() & 16 {
             w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i & 0x3));
         }
         unsafe {
