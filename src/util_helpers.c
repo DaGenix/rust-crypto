@@ -10,6 +10,7 @@
 
 #if defined(__i386__)
 uint32_t rust_crypto_util_supports_aesni() {
+    #ifdef __SSE__
     uint32_t flags;
     asm(
         "pushl %%ebx; \
@@ -20,11 +21,15 @@ uint32_t rust_crypto_util_supports_aesni() {
         : "eax", "edx" // clobbers
     );
     return flags & 0x02000000;
+    #else
+    return 0;
+    #endif
 }
 #endif
 
 #if defined(__x86_64__)
 uint32_t rust_crypto_util_supports_aesni() {
+    #ifdef __SSE__
     uint32_t flags;
     asm(
         "mov $1, %%eax; cpuid;"
@@ -33,6 +38,9 @@ uint32_t rust_crypto_util_supports_aesni() {
         : "eax", "ebx", "edx" // clobbers
     );
     return flags & 0x02000000;
+    #else
+    return 0;
+    #endif
 }
 #endif
 

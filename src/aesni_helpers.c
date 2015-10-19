@@ -5,10 +5,12 @@
 // except according to those terms.
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #if defined(__i386__) || defined(__x86_64__)
 
 void rust_crypto_aesni_aesimc(uint8_t* round_keys) {
+    #ifdef __SSE__
     asm volatile(
         " \
             movdqu (%0), %%xmm1; \
@@ -19,11 +21,15 @@ void rust_crypto_aesni_aesimc(uint8_t* round_keys) {
     : "r" (round_keys) // inputs
     : "xmm1", "memory" // clobbers
     );
+    #else
+    exit(1);
+    #endif
 }
 
 void rust_crypto_aesni_setup_working_key_128(
         uint8_t* key,
         uint8_t* round_key) {
+    #ifdef __SSE__
     asm volatile(
         " \
             movdqu (%1), %%xmm1; \
@@ -72,11 +78,15 @@ void rust_crypto_aesni_setup_working_key_128(
     : "r" (key)
     : "xmm1", "xmm2", "xmm3", "memory"
     );
+    #else
+    exit(1);
+    #endif
 }
 
 void rust_crypto_aesni_setup_working_key_192(
         uint8_t* key,
         uint8_t* round_key) {
+    #ifdef __SSE__
     asm volatile(
         " \
             movdqu (%1), %%xmm1; \
@@ -160,11 +170,15 @@ void rust_crypto_aesni_setup_working_key_192(
     : "r" (key)
     : "xmm1", "xmm2", "xmm3", "memory"
     );
+    #else
+    exit(1);
+    #endif
 }
 
 void rust_crypto_aesni_setup_working_key_256(
         uint8_t* key,
         uint8_t* round_key) {
+    #ifdef __SSE__
     asm volatile(
         " \
             movdqu (%1), %%xmm1; \
@@ -256,6 +270,9 @@ void rust_crypto_aesni_setup_working_key_256(
     : "r" (key)
     : "xmm1", "xmm2", "xmm3", "memory"
     );
+    #else
+    exit(1);
+    #endif
 }
 
 void rust_crypto_aesni_encrypt_block(
@@ -263,6 +280,7 @@ void rust_crypto_aesni_encrypt_block(
             uint8_t* input,
             uint8_t* round_keys,
             uint8_t* output) {
+    #ifdef __SSE__
     asm volatile(
     " \
         /* Copy the data to encrypt to xmm1 */ \
@@ -293,6 +311,9 @@ void rust_crypto_aesni_encrypt_block(
     : "r" (input), "r" (output) // inputs
     : "xmm0", "xmm1", "memory", "cc" // clobbers
     );
+    #else
+    exit(1);
+    #endif
 }
 
 void rust_crypto_aesni_decrypt_block(
@@ -300,6 +321,7 @@ void rust_crypto_aesni_decrypt_block(
             uint8_t* input,
             uint8_t* round_keys,
             uint8_t* output) {
+    #ifdef __SSE__
     asm volatile(
         " \
             /* Copy the data to decrypt to xmm1 */ \
@@ -330,6 +352,9 @@ void rust_crypto_aesni_decrypt_block(
     : "r" (input), "r" (output) // inputs
     : "xmm0", "xmm1", "memory", "cc" // clobbers
     );
+    #else
+    exit(1);
+    #endif
 }
 
 #endif
