@@ -19,7 +19,7 @@ pub fn supports_aesni() -> bool {
 }
 
 extern {
-    pub fn rust_crypto_util_fixed_time_eq_asm(
+    pub fn rust_crypto_util_fixed_time_eq(
             lhsp: *const u8,
             rhsp: *const u8,
             count: libc::size_t) -> u32;
@@ -51,7 +51,7 @@ pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
         unsafe {
             let lhsp = lhs.get_unchecked(0);
             let rhsp = rhs.get_unchecked(0);
-            rust_crypto_util_fixed_time_eq_asm(lhsp, rhsp, count) == 0
+            rust_crypto_util_fixed_time_eq(lhsp, rhsp, count) == 0
         }
     }
 }
