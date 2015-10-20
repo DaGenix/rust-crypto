@@ -76,15 +76,15 @@ uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t
         " \
             1: \
             \
-            ldrb r4, [$1] \
-            ldrb r5, [$2] \
-            eor r4, r4, r5 \
-            orr $0, $0, r4 \
+            ldrb r4, [%1]; \
+            ldrb r5, [%2]; \
+            eor r4, r4, r5; \
+            orr %0, %0, r4; \
             \
-            add $1, $1, #1 \
-            add $2, $2, #1 \
-            subs $3, $3, #1 \
-            bne 1b \
+            add %1, %1, #1; \
+            add %2, %2, #1; \
+            subs %3, %3, #1; \
+            bne 1b; \
         "
         : "+&r" (result), "+&r" (lhsp), "+&r" (rhsp), "+&r" (count) // all input and output
         : // input
