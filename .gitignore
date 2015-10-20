@@ -1,36 +1,15 @@
-# Generated dependancy files
-**/*.d
-
-# Eclipse files
-.classpath
-.project
-.settings/
-
-# rustpkg files
-build
-bin
-.rust
-
 # Output library files
 *.dylib
 *.rlib
 *.so
 *.o
 
-# Output files
-rust-crypto-test
-rust-crypto-test.exe
-rust-crypto-util
-rust-crypto-util.exe
-
-# mvn build files
-tools/rust-crypto-tester/target/
-
 # vim
 *~
-.*.swp
-.*.swo
 
 # cargo
 Cargo.lock
 target/
+
+# Misc
+.*

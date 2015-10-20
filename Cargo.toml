@@ -17,11 +17,11 @@ name = "crypto"
 with-bench = []
 
 [build-dependencies]
-gcc = "*"
+gcc = "^0.3"
 
 [dependencies]
-libc = "*"
-time = "*"
-rand = "*"
-rustc-serialize = "*"
+libc = "^0.1"
+time = "^0.1"
+rand = "^0.3"
+rustc-serialize = "^0.3"
 
