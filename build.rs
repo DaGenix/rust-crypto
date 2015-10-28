@@ -6,9 +6,22 @@
 
 extern crate gcc;
 
+use std::env;
+
 fn main() {
-    gcc::compile_library(
-        "lib_rust_crypto_helpers.a",
-        &["src/util_helpers.c", "src/aesni_helpers.c"]);
+    let target = env::var("TARGET").unwrap();
+    if target.contains("msvc") {
+        let mut config = gcc::Config::new();
+        config.file("src/util_helpers.asm");
+        config.file("src/aesni_helpers.asm");
+        if target.contains("x86_64") {
+            config.define("X64", None);
+        }
+        config.compile("lib_rust_crypto_helpers.a");
+    } else {
+        gcc::compile_library(
+            "lib_rust_crypto_helpers.a",
+            &["src/util_helpers.c", "src/aesni_helpers.c"]);
+    }
 }
 

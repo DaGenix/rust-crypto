@@ -7,6 +7,7 @@
 use aes::KeySize;
 use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
+use util::supports_aesni;
 
 #[derive(Copy)]
 pub struct AesNiEncryptor {
@@ -29,6 +30,11 @@ type RoundSetupInfo = (u8, fn(&[u8], KeyType, &mut [u8]));
 
 impl AesNiEncryptor {
     pub fn new(key_size: KeySize, key: &[u8]) -> AesNiEncryptor {
+        if !supports_aesni() {
+            panic!("AES-NI not supported on this architecture. If you are \
+                using the MSVC toolchain, this is because the AES-NI method's \
+                have not been ported, yet");
+        }
         let (rounds, setup_function): RoundSetupInfo = match key_size {
             KeySize128 => (10, setup_working_key_aesni_128),
             KeySize192 => (12, setup_working_key_aesni_192),
@@ -45,6 +51,11 @@ impl AesNiEncryptor {
 
 impl AesNiDecryptor {
     pub fn new(key_size: KeySize, key: &[u8]) -> AesNiDecryptor {
+        if !supports_aesni() {
+            panic!("AES-NI not supported on this architecture. If you are \
+                using the MSVC toolchain, this is because the AES-NI method's \
+                have not been ported, yet");
+        }
         let (rounds, setup_function): RoundSetupInfo = match key_size {
             KeySize128 => (10, setup_working_key_aesni_128),
             KeySize192 => (12, setup_working_key_aesni_192),
