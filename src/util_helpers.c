@@ -46,6 +46,9 @@ uint32_t rust_crypto_util_supports_aesni() {
 
 #if defined(__i386__) || defined(__x86_64__)
 uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t count) {
+    if (count == 0) {
+        return 1;
+    }
     uint8_t result = 0;
     asm(
         " \
@@ -71,6 +74,9 @@ uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t
 
 #ifdef __arm__
 uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t count) {
+    if (count == 0) {
+        return 1;
+    }
     uint8_t result = 0;
     asm(
         " \

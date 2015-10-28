@@ -43,8 +43,6 @@ pub fn secure_memset(dst: &mut [u8], val: u8) {
 pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
     if lhs.len() != rhs.len() {
         false
-    } else if lhs.len() == 0 {
-        true
     } else {
         let count = lhs.len() as libc::size_t;
 
