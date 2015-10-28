@@ -97,6 +97,6 @@ uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t
 
 void rust_crypto_util_secure_memset(uint8_t* dst, uint8_t val, size_t count) {
     memset(dst, val, count);
-    asm("" : : "g" (dst) : "memory");
+    asm volatile("" : : "g" (dst) : "memory");
 }
 
