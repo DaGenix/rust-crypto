@@ -8,12 +8,12 @@ Rust-Crypto seeks to create practical, auditable, pure-Rust implementations of c
 algorithms with a minimum amount of assembly code where appropriate. The x86-64, x86, and
 ARM architectures are supported, although the x86-64 architecture receives the most testing.
 
-Rust-Crypto tagets the current, stable build of the Rust language (currently 1.3).
+Rust-Crypto targets the current, stable build of the Rust language (currently 1.5).
 If you are having issues while using an older version, please try upgrading to the latest stable
 Rust version.
 
 Rust-Crypto has not been thoroughly
-audited for correctness, so any use where security is important is not recommended at this time.
+audited for correctness, so any use where security is important is not yet recommended.
 
 ## Usage
 
