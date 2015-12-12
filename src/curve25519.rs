@@ -1405,12 +1405,6 @@ fn equal(b: u8, c: u8) -> i32 {
 
 
 
-fn negative(b: i8) -> u8 {
-  let mut x = (b as i64) as u64;
-  x >>= 63; /* 1: yes; 0: no */
-  x as u8
-}
-
 impl GePrecomp {
     fn zero() -> GePrecomp {
         GePrecomp {
@@ -1427,7 +1421,7 @@ impl GePrecomp {
     }
 
     pub fn select(pos: usize, b: i8) -> GePrecomp {
-       let bnegative: u8 = negative(b);
+       let bnegative = (b as u8) >> 7;
        let babs: u8 = (b - (((-(bnegative as i8)) & b) << 1)) as u8;
        let mut t = GePrecomp::zero();
        t.maybe_set(&GE_PRECOMP_BASE[pos][0], equal(babs, 1));
