@@ -4,6 +4,12 @@ use curve25519::{GeP2, GeP3, ge_scalarmult_base, sc_reduce, sc_muladd, curve2551
 use util::{fixed_time_eq};
 use std::ops::{Add, Sub, Mul};
 
+static L: [u8; 32] =
+      [ 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x14, 0xde, 0xf9, 0xde, 0xa2, 0xf7, 0x9c, 0xd6,
+        0x58, 0x12, 0x63, 0x1a, 0x5c, 0xf5, 0xd3, 0xed ];
+
 pub fn keypair(seed: &[u8]) -> ([u8; 64], [u8; 32]) {
     let mut secret: [u8; 64] = {
         let mut hash_output: [u8; 64] = [0; 64];
@@ -72,20 +78,16 @@ pub fn signature(message: &[u8], secret_key: &[u8]) -> [u8; 64] {
 
     signature
 }
+
 fn check_s_lt_l(s: &[u8]) -> bool
 {
-    let l: [u8; 32] =
-      [ 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x14, 0xde, 0xf9, 0xde, 0xa2, 0xf7, 0x9c, 0xd6,
-        0x58, 0x12, 0x63, 0x1a, 0x5c, 0xf5, 0xd3, 0xed ];
     let mut c: u8 = 0;
     let mut n: u8 = 1;
 
     let mut i = 31;
     loop {
-        c |= ((((s[i] as i32) - (l[i] as i32)) >> 8) as u8) & n;
-        n &= (((((s[i] ^ l[i]) as i32)) - 1) >> 8) as u8;
+        c |= ((((s[i] as i32) - (L[i] as i32)) >> 8) as u8) & n;
+        n &= (((((s[i] ^ L[i]) as i32)) - 1) >> 8) as u8;
         if i == 0 {
             break;
         } else {
