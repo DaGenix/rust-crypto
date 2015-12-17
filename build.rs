@@ -10,7 +10,8 @@ use std::env;
 
 fn main() {
     let target = env::var("TARGET").unwrap();
-    if target.contains("msvc") {
+    let host = env::var("HOST").unwrap();
+    if target.contains("msvc") && host.contains("windows") {
         let mut config = gcc::Config::new();
         config.file("src/util_helpers.asm");
         config.file("src/aesni_helpers.asm");
