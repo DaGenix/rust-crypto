@@ -4,6 +4,7 @@ use std::mem;
 use blake2b::Blake2b;
 use digest::Digest;
 use std::iter::FromIterator;
+use cryptoutil::copy_memory;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Variant {
@@ -155,13 +156,13 @@ impl Argon2 {
 
     fn fill_first_slice(&mut self, mut h0: [u8; 72], lane: u32) {
         // fill the first (of four) slice
-        h0[68..72].clone_from_slice(&as32le(lane));
+        copy_memory(&as32le(lane), &mut h0[68..72]);
 
-        h0[64..68].clone_from_slice(&as32le(0));
+        copy_memory(&as32le(0), &mut h0[64..68]);
         let zeroth = self.blkidx(lane, 0);
         h_prime(as_u8_mut(&mut self.blocks[zeroth]), &h0);
 
-        h0[64..68].clone_from_slice(&as32le(1));
+        copy_memory(&as32le(1), &mut h0[64..68]);
         let first = self.blkidx(lane, 1);
         h_prime(as_u8_mut(&mut self.blocks[first]), &h0);
 
@@ -241,12 +242,12 @@ fn h_prime(out: &mut [u8], input: &[u8]) {
         b2hash!(out; &len32(out), input);
     } else {
         let mut tmp = b2hash!(&len32(out), input);
-        out[0..DEF_B2HASH_LEN].clone_from_slice(&tmp);
+        copy_memory(&tmp, &mut out[0..DEF_B2HASH_LEN]);
         let mut wr_at: usize = 32;
 
         while out.len() - wr_at > DEF_B2HASH_LEN {
             b2hash!(&mut tmp; &tmp);
-            out[wr_at..wr_at + DEF_B2HASH_LEN].clone_from_slice(&tmp);
+            copy_memory(&tmp, &mut out[wr_at..wr_at + DEF_B2HASH_LEN]);
             wr_at += DEF_B2HASH_LEN / 2;
         }
 
