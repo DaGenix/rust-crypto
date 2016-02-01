@@ -542,8 +542,14 @@ mod kat_tests {
     }
 
     #[test]
-    fn test_argon2i() { compare_kats("kats/argon2i", super::Variant::Argon2i); }
+    fn test_argon2i() {
+        compare_kats("tests/support/argon2-kats/argon2i",
+                     super::Variant::Argon2i);
+    }
 
     #[test]
-    fn test_argon2d() { compare_kats("kats/argon2d", super::Variant::Argon2d); }
+    fn test_argon2d() {
+        compare_kats("tests/support/argon2-kats/argon2d",
+                     super::Variant::Argon2d);
+    }
 }
