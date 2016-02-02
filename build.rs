@@ -7,6 +7,7 @@
 extern crate gcc;
 
 use std::env;
+use std::path::Path;
 
 fn main() {
     let target = env::var("TARGET").unwrap();
@@ -18,10 +19,17 @@ fn main() {
             config.define("X64", None);
         }
         config.compile("lib_rust_crypto_helpers.a");
-    } else {
-        gcc::compile_library(
-            "lib_rust_crypto_helpers.a",
-            &["src/util_helpers.c", "src/aesni_helpers.c"]);
+    }
+    else {
+        let mut cfg = gcc::Config::new();
+        cfg.file("src/util_helpers.c");
+        cfg.file("src/aesni_helpers.c");
+        // gcc can't build this library so, unless the user has explicitly
+        // specified a different C compiler, use clang.
+        if env::var_os("CC").is_none() {
+            cfg.compiler(Path::new("clang"));
+        }
+        cfg.compile("lib_rust_crypto_helpers.a");
     }
 }
 
