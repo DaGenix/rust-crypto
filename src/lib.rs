@@ -45,6 +45,7 @@ pub mod salsa20;
 pub mod scrypt;
 pub mod sha1;
 pub mod sha2;
+pub mod sha3;
 mod simd;
 pub mod sosemanuk;
 mod step_by;
