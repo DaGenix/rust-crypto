@@ -291,9 +291,7 @@ impl Blake2b {
             let incby = self.buflen as u64;
             self.increment_counter(incby);
             self.set_lastblock();
-            let mut temp_buf = self.buf;
-            let buf_slice = &mut temp_buf[self.buflen..];
-            for b in buf_slice.iter_mut() {
+            for b in self.buf[self.buflen..].iter_mut() {
                 *b = 0;
             }
             self.compress();
