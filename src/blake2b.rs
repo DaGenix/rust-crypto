@@ -50,10 +50,12 @@ pub struct Blake2b {
     last_node: u8,
     digest_length: u8,
     computed: bool, // whether the final digest has been computed
+    param: Blake2bParam
 }
 
 impl Clone for Blake2b { fn clone(&self) -> Blake2b { *self } }
 
+#[derive(Copy, Clone)]
 struct Blake2bParam {
     digest_length: u8,
     key_length: u8,
@@ -108,7 +110,7 @@ impl Blake2b {
         self.t[1] += if self.t[0] < inc { 1 } else { 0 };
     }
 
-    fn init0(digest_length: u8, key: &[u8]) -> Blake2b {
+    fn init0(param: Blake2bParam, digest_length: u8, key: &[u8]) -> Blake2b {
         assert!(key.len() <= BLAKE2B_KEYBYTES);
         let mut b = Blake2b {
             h: IV,
@@ -120,30 +122,31 @@ impl Blake2b {
             digest_length: digest_length,
             computed: false,
             key: [0; BLAKE2B_KEYBYTES],
-            key_length: key.len() as u8
+            key_length: key.len() as u8,
+            param: param
         };
         copy_memory(key, &mut b.key);
         b
     }
 
-    fn apply_param(&mut self, p: &Blake2bParam) {
+    fn apply_param(&mut self) {
         use std::io::Write;
         use cryptoutil::WriteExt;
 
         let mut param_bytes : [u8; 64] = [0; 64];
         {
             let mut writer: &mut [u8] = &mut param_bytes;
-            writer.write_u8(p.digest_length).unwrap();
-            writer.write_u8(p.key_length).unwrap();
-            writer.write_u8(p.fanout).unwrap();
-            writer.write_u8(p.depth).unwrap();
-            writer.write_u32_le(p.leaf_length).unwrap();
-            writer.write_u64_le(p.node_offset).unwrap();
-            writer.write_u8(p.node_depth).unwrap();
-            writer.write_u8(p.inner_length).unwrap();
-            writer.write_all(&p.reserved).unwrap();
-            writer.write_all(&p.salt).unwrap();
-            writer.write_all(&p.personal).unwrap();
+            writer.write_u8(self.param.digest_length).unwrap();
+            writer.write_u8(self.param.key_length).unwrap();
+            writer.write_u8(self.param.fanout).unwrap();
+            writer.write_u8(self.param.depth).unwrap();
+            writer.write_u32_le(self.param.leaf_length).unwrap();
+            writer.write_u64_le(self.param.node_offset).unwrap();
+            writer.write_u8(self.param.node_depth).unwrap();
+            writer.write_u8(self.param.inner_length).unwrap();
+            writer.write_all(&self.param.reserved).unwrap();
+            writer.write_all(&self.param.salt).unwrap();
+            writer.write_all(&self.param.personal).unwrap();
         }
 
         let mut param_words : [u64; 8] = [0; 8];
@@ -155,9 +158,9 @@ impl Blake2b {
 
 
     // init xors IV with input parameter block
-    fn init_param( p: &Blake2bParam, key: &[u8] ) -> Blake2b {
-        let mut b = Blake2b::init0(p.digest_length, key);
-        b.apply_param(p);
+    fn init_param( p: Blake2bParam, key: &[u8] ) -> Blake2b {
+        let mut b = Blake2b::init0(p, p.digest_length, key);
+        b.apply_param();
         b
     }
 
@@ -179,7 +182,7 @@ impl Blake2b {
 
     pub fn new(outlen: usize) -> Blake2b {
         assert!(outlen > 0 && outlen <= BLAKE2B_OUTBYTES);
-        Blake2b::init_param(&Blake2b::default_param(outlen as u8), &[])
+        Blake2b::init_param(Blake2b::default_param(outlen as u8), &[])
     }
 
     fn apply_key(&mut self) {
@@ -207,7 +210,7 @@ impl Blake2b {
             personal: [0; BLAKE2B_PERSONALBYTES],
         };
 
-        let mut b = Blake2b::init_param(&param, key);
+        let mut b = Blake2b::init_param(param, key);
         b.apply_key();
         b
     }
@@ -303,17 +306,7 @@ impl Blake2b {
         copy_memory(&self.buf[0..outlen], out);
     }
 
-    pub fn blake2b(out: &mut[u8], input: &[u8], key: &[u8]) {
-        let mut hasher : Blake2b = if key.len() > 0 { Blake2b::new_keyed(out.len(), key) } else { Blake2b::new(out.len()) };
-
-        hasher.update(input);
-        hasher.finalize(out);
-    }
-
-}
-
-impl Digest for Blake2b {
-    fn reset(&mut self) {
+    pub fn reset(&mut self) {
         for (h_elem, iv_elem) in self.h.iter_mut().zip(IV.iter()) {
             *h_elem = *iv_elem;
         }
@@ -329,9 +322,22 @@ impl Digest for Blake2b {
         self.buflen = 0;
         self.last_node = 0;
         self.computed = false;
-        let len = self.digest_length;
-        self.apply_param(&Blake2b::default_param(len));
+        self.apply_param();
+        if self.key_length > 0 {
+            self.apply_key();
+        }
     }
+
+    pub fn blake2b(out: &mut[u8], input: &[u8], key: &[u8]) {
+        let mut hasher : Blake2b = if key.len() > 0 { Blake2b::new_keyed(out.len(), key) } else { Blake2b::new(out.len()) };
+
+        hasher.update(input);
+        hasher.finalize(out);
+    }
+}
+
+impl Digest for Blake2b {
+    fn reset(&mut self) { Blake2b::reset(self); }
     fn input(&mut self, msg: &[u8]) { self.update(msg); }
     fn result(&mut self, out: &mut [u8]) { self.finalize(out); }
     fn output_bits(&self) -> usize { 8 * (self.digest_length as usize) }
@@ -354,24 +360,7 @@ impl Mac for Blake2b {
      * Reset the Mac state to begin processing another input stream.
      */
     fn reset(&mut self) {
-        for (h_elem, iv_elem) in self.h.iter_mut().zip(IV.iter()) {
-            *h_elem = *iv_elem;
-        }
-        for t_elem in self.t.iter_mut() {
-            *t_elem = 0;
-        }
-        for f_elem in self.f.iter_mut() {
-            *f_elem = 0;
-        }
-        for b in self.buf.iter_mut() {
-            *b = 0;
-        }
-        self.buflen = 0;
-        self.last_node = 0;
-        self.computed = false;
-        let len = self.digest_length;
-        self.apply_param(&Blake2b::default_param(len));
-        self.apply_key();
+        Blake2b::reset(self);
     }
 
     /**
