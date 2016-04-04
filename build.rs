@@ -25,10 +25,15 @@ fn main() {
         let mut cfg = gcc::Config::new();
         cfg.file("src/util_helpers.c");
         cfg.file("src/aesni_helpers.c");
-        // gcc can't build this library so, unless the user has explicitly
-        // specified a different C compiler, use clang.
         if env::var_os("CC").is_none() {
-            cfg.compiler(Path::new("clang"));
+            if host.contains("openbsd") {
+                // Use clang on openbsd since there have been reports that
+                // GCC doesn't like some of the assembly that we use on that
+                // platform.
+                cfg.compiler(Path::new("clang"));
+            } else {
+                cfg.compiler(Path::new("cc"));
+            }
         }
         cfg.compile("lib_rust_crypto_helpers.a");
     }
