@@ -18,9 +18,6 @@ rust:
   - 1.5.0
   - 1.4.0
   - 1.3.0
-  - 1.2.0
-  - 1.1.0
-  - 1.0.0
 
 # load travis-cargo
 before_script:
