@@ -31,7 +31,7 @@ fn main() {
                 // GCC doesn't like some of the assembly that we use on that
                 // platform.
                 cfg.compiler(Path::new("clang"));
-            } else {
+            } else if target == host {
                 cfg.compiler(Path::new("cc"));
             }
         }
