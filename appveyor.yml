@@ -20,13 +20,11 @@ environment:
   - TARGET: 1.8.0-i686-pc-windows-gnu
     MSYS_BITS: 32
   - TARGET: 1.7.0-x86_64-pc-windows-msvc
-  - TARGET: 1.7.0-i686-pc-windows-msvc
   - TARGET: 1.7.0-x86_64-pc-windows-gnu
     MSYS_BITS: 64
   - TARGET: 1.7.0-i686-pc-windows-gnu
     MSYS_BITS: 32
   - TARGET: 1.6.0-x86_64-pc-windows-msvc
-  - TARGET: 1.6.0-i686-pc-windows-msvc
   - TARGET: 1.6.0-x86_64-pc-windows-gnu
     MSYS_BITS: 64
   - TARGET: 1.6.0-i686-pc-windows-gnu
