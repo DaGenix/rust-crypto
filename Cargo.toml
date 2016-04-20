@@ -20,8 +20,7 @@ with-bench = []
 gcc = "^0.3"
 
 [dependencies]
-libc = "^0.1"
+libc = "^0.2"
 time = "^0.1"
 rand = "^0.3"
 rustc-serialize = "^0.3"
-
