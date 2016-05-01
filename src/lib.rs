@@ -51,6 +51,7 @@ mod simd;
 pub mod sosemanuk;
 mod step_by;
 pub mod symmetriccipher;
+pub mod twofish;
 pub mod util;
 pub mod whirlpool;
 

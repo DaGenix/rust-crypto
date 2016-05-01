@@ -1,0 +1,1538 @@
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+// This is an implementation of Bruce Schneier's Twofish
+// https://www.schneier.com/cryptography/twofish/
+
+// Influenced by Dario Andrei's Javascript Twofish implementation
+// https://github.com/wouldgo/twofish
+
+use symmetriccipher::{BlockEncryptor, BlockDecryptor};
+
+// Twofish Constants
+
+const BLOCK_SIZE: usize = 16;
+
+const INPUT_WHITEN: usize = 0;
+
+const GF256_FDBK_2: i32 = ((0x169 / 2) as f64) as i32;
+const GF256_FDBK_4: i32 = ((0x169 / 4) as f64) as i32;
+
+const OUTPUT_WHITEN: usize = INPUT_WHITEN + BLOCK_SIZE / 4;
+
+const P: [[i32; 256]; 2] = [P0, P1];
+
+const P_00: usize = 1;
+const P_01: usize = 0;
+const P_02: usize = 0;
+const P_03: usize = P_01 ^ 1;
+const P_04: usize = 1;
+
+const P_10: usize = 0;
+const P_11: usize = 0;
+const P_12: usize = 1;
+const P_13: usize = P_11 ^ 1;
+const P_14: usize = 0;
+
+const P_20: usize = 1;
+const P_21: usize = 1;
+const P_22: usize = 0;
+const P_23: usize = P_21 ^ 1;
+const P_24: usize = 0;
+
+const P_30: usize = 0;
+const P_31: usize = 1;
+const P_32: usize = 1;
+const P_33: usize = P_31 ^ 1;
+const P_34: usize = 1;
+
+// S-boxes
+const P0: [i32; 256] = [0xA9, 0x67, 0xB3, 0xE8, 0x04, 0xFD, 0xA3, 0x76, 0x9A, 0x92, 0x80, 0x78,
+                        0xE4, 0xDD, 0xD1, 0x38, 0x0D, 0xC6, 0x35, 0x98, 0x18, 0xF7, 0xEC, 0x6C,
+                        0x43, 0x75, 0x37, 0x26, 0xFA, 0x13, 0x94, 0x48, 0xF2, 0xD0, 0x8B, 0x30,
+                        0x84, 0x54, 0xDF, 0x23, 0x19, 0x5B, 0x3D, 0x59, 0xF3, 0xAE, 0xA2, 0x82,
+                        0x63, 0x01, 0x83, 0x2E, 0xD9, 0x51, 0x9B, 0x7C, 0xA6, 0xEB, 0xA5, 0xBE,
+                        0x16, 0x0C, 0xE3, 0x61, 0xC0, 0x8C, 0x3A, 0xF5, 0x73, 0x2C, 0x25, 0x0B,
+                        0xBB, 0x4E, 0x89, 0x6B, 0x53, 0x6A, 0xB4, 0xF1, 0xE1, 0xE6, 0xBD, 0x45,
+                        0xE2, 0xF4, 0xB6, 0x66, 0xCC, 0x95, 0x03, 0x56, 0xD4, 0x1C, 0x1E, 0xD7,
+                        0xFB, 0xC3, 0x8E, 0xB5, 0xE9, 0xCF, 0xBF, 0xBA, 0xEA, 0x77, 0x39, 0xAF,
+                        0x33, 0xC9, 0x62, 0x71, 0x81, 0x79, 0x09, 0xAD, 0x24, 0xCD, 0xF9, 0xD8,
+                        0xE5, 0xC5, 0xB9, 0x4D, 0x44, 0x08, 0x86, 0xE7, 0xA1, 0x1D, 0xAA, 0xED,
+                        0x06, 0x70, 0xB2, 0xD2, 0x41, 0x7B, 0xA0, 0x11, 0x31, 0xC2, 0x27, 0x90,
+                        0x20, 0xF6, 0x60, 0xFF, 0x96, 0x5C, 0xB1, 0xAB, 0x9E, 0x9C, 0x52, 0x1B,
+                        0x5F, 0x93, 0x0A, 0xEF, 0x91, 0x85, 0x49, 0xEE, 0x2D, 0x4F, 0x8F, 0x3B,
+                        0x47, 0x87, 0x6D, 0x46, 0xD6, 0x3E, 0x69, 0x64, 0x2A, 0xCE, 0xCB, 0x2F,
+                        0xFC, 0x97, 0x05, 0x7A, 0xAC, 0x7F, 0xD5, 0x1A, 0x4B, 0x0E, 0xA7, 0x5A,
+                        0x28, 0x14, 0x3F, 0x29, 0x88, 0x3C, 0x4C, 0x02, 0xB8, 0xDA, 0xB0, 0x17,
+                        0x55, 0x1F, 0x8A, 0x7D, 0x57, 0xC7, 0x8D, 0x74, 0xB7, 0xC4, 0x9F, 0x72,
+                        0x7E, 0x15, 0x22, 0x12, 0x58, 0x07, 0x99, 0x34, 0x6E, 0x50, 0xDE, 0x68,
+                        0x65, 0xBC, 0xDB, 0xF8, 0xC8, 0xA8, 0x2B, 0x40, 0xDC, 0xFE, 0x32, 0xA4,
+                        0xCA, 0x10, 0x21, 0xF0, 0xD3, 0x5D, 0x0F, 0x00, 0x6F, 0x9D, 0x36, 0x42,
+                        0x4A, 0x5E, 0xC1, 0xE0];
+
+const P1: [i32; 256] = [0x75, 0xF3, 0xC6, 0xF4, 0xDB, 0x7B, 0xFB, 0xC8, 0x4A, 0xD3, 0xE6, 0x6B,
+                        0x45, 0x7D, 0xE8, 0x4B, 0xD6, 0x32, 0xD8, 0xFD, 0x37, 0x71, 0xF1, 0xE1,
+                        0x30, 0x0F, 0xF8, 0x1B, 0x87, 0xFA, 0x06, 0x3F, 0x5E, 0xBA, 0xAE, 0x5B,
+                        0x8A, 0x00, 0xBC, 0x9D, 0x6D, 0xC1, 0xB1, 0x0E, 0x80, 0x5D, 0xD2, 0xD5,
+                        0xA0, 0x84, 0x07, 0x14, 0xB5, 0x90, 0x2C, 0xA3, 0xB2, 0x73, 0x4C, 0x54,
+                        0x92, 0x74, 0x36, 0x51, 0x38, 0xB0, 0xBD, 0x5A, 0xFC, 0x60, 0x62, 0x96,
+                        0x6C, 0x42, 0xF7, 0x10, 0x7C, 0x28, 0x27, 0x8C, 0x13, 0x95, 0x9C, 0xC7,
+                        0x24, 0x46, 0x3B, 0x70, 0xCA, 0xE3, 0x85, 0xCB, 0x11, 0xD0, 0x93, 0xB8,
+                        0xA6, 0x83, 0x20, 0xFF, 0x9F, 0x77, 0xC3, 0xCC, 0x03, 0x6F, 0x08, 0xBF,
+                        0x40, 0xE7, 0x2B, 0xE2, 0x79, 0x0C, 0xAA, 0x82, 0x41, 0x3A, 0xEA, 0xB9,
+                        0xE4, 0x9A, 0xA4, 0x97, 0x7E, 0xDA, 0x7A, 0x17, 0x66, 0x94, 0xA1, 0x1D,
+                        0x3D, 0xF0, 0xDE, 0xB3, 0x0B, 0x72, 0xA7, 0x1C, 0xEF, 0xD1, 0x53, 0x3E,
+                        0x8F, 0x33, 0x26, 0x5F, 0xEC, 0x76, 0x2A, 0x49, 0x81, 0x88, 0xEE, 0x21,
+                        0xC4, 0x1A, 0xEB, 0xD9, 0xC5, 0x39, 0x99, 0xCD, 0xAD, 0x31, 0x8B, 0x01,
+                        0x18, 0x23, 0xDD, 0x1F, 0x4E, 0x2D, 0xF9, 0x48, 0x4F, 0xF2, 0x65, 0x8E,
+                        0x78, 0x5C, 0x58, 0x19, 0x8D, 0xE5, 0x98, 0x57, 0x67, 0x7F, 0x05, 0x64,
+                        0xAF, 0x63, 0xB6, 0xFE, 0xF5, 0xB7, 0x3C, 0xA5, 0xCE, 0xE9, 0x68, 0x44,
+                        0xE0, 0x4D, 0x43, 0x69, 0x29, 0x2E, 0xAC, 0x15, 0x59, 0xA8, 0x0A, 0x9E,
+                        0x6E, 0x47, 0xDF, 0x34, 0x35, 0x6A, 0xCF, 0xDC, 0x22, 0xC9, 0xC0, 0x9B,
+                        0x89, 0xD4, 0xED, 0xAB, 0x12, 0xA2, 0x0D, 0x52, 0xBB, 0x02, 0x2F, 0xA9,
+                        0xD7, 0x61, 0x1E, 0xB4, 0x50, 0x04, 0xF6, 0xC2, 0x16, 0x25, 0x86, 0x56,
+                        0x55, 0x09, 0xBE, 0x91];
+
+const ROUNDS: usize = 16;
+const ROUND_SUBKEYS: usize = OUTPUT_WHITEN + BLOCK_SIZE / 4;
+
+const RS_GF_FDBK: i32 = 0x14D;
+
+const SK_BUMP: i32 = 0x01010101;
+const SK_ROTL: i32 = 9;
+const SK_STEP: i32 = 0x02020202;
+
+
+#[derive(Clone)]
+pub struct Twofish {
+    mds: Vec<Vec<u32>>,
+    session_key: Vec<Vec<i64>>,
+}
+
+impl Twofish {
+
+    fn b0(&self, x: i32) -> i32 {
+
+        x & 0xFF
+    }
+
+    fn b1(&self, x: i32) -> i32 {
+
+        self.zero_fill_right_shift_i32(x, 8) & 0xFF
+    }
+
+    fn b2(&self, x: i32) -> i32 {
+
+        self.zero_fill_right_shift_i32(x, 16) & 0xFF
+    }
+
+    fn b3(&self, x: i32) -> i32 {
+
+        self.zero_fill_right_shift_i32(x, 24) & 0xFF
+    }
+
+    pub fn block_decrypt(&self, input: &[u8]) -> Vec<u8> {
+
+        if self.session_key.len() != 2 {
+            panic!("Incorrect session key in Twofish::block_decrypt()");
+        }
+
+        let ref s_box: Vec<i64> = self.session_key[0];
+        let ref s_key: Vec<i64> = self.session_key[1];
+
+        let mut x2: i64 = (((input[0] & 0xFF) as i32) | (((input[1] & 0xFF) as i32) << 8) |
+                           (((input[2] & 0xFF) as i32) << 16) |
+                           (((input[3] & 0xFF) as i32) << 24)) as i64;
+
+        let mut x3: i64 = (((input[4] & 0xFF) as i32) | (((input[5] & 0xFF) as i32) << 8) |
+                           (((input[6] & 0xFF) as i32) << 16) |
+                           (((input[7] & 0xFF) as i32) << 24)) as i64;
+
+        let mut x0: i64 = (((input[8] & 0xFF) as i32) | (((input[9] & 0xFF) as i32) << 8) |
+                           (((input[10] & 0xFF) as i32) << 16) |
+                           (((input[11] & 0xFF) as i32) << 24)) as i64;
+
+        let mut x1: i64 = (((input[12] & 0xFF) as i32) | (((input[13] & 0xFF) as i32) << 8) |
+                           (((input[14] & 0xFF) as i32) << 16) |
+                           (((input[15] & 0xFF) as i32) << 24)) as i64;
+
+        let mut t0: i64;
+        let mut t1: i64;
+        let mut k: usize = ROUND_SUBKEYS + 2 * ROUNDS - 1;
+
+        x2 = ((x2 as i32) ^ (s_key[OUTPUT_WHITEN] as i32)) as i64;
+        x3 = ((x3 as i32) ^ (s_key[OUTPUT_WHITEN + 1] as i32)) as i64;
+        x0 = ((x0 as i32) ^ (s_key[OUTPUT_WHITEN + 2] as i32)) as i64;
+        x1 = ((x1 as i32) ^ (s_key[OUTPUT_WHITEN + 3] as i32)) as i64;
+
+        let mut r: usize = 0;
+        while r < ROUNDS {
+            t0 = self.fe_32(s_box, x2 as i32, 0);
+            t1 = self.fe_32(s_box, x3 as i32, 3);
+
+            x1 = ((x1 as i32) ^ ((t0 + 2 * t1 + s_key[k]) as i32)) as i64;
+            k -= 1;
+            x1 = ((self.zero_fill_right_shift_i32(x1 as i32, 1)) | ((x1 as i32) << 31)) as i64;
+            x0 = (((x0 as i32) << 1) | (self.zero_fill_right_shift_i32(x0 as i32, 31))) as i64;
+            x0 = ((x0 as i32) ^ ((t0 + t1 + s_key[k]) as i32)) as i64;
+            k -= 1;
+
+            t0 = self.fe_32(s_box, x0 as i32, 0);
+            t1 = self.fe_32(s_box, x1 as i32, 3);
+
+            x3 = ((x3 as i32) ^ ((t0 + 2 * t1 + s_key[k]) as i32)) as i64;
+            k -= 1;
+            x3 = ((self.zero_fill_right_shift_i32(x3 as i32, 1)) | ((x3 as i32) << 31)) as i64;
+            x2 = (((x2 as i32) << 1) | (self.zero_fill_right_shift_i32(x2 as i32, 31))) as i64;
+            x2 = ((x2 as i32) ^ ((t0 + t1 + s_key[k]) as i32)) as i64;
+            k -= 1;
+
+            r += 2;
+        }
+
+        x0 = ((x0 as i32) ^ (s_key[INPUT_WHITEN] as i32)) as i64;
+        x1 = ((x1 as i32) ^ (s_key[INPUT_WHITEN + 1] as i32)) as i64;
+        x2 = ((x2 as i32) ^ (s_key[INPUT_WHITEN + 2] as i32)) as i64;
+        x3 = ((x3 as i32) ^ (s_key[INPUT_WHITEN + 3] as i32)) as i64;
+
+        return vec![x0 as u8,
+                    self.zero_fill_right_shift_i32(x0 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x0 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x0 as i32, 24) as u8,
+                    x1 as u8,
+                    self.zero_fill_right_shift_i32(x1 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x1 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x1 as i32, 24) as u8,
+                    x2 as u8,
+                    self.zero_fill_right_shift_i32(x2 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x2 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x2 as i32, 24) as u8,
+                    x3 as u8,
+                    self.zero_fill_right_shift_i32(x3 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x3 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x3 as i32, 24) as u8];
+    }
+
+    pub fn block_encrypt(&self, input: &[u8]) -> Vec<u8> {
+
+        if self.session_key.len() != 2 {
+            panic!("Incorrect session key in Twofish::block_encrypt()");
+        }
+
+        let ref s_box: Vec<i64> = self.session_key[0];
+        let ref s_key: Vec<i64> = self.session_key[1];
+
+        let mut x0: i64 = (((input[0] & 0xFF) as i32) | (((input[1] & 0xFF) as i32) << 8) |
+                           (((input[2] & 0xFF) as i32) << 16) |
+                           (((input[3] & 0xFF) as i32) << 24)) as i64;
+
+        let mut x1: i64 = (((input[4] & 0xFF) as i32) | (((input[5] & 0xFF) as i32) << 8) |
+                           (((input[6] & 0xFF) as i32) << 16) |
+                           (((input[7] & 0xFF) as i32) << 24)) as i64;
+
+        let mut x2: i64 = (((input[8] & 0xFF) as i32) | (((input[9] & 0xFF) as i32) << 8) |
+                           (((input[10] & 0xFF) as i32) << 16) |
+                           (((input[11] & 0xFF) as i32) << 24)) as i64;
+
+        let mut x3: i64 = (((input[12] & 0xFF) as i32) | (((input[13] & 0xFF) as i32) << 8) |
+                           (((input[14] & 0xFF) as i32) << 16) |
+                           (((input[15] & 0xFF) as i32) << 24)) as i64;
+
+        let mut t0: i64;
+        let mut t1: i64;
+        let mut k: usize = ROUND_SUBKEYS;
+
+        x0 = ((x0 as i32) ^ (s_key[INPUT_WHITEN] as i32)) as i64;
+        x1 = ((x1 as i32) ^ (s_key[INPUT_WHITEN + 1] as i32)) as i64;
+        x2 = ((x2 as i32) ^ (s_key[INPUT_WHITEN + 2] as i32)) as i64;
+        x3 = ((x3 as i32) ^ (s_key[INPUT_WHITEN + 3] as i32)) as i64;
+
+        let mut r: usize = 0;
+        while r < ROUNDS {
+            t0 = self.fe_32(s_box, x0 as i32, 0);
+            t1 = self.fe_32(s_box, x1 as i32, 3);
+
+            x2 = ((x2 as i32) ^ ((t0 + t1 + s_key[k]) as i32)) as i64;
+            k += 1;
+
+            x2 = ((self.zero_fill_right_shift_i32(x2 as i32, 1)) | ((x2 as i32) << 31)) as i64;
+            x3 = (((x3 as i32) << 1) | (self.zero_fill_right_shift_i32(x3 as i32, 31))) as i64;
+
+            x3 = ((x3 as i32) ^ ((t0 + 2 * t1 + s_key[k]) as i32)) as i64;
+            k += 1;
+
+            t0 = self.fe_32(s_box, x2 as i32, 0);
+            t1 = self.fe_32(s_box, x3 as i32, 3);
+
+            x0 = ((x0 as i32) ^ ((t0 + t1 + s_key[k]) as i32)) as i64;
+            k += 1;
+
+            x0 = ((self.zero_fill_right_shift_i32(x0 as i32, 1)) | ((x0 as i32) << 31)) as i64;
+            x1 = (((x1 as i32) << 1) | (self.zero_fill_right_shift_i32(x1 as i32, 31))) as i64;
+            x1 = ((x1 as i32) ^ ((t0 + 2 * t1 + s_key[k]) as i32)) as i64;
+            k += 1;
+
+            r += 2;
+        }
+
+        x2 = ((x2 as i32) ^ (s_key[OUTPUT_WHITEN] as i32)) as i64;
+        x3 = ((x3 as i32) ^ (s_key[OUTPUT_WHITEN + 1] as i32)) as i64;
+        x0 = ((x0 as i32) ^ (s_key[OUTPUT_WHITEN + 2] as i32)) as i64;
+        x1 = ((x1 as i32) ^ (s_key[OUTPUT_WHITEN + 3] as i32)) as i64;
+
+        return vec![x2 as u8,
+                    self.zero_fill_right_shift_i32(x2 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x2 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x2 as i32, 24) as u8,
+                    x3 as u8,
+                    self.zero_fill_right_shift_i32(x3 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x3 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x3 as i32, 24) as u8,
+                    x0 as u8,
+                    self.zero_fill_right_shift_i32(x0 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x0 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x0 as i32, 24) as u8,
+                    x1 as u8,
+                    self.zero_fill_right_shift_i32(x1 as i32, 8) as u8,
+                    self.zero_fill_right_shift_i32(x1 as i32, 16) as u8,
+                    self.zero_fill_right_shift_i32(x1 as i32, 24) as u8];
+    }
+
+    fn calc_mds() -> Vec<Vec<u32>> {
+
+        let mut result: Vec<Vec<u32>> = (0..4).map(|_| vec![0; 256]).collect();
+
+        let mut m1 = [0i32, 0];
+        let mut mx = [0i32, 0];
+        let mut my = [0i32, 0];
+
+        let mut i: usize = 0;
+        let mut j: i32;
+
+        while i < 256 {
+
+            j = P[0][i] & 0xFF;
+
+            m1[0] = j;
+            mx[0] = Twofish::mx_x(j) & 0xFF;
+            my[0] = Twofish::mx_y(j) & 0xFF;
+
+            j = P[1][i] & 0xFF;
+            m1[1] = j;
+            mx[1] = Twofish::mx_x(j) & 0xFF;
+            my[1] = Twofish::mx_y(j) & 0xFF;
+
+            result[0][i] = (m1[P_00] << 0 | mx[P_00] << 8 | my[P_00] << 16 | my[P_00] << 24) as u32;
+            result[1][i] = (my[P_10] << 0 | my[P_10] << 8 | mx[P_10] << 16 | m1[P_10] << 24) as u32;
+            result[2][i] = (mx[P_20] << 0 | my[P_20] << 8 | m1[P_20] << 16 | my[P_20] << 24) as u32;
+            result[3][i] = (mx[P_30] << 0 | m1[P_30] << 8 | my[P_30] << 16 | mx[P_30] << 24) as u32;
+
+            i += 1;
+        }
+
+        result
+    }
+
+    fn choose_b(&self, x: i32, n: i32) -> i32 {
+
+        match n % 4 {
+            0 => self.b0(x),
+            1 => self.b1(x),
+            2 => self.b2(x),
+            3 => self.b3(x),
+            _ => 0,
+        }
+    }
+
+    fn f_32(&self, k64_cnt: i32, x: i32, k32: &Vec<i32>) -> i32 {
+
+        let mut lb0: usize = self.b0(x) as usize;
+        let mut lb1: usize = self.b1(x) as usize;
+        let mut lb2: usize = self.b2(x) as usize;
+        let mut lb3: usize = self.b3(x) as usize;
+        let k0: i32 = k32[0] | 0;
+        let k1: i32 = k32[1] | 0;
+        let k2: i32 = k32[2] | 0;
+        let k3: i32 = k32[3] | 0;
+
+        let mut result: i32 = 0;
+
+        let test: i32 = k64_cnt & 3;
+
+        if test == 1 {
+            return
+			(self.mds[0][(P[P_01][lb0] & 0xFF ^ self.b0(k0)) as usize] ^
+			 self.mds[1][(P[P_11][lb1] & 0xFF ^ self.b1(k0)) as usize] ^
+			 self.mds[2][(P[P_21][lb2] & 0xFF ^ self.b2(k0)) as usize] ^
+			 self.mds[3][(P[P_31][lb3] & 0xFF ^ self.b3(k0)) as usize]) as i32;
+        } else {
+            if (test == 0) | (test == 3) | (test == 2) {
+                if test == 0 {
+                    lb0 = (P[P_04][lb0] & 0xFF ^ self.b0(k3)) as usize;
+                    lb1 = (P[P_14][lb1] & 0xFF ^ self.b1(k3)) as usize;
+                    lb2 = (P[P_24][lb2] & 0xFF ^ self.b2(k3)) as usize;
+                    lb3 = (P[P_34][lb3] & 0xFF ^ self.b3(k3)) as usize;
+                };
+
+                if (test == 0) | (test == 3) {
+                    lb0 = (P[P_03][lb0] & 0xFF ^ self.b0(k2)) as usize;
+                    lb1 = (P[P_13][lb1] & 0xFF ^ self.b1(k2)) as usize;
+                    lb2 = (P[P_23][lb2] & 0xFF ^ self.b2(k2)) as usize;
+                    lb3 = (P[P_33][lb3] & 0xFF ^ self.b3(k2)) as usize;
+                };
+                result =
+                    (self.mds[0][(P[P_01][(P[P_02][lb0] & 0xFF ^ self.b0(k1)) as usize] &
+                                  0xFF ^ self.b0(k0)) as usize] ^
+                     self.mds[1][(P[P_11][(P[P_12][lb1] & 0xFF ^ self.b1(k1)) as usize] &
+                                  0xFF ^ self.b1(k0)) as usize] ^
+                     self.mds[2][(P[P_21][(P[P_22][lb2] & 0xFF ^ self.b2(k1)) as usize] &
+                                  0xFF ^ self.b2(k0)) as usize] ^
+                     self.mds[3][(P[P_31][(P[P_32][lb3] & 0xFF ^ self.b3(k1)) as usize] & 0xFF ^
+                                  self.b3(k0)) as usize]) as i32;
+            };
+        }
+
+        result
+    }
+
+    fn fe_32(&self, s_box: &Vec<i64>, x: i32, r: i32) -> i64 {
+
+        let to_return: i64 = s_box[2 * self.choose_b(x, r) as usize] ^
+                             s_box[(2 * self.choose_b(x, r + 1) + 1) as usize] ^
+                             s_box[(0x200 + 2 * self.choose_b(x, r + 2)) as usize] ^
+                             s_box[(0x200 + 2 * self.choose_b(x, r + 3) + 1) as usize];
+
+        to_return
+    }
+
+    fn lfsr1(x: i32) -> i32 {
+
+        let rhs: i32 = if (x & 0x01) != 0 {
+            GF256_FDBK_2
+        } else {
+            0
+        };
+        x >> 1 ^ rhs
+    }
+
+    fn lfsr2(x: i32) -> i32 {
+
+        let mut rhs: i32 = if (x & 0x02) != 0 {
+            GF256_FDBK_2
+        } else {
+            0
+        };
+
+        if (x & 0x01) != 0 {
+            rhs = rhs ^ GF256_FDBK_4
+        } else {
+            rhs = rhs ^ 0;
+        };
+
+        x >> 2 ^ rhs
+    }
+
+    fn make_key(&self, a_key: &Vec<u8>) -> Vec<Vec<i64>> {
+
+        let mut a: i64;
+        let mut b: i32;
+        let mut i: usize;
+        let mut index: usize;
+        let mut j: usize;
+        let k0: i32;
+        let k1: i32;
+        let k2: i32;
+        let k3: i32;
+        let mut k32e: Vec<i32> = vec![0; 4];
+        let mut k32o: Vec<i32> = vec![0; 4];
+        let mut key_length: usize = a_key.len();
+        let k64_cnt: i32 = (key_length / 8) as i32;
+        let mut lb0: usize;
+        let mut lb1: usize;
+        let mut lb2: usize;
+        let mut lb3: usize;
+        let mut limited_key: Vec<u8> = Vec::new();
+        let mut n_value: u8;
+        let mut offset: usize = 0;
+        let mut q: i32;
+
+        let mut s_box: Vec<i64> = vec![0; 1024];
+        let mut s_box_key: Vec<i32> = vec![0; 8];
+        let subkey_count = ROUND_SUBKEYS + 2 * ROUNDS;
+        let mut sub_keys: Vec<i64> = vec![0; subkey_count];
+
+        let mut temp_key: Vec<u8> = Vec::new();
+        let mut working_key: Vec<u8> = Vec::new();
+        working_key.extend(a_key);
+
+        if (key_length < 8) || (key_length > 8 && key_length < 16) ||
+           (key_length > 16 && key_length < 24) || (key_length > 24 && key_length < 32) {
+
+            index = 0;
+            while index < key_length + (8 - key_length) {
+                if index < a_key.len() {
+                    n_value = a_key[index];
+                    temp_key.push(n_value);
+                } else {
+                    temp_key.push(0x00);
+                }
+                index += 1;
+            }
+            working_key.clear();
+            working_key.append(&mut temp_key);
+
+        } else {
+            if key_length > 32 {
+                index = 0;
+                while index < 32 {
+                    limited_key.push(a_key[index]);
+                    index += 1;
+                }
+                working_key.clear();
+                working_key.append(&mut limited_key);
+            }
+        }
+
+        key_length = working_key.len();
+        i = 0;
+        j = (k64_cnt as usize) - 1;
+        while (i < 4) & (offset < key_length) {
+            k32e[i] = (((working_key[offset] & 0xFF) as i32) |
+                       (((working_key[offset + 1] & 0xFF) as i32) << 8) |
+                       (((working_key[offset + 2] & 0xFF) as i32) << 16) |
+                       (((working_key[offset + 3] & 0xFF) as i32) <<
+                        24)) as i32;
+            offset += 4;
+
+            k32o[i] = (((working_key[offset] & 0xFF) as i32) |
+                       (((working_key[offset + 1] & 0xFF) as i32) << 8) |
+                       (((working_key[offset + 2] & 0xFF) as i32) << 16) |
+                       (((working_key[offset + 3] & 0xFF) as i32) <<
+                        24)) as i32;
+            offset += 4;
+
+            s_box_key[j] = self.rs_mds_encode(k32e[i], k32o[i]);
+            i += 1;
+            if j > 0 {
+                j -= 1;
+            };
+        }
+
+        i = 0;
+        q = 0;
+        while i < subkey_count / 2 {
+
+            a = self.f_32(k64_cnt, q, &k32e) as i64;
+            b = self.f_32(k64_cnt, q + SK_BUMP, &k32o);
+
+            b = b << 8 | self.zero_fill_right_shift_i32(b, 24);
+            a += b as i64;
+            sub_keys[2 * i] = a;
+
+            a += b as i64;
+            sub_keys[2 * i + 1] =
+                ((a as i32) << SK_ROTL |
+                 self.zero_fill_right_shift_i32(a as i32, 32 - SK_ROTL)) as i64;
+
+            i += 1;
+            q += SK_STEP;
+        }
+
+        k0 = s_box_key[0];
+        k1 = s_box_key[1];
+        k2 = s_box_key[2];
+        k3 = s_box_key[3];
+
+        let test: i32 = k64_cnt & 3;
+        i = 0;
+        while i < 256 {
+            lb0 = i;
+            lb1 = i;
+            lb2 = i;
+            lb3 = i;
+            if test == 1 {
+                s_box[2 * i] = (self.mds[0][(P[P_01][lb0] & 0xFF ^ self.b0(k0)) as usize]) as i64;
+                s_box[2 * i + 1] =
+                    (self.mds[1][(P[P_11][lb1] & 0xFF ^ self.b1(k0)) as usize]) as i64;
+                s_box[0x200 + 2 * i] =
+                    (self.mds[2][(P[P_21][lb2] & 0xFF ^ self.b2(k0)) as usize]) as i64;
+                s_box[0x200 + 2 * i + 1] =
+                    (self.mds[3][(P[P_31][lb3] & 0xFF ^ self.b3(k0)) as usize]) as i64;
+            } else {
+                if (test == 0) | (test == 3) | (test == 2) {
+                    if test == 0 {
+                        lb0 = (P[P_04][lb0] & 0xFF ^ self.b0(k3)) as usize;
+                        lb1 = (P[P_14][lb1] & 0xFF ^ self.b1(k3)) as usize;
+                        lb2 = (P[P_24][lb2] & 0xFF ^ self.b2(k3)) as usize;
+                        lb3 = (P[P_34][lb3] & 0xFF ^ self.b3(k3)) as usize;
+                    }
+                    if (test == 0) | (test == 3) {
+                        lb0 = (P[P_03][lb0] & 0xFF ^ self.b0(k2)) as usize;
+                        lb1 = (P[P_13][lb1] & 0xFF ^ self.b1(k2)) as usize;
+                        lb2 = (P[P_23][lb2] & 0xFF ^ self.b2(k2)) as usize;
+                        lb3 = (P[P_33][lb3] & 0xFF ^ self.b3(k2)) as usize;
+                    }
+                    s_box[2 * i] =
+						(self.mds[0][(P[P_01][(P[P_02][lb0] & 0xFF ^
+						 self.b0(k1)) as usize] & 0xFF ^ self.b0(k0)) as usize]) as i64;
+                    s_box[2 * i + 1] =
+						(self.mds[1][(P[P_11][(P[P_12][lb1] & 0xFF ^
+						 self.b1(k1)) as usize] & 0xFF ^ self.b1(k0)) as usize]) as i64;
+                    s_box[0x200 + 2 * i] =
+						(self.mds[2][(P[P_21][(P[P_22][lb2] & 0xFF ^
+						 self.b2(k1)) as usize] & 0xFF ^ self.b2(k0)) as usize]) as i64;
+                    s_box[0x200 + 2 * i + 1] =
+						(self.mds[3][(P[P_31][(P[P_32][lb3] & 0xFF ^
+						 self.b3(k1)) as usize] & 0xFF ^ self.b3(k0)) as usize]) as i64;
+                }
+            }
+            i += 1;
+        }
+
+        return vec![s_box, sub_keys];
+    }
+
+    fn mx_x(x: i32) -> i32 {
+
+        x ^ Twofish::lfsr2(x)
+    }
+
+    fn mx_y(x: i32) -> i32 {
+
+        x ^ Twofish::lfsr1(x) ^ Twofish::lfsr2(x)
+    }
+
+    pub fn new(user_key: &Vec<u8>) -> Twofish {
+
+        let mds: Vec<Vec<u32>> = Twofish::calc_mds();
+        let mut result: Twofish = Twofish {
+            mds: mds,
+            session_key: vec![vec![0i64; 0], vec![0i64; 0]],
+        };
+        result.session_key = result.make_key(user_key);
+        result
+    }
+
+    fn rs_mds_encode(&self, k0: i32, k1: i32) -> i32 {
+
+        let mut result: i32 = k1;
+        let mut index: u8 = 0;
+
+        while index < 4 {
+            result = self.rs_rem(result);
+            index += 1;
+        }
+        result ^= k0;
+        index = 0;
+        while index < 4 {
+            result = self.rs_rem(result);
+            index += 1;
+        }
+        result
+    }
+
+    fn rs_rem(&self, x: i32) -> i32 {
+
+        let b: i32 = x >> 24 & 0xFF;
+        let g2: i32 = if b & 0x80 != 0 {
+            (b << 1 ^ RS_GF_FDBK) & 0xFF
+        } else {
+            (b << 1 ^ 0) & 0xFF
+        };
+        let g3: i32 = if b & 0x01 != 0 {
+            b >> 1 ^ RS_GF_FDBK >> 1 ^ g2
+        } else {
+            b >> 1 ^ 0 ^ g2
+        };
+        x << 8 ^ g3 << 24 ^ g2 << 16 ^ g3 << 8 ^ b
+    }
+
+    // Zero fill right shift operator for i32 (as per JS >>>)
+    pub fn zero_fill_right_shift_i32(&self, num: i32, shift: i32) -> i32 {
+
+        ((num as u32) >> shift) as i32
+    }
+}
+
+impl BlockEncryptor for Twofish {
+    fn block_size(&self) -> usize {
+        BLOCK_SIZE
+    }
+
+    fn encrypt_block(&self, input: &[u8], output: &mut [u8]) {
+        assert!(input.len() == BLOCK_SIZE);
+        assert!(output.len() == BLOCK_SIZE);
+        let output_vector: Vec<u8> = self.block_encrypt(&input);
+        for (place, element) in output.iter_mut().zip(output_vector.iter()) {
+            *place = *element;
+        }
+    }
+}
+
+impl BlockDecryptor for Twofish {
+    fn block_size(&self) -> usize {
+        BLOCK_SIZE
+    }
+
+    fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
+        assert!(input.len() == BLOCK_SIZE);
+        assert!(output.len() == BLOCK_SIZE);
+        let output_vector: Vec<u8> = self.block_decrypt(&input);
+        for (place, element) in output.iter_mut().zip(output_vector.iter()) {
+            *place = *element;
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use twofish::Twofish;
+    use symmetriccipher::{BlockEncryptor, BlockDecryptor};
+    struct Test {
+        ciphertext: Vec<u8>,
+        key: Vec<u8>,
+        plaintext: Vec<u8>,
+    }
+
+    // Sample of ECB Known Answer Test Tables as provided by Bruce Schneier
+
+    fn test_vectors() -> Vec<Test> {
+        vec![
+			// Key size = 128
+
+			// I = 1
+			Test {
+					key:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					plaintext:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					ciphertext:
+						vec![
+							0x9F, 0x58, 0x9F, 0x5C,
+							0xF6, 0x12, 0x2C, 0x32,
+							0xB6, 0xBF, 0xEC, 0x2F,
+							0x2A, 0xE8, 0xC3, 0x5A,
+						]
+			},
+			// I = 2
+			Test {
+					key:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					plaintext:
+						vec![
+							0x9F, 0x58, 0x9F, 0x5C,
+							0xF6, 0x12, 0x2C, 0x32,
+							0xB6, 0xBF, 0xEC, 0x2F,
+							0x2A, 0xE8, 0xC3, 0x5A,
+						],
+					ciphertext:
+						vec![
+							0xD4, 0x91, 0xDB, 0x16,
+							0xE7, 0xB1, 0xC3, 0x9E,
+							0x86, 0xCB, 0x08, 0x6B,
+							0x78, 0x9F, 0x54, 0x19,
+						]
+			},
+			// I = 3
+			Test {
+					key:
+						vec![
+							0x9F, 0x58, 0x9F, 0x5C,
+							0xF6, 0x12, 0x2C, 0x32,
+							0xB6, 0xBF, 0xEC, 0x2F,
+							0x2A, 0xE8, 0xC3, 0x5A,
+						],
+					plaintext:
+						vec![
+							0xD4, 0x91, 0xDB, 0x16,
+							0xE7, 0xB1, 0xC3, 0x9E,
+							0x86, 0xCB, 0x08, 0x6B,
+							0x78, 0x9F, 0x54, 0x19,
+						],
+					ciphertext:
+						vec![
+							0x01, 0x9F, 0x98, 0x09,
+							0xDE, 0x17, 0x11, 0x85,
+							0x8F, 0xAA, 0xC3, 0xA3,
+							0xBA, 0x20, 0xFB, 0xC3,
+						]
+			},
+			// I = 4
+			Test {
+					key:
+						vec![
+							0xD4, 0x91, 0xDB, 0x16,
+							0xE7, 0xB1, 0xC3, 0x9E,
+							0x86, 0xCB, 0x08, 0x6B,
+							0x78, 0x9F, 0x54, 0x19,
+						],
+					plaintext:
+						vec![
+							0x01, 0x9F, 0x98, 0x09,
+							0xDE, 0x17, 0x11, 0x85,
+							0x8F, 0xAA, 0xC3, 0xA3,
+							0xBA, 0x20, 0xFB, 0xC3,
+						],
+					ciphertext:
+						vec![
+							0x63, 0x63, 0x97, 0x7D,
+							0xE8, 0x39, 0x48, 0x62,
+							0x97, 0xE6, 0x61, 0xC6,
+							0xC9, 0xD6, 0x68, 0xEB,
+						]
+			},
+			// I = 5
+			Test {
+					key:
+						vec![
+							0x01, 0x9F, 0x98, 0x09,
+							0xDE, 0x17, 0x11, 0x85,
+							0x8F, 0xAA, 0xC3, 0xA3,
+							0xBA, 0x20, 0xFB, 0xC3,
+						],
+					plaintext:
+						vec![
+							0x63, 0x63, 0x97, 0x7D,
+							0xE8, 0x39, 0x48, 0x62,
+							0x97, 0xE6, 0x61, 0xC6,
+							0xC9, 0xD6, 0x68, 0xEB,
+						],
+					ciphertext:
+						vec![
+							0x81, 0x6D, 0x5B, 0xD0,
+							0xFA, 0xE3, 0x53, 0x42,
+							0xBF, 0x2A, 0x74, 0x12,
+							0xC2, 0x46, 0xF7, 0x52,
+						]
+			},
+			// ...
+			// I = 45
+			Test {
+					key:
+						vec![
+							0x5C, 0x2E, 0xBB, 0xF7,
+							0x5D, 0x31, 0xF3, 0x0B,
+							0x5E, 0xA2, 0x6E, 0xAC,
+							0x87, 0x82, 0xD8, 0xD1,
+						],
+					plaintext:
+						vec![
+							0x3A, 0x3C, 0xFA, 0x1F,
+							0x13, 0xA1, 0x36, 0xC9,
+							0x4D, 0x76, 0xE5, 0xFA,
+							0x4A, 0x11, 0x09, 0xFF,
+						],
+					ciphertext:
+						vec![
+							0x91, 0x63, 0x0C, 0xF9,
+							0x60, 0x03, 0xB8, 0x03,
+							0x2E, 0x69, 0x57, 0x97,
+							0xE3, 0x13, 0xA5, 0x53,
+						]
+			},
+			// I = 46
+			Test {
+					key:
+						vec![
+							0x3A, 0x3C, 0xFA, 0x1F,
+							0x13, 0xA1, 0x36, 0xC9,
+							0x4D, 0x76, 0xE5, 0xFA,
+							0x4A, 0x11, 0x09, 0xFF,
+						],
+					plaintext:
+						vec![
+							0x91, 0x63, 0x0C, 0xF9,
+							0x60, 0x03, 0xB8, 0x03,
+							0x2E, 0x69, 0x57, 0x97,
+							0xE3, 0x13, 0xA5, 0x53,
+						],
+					ciphertext:
+						vec![
+							0x13, 0x7A, 0x24, 0xCA,
+							0x47, 0xCD, 0x12, 0xBE,
+							0x81, 0x8D, 0xF4, 0xD2,
+							0xF4, 0x35, 0x59, 0x60,
+						]
+			},
+			// I = 47
+			Test {
+					key:
+						vec![
+							0x91, 0x63, 0x0C, 0xF9,
+							0x60, 0x03, 0xB8, 0x03,
+							0x2E, 0x69, 0x57, 0x97,
+							0xE3, 0x13, 0xA5, 0x53,
+						],
+					plaintext:
+						vec![
+							0x13, 0x7A, 0x24, 0xCA,
+							0x47, 0xCD, 0x12, 0xBE,
+							0x81, 0x8D, 0xF4, 0xD2,
+							0xF4, 0x35, 0x59, 0x60,
+						],
+					ciphertext:
+						vec![
+							0xBC, 0xA7, 0x24, 0xA5,
+							0x45, 0x33, 0xC6, 0x98,
+							0x7E, 0x14, 0xAA, 0x82,
+							0x79, 0x52, 0xF9, 0x21,
+						]
+			},
+			// I = 48
+			Test {
+					key:
+						vec![
+							0x13, 0x7A, 0x24, 0xCA,
+							0x47, 0xCD, 0x12, 0xBE,
+							0x81, 0x8D, 0xF4, 0xD2,
+							0xF4, 0x35, 0x59, 0x60,
+						],
+					plaintext:
+						vec![
+							0xBC, 0xA7, 0x24, 0xA5,
+							0x45, 0x33, 0xC6, 0x98,
+							0x7E, 0x14, 0xAA, 0x82,
+							0x79, 0x52, 0xF9, 0x21,
+						],
+					ciphertext:
+						vec![
+							0x6B, 0x45, 0x92, 0x86,
+							0xF3, 0xFF, 0xD2, 0x8D,
+							0x49, 0xF1, 0x5B, 0x15,
+							0x81, 0xB0, 0x8E, 0x42,
+						]
+			},
+			// I = 49
+			Test {
+					key:
+						vec![
+							0xBC, 0xA7, 0x24, 0xA5,
+							0x45, 0x33, 0xC6, 0x98,
+							0x7E, 0x14, 0xAA, 0x82,
+							0x79, 0x52, 0xF9, 0x21,
+						],
+					plaintext:
+						vec![
+							0x6B, 0x45, 0x92, 0x86,
+							0xF3, 0xFF, 0xD2, 0x8D,
+							0x49, 0xF1, 0x5B, 0x15,
+							0x81, 0xB0, 0x8E, 0x42,
+						],
+					ciphertext:
+						vec![
+							0x5D, 0x9D, 0x4E, 0xEF,
+							0xFA, 0x91, 0x51, 0x57,
+							0x55, 0x24, 0xF1, 0x15,
+							0x81, 0x5A, 0x12, 0xE0,
+						]
+			},
+
+			// Key size = 192
+
+			// I = 1
+			Test {
+					key:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					plaintext:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					ciphertext:
+						vec![
+							0xEF, 0xA7, 0x1F, 0x78,
+							0x89, 0x65, 0xBD, 0x44,
+							0x53, 0xF8, 0x60, 0x17,
+							0x8F, 0xC1, 0x91, 0x01,
+						]
+			},
+			// I = 2
+			Test {
+					key:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					plaintext:
+						vec![
+							0xEF, 0xA7, 0x1F, 0x78,
+							0x89, 0x65, 0xBD, 0x44,
+							0x53, 0xF8, 0x60, 0x17,
+							0x8F, 0xC1, 0x91, 0x01,
+						],
+					ciphertext:
+						vec![
+							0x88, 0xB2, 0xB2, 0x70,
+							0x6B, 0x10, 0x5E, 0x36,
+							0xB4, 0x46, 0xBB, 0x6D,
+							0x73, 0x1A, 0x1E, 0x88,
+						]
+			},
+			// I = 3
+			Test {
+					key:
+						vec![
+							0xEF, 0xA7, 0x1F, 0x78,
+							0x89, 0x65, 0xBD, 0x44,
+							0x53, 0xF8, 0x60, 0x17,
+							0x8F, 0xC1, 0x91, 0x01,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					plaintext:
+						vec![
+							0x88, 0xB2, 0xB2, 0x70,
+							0x6B, 0x10, 0x5E, 0x36,
+							0xB4, 0x46, 0xBB, 0x6D,
+							0x73, 0x1A, 0x1E, 0x88,
+						],
+					ciphertext:
+						vec![
+							0x39, 0xDA, 0x69, 0xD6,
+							0xBA, 0x49, 0x97, 0xD5,
+							0x85, 0xB6, 0xDC, 0x07,
+							0x3C, 0xA3, 0x41, 0xB2,
+						]
+			},
+			// I = 4
+			Test {
+					key:
+						vec![
+							0x88, 0xB2, 0xB2, 0x70,
+							0x6B, 0x10, 0x5E, 0x36,
+							0xB4, 0x46, 0xBB, 0x6D,
+							0x73, 0x1A, 0x1E, 0x88,
+							0xEF, 0xA7, 0x1F, 0x78,
+							0x89, 0x65, 0xBD, 0x44,
+						],
+					plaintext:
+						vec![
+							0x39, 0xDA, 0x69, 0xD6,
+							0xBA, 0x49, 0x97, 0xD5,
+							0x85, 0xB6, 0xDC, 0x07,
+							0x3C, 0xA3, 0x41, 0xB2,
+						],
+					ciphertext:
+						vec![
+							0x18, 0x2B, 0x02, 0xD8,
+							0x14, 0x97, 0xEA, 0x45,
+							0xF9, 0xDA, 0xAC, 0xDC,
+							0x29, 0x19, 0x3A, 0x65,
+						]
+			},
+			// I = 5
+			Test {
+					key:
+						vec![
+							0x39, 0xDA, 0x69, 0xD6,
+							0xBA, 0x49, 0x97, 0xD5,
+							0x85, 0xB6, 0xDC, 0x07,
+							0x3C, 0xA3, 0x41, 0xB2,
+							0x88, 0xB2, 0xB2, 0x70,
+							0x6B, 0x10, 0x5E, 0x36,
+						],
+					plaintext:
+						vec![
+							0x18, 0x2B, 0x02, 0xD8,
+							0x14, 0x97, 0xEA, 0x45,
+							0xF9, 0xDA, 0xAC, 0xDC,
+							0x29, 0x19, 0x3A, 0x65,
+						],
+					ciphertext:
+						vec![
+							0x7A, 0xFF, 0x7A, 0x70,
+							0xCA, 0x2F, 0xF2, 0x8A,
+							0xC3, 0x1D, 0xD8, 0xAE,
+							0x5D, 0xAA, 0xAB, 0x63,
+						]
+			},
+			// ...
+			// I = 45
+			Test {
+					key:
+						vec![
+							0xA7, 0x94, 0xCA, 0xEE,
+							0x67, 0x56, 0x28, 0x1B,
+							0x7A, 0x64, 0x89, 0x4E,
+							0x4E, 0x4F, 0x70, 0xA8,
+							0x3C, 0x64, 0xD7, 0xFC,
+							0x88, 0x1B, 0x9B, 0x82,
+						],
+					plaintext:
+						vec![
+							0x89, 0xA9, 0xBF, 0x6B,
+							0x89, 0x3B, 0xC5, 0xE6,
+							0xFE, 0xF4, 0xC7, 0x7F,
+							0x3D, 0x0F, 0x29, 0xA6,
+						],
+					ciphertext:
+						vec![
+							0x5D, 0xBE, 0x44, 0x03,
+							0x27, 0x69, 0xDF, 0x54,
+							0x3E, 0xAD, 0x7A, 0xD1,
+							0x3A, 0x5F, 0x33, 0x10,
+						]
+			},
+			// I = 46
+			Test {
+					key:
+						vec![
+							0x89, 0xA9, 0xBF, 0x6B,
+							0x89, 0x3B, 0xC5, 0xE6,
+							0xFE, 0xF4, 0xC7, 0x7F,
+							0x3D, 0x0F, 0x29, 0xA6,
+							0xA7, 0x94, 0xCA, 0xEE,
+							0x67, 0x56, 0x28, 0x1B,
+						],
+					plaintext:
+						vec![
+							0x5D, 0xBE, 0x44, 0x03,
+							0x27, 0x69, 0xDF, 0x54,
+							0x3E, 0xAD, 0x7A, 0xD1,
+							0x3A, 0x5F, 0x33, 0x10,
+						],
+					ciphertext:
+						vec![
+							0xDE, 0xA4, 0xF3, 0xDA,
+							0x75, 0xEC, 0x7A, 0x8E,
+							0xAC, 0x38, 0x61, 0xA9,
+							0x91, 0x24, 0x02, 0xCD,
+						]
+			},
+			// I = 47
+			Test {
+					key:
+						vec![
+							0x5D, 0xBE, 0x44, 0x03,
+							0x27, 0x69, 0xDF, 0x54,
+							0x3E, 0xAD, 0x7A, 0xD1,
+							0x3A, 0x5F, 0x33, 0x10,
+							0x89, 0xA9, 0xBF, 0x6B,
+							0x89, 0x3B, 0xC5, 0xE6,
+						],
+					plaintext:
+						vec![
+							0xDE, 0xA4, 0xF3, 0xDA,
+							0x75, 0xEC, 0x7A, 0x8E,
+							0xAC, 0x38, 0x61, 0xA9,
+							0x91, 0x24, 0x02, 0xCD,
+						],
+					ciphertext:
+						vec![
+							0xFB, 0x66, 0x52, 0x2C,
+							0x33, 0x2F, 0xCC, 0x4C,
+							0x04, 0x2A, 0xBE, 0x32,
+							0xFA, 0x9E, 0x90, 0x2F,
+						]
+			},
+			// I = 48
+			Test {
+					key:
+						vec![
+							0xDE, 0xA4, 0xF3, 0xDA,
+							0x75, 0xEC, 0x7A, 0x8E,
+							0xAC, 0x38, 0x61, 0xA9,
+							0x91, 0x24, 0x02, 0xCD,
+							0x5D, 0xBE, 0x44, 0x03,
+							0x27, 0x69, 0xDF, 0x54,
+						],
+					plaintext:
+						vec![
+							0xFB, 0x66, 0x52, 0x2C,
+							0x33, 0x2F, 0xCC, 0x4C,
+							0x04, 0x2A, 0xBE, 0x32,
+							0xFA, 0x9E, 0x90, 0x2F,
+						],
+					ciphertext:
+						vec![
+							0xF0, 0xAB, 0x73, 0x30,
+							0x11, 0x25, 0xFA, 0x21,
+							0xEF, 0x70, 0xBE, 0x53,
+							0x85, 0xFB, 0x76, 0xB6,
+						]
+			},
+			// I = 49
+			Test {
+					key:
+						vec![
+							0xFB, 0x66, 0x52, 0x2C,
+							0x33, 0x2F, 0xCC, 0x4C,
+							0x04, 0x2A, 0xBE, 0x32,
+							0xFA, 0x9E, 0x90, 0x2F,
+							0xDE, 0xA4, 0xF3, 0xDA,
+							0x75, 0xEC, 0x7A, 0x8E,
+						],
+					plaintext:
+						vec![
+							0xF0, 0xAB, 0x73, 0x30,
+							0x11, 0x25, 0xFA, 0x21,
+							0xEF, 0x70, 0xBE, 0x53,
+							0x85, 0xFB, 0x76, 0xB6,
+						],
+					ciphertext:
+						vec![
+							0xE7, 0x54, 0x49, 0x21,
+							0x2B, 0xEE, 0xF9, 0xF4,
+							0xA3, 0x90, 0xBD, 0x86,
+							0x0A, 0x64, 0x09, 0x41,
+						]
+			},
+
+			// Key size = 256
+
+			// I = 1
+			Test {
+					key:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00
+						],
+					plaintext:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+						],
+					ciphertext:
+						vec![
+							0x57, 0xFF, 0x73, 0x9D,
+							0x4D, 0xC9, 0x2C, 0x1B,
+							0xD7, 0xFC, 0x01, 0x70,
+							0x0C, 0xC8, 0x21, 0x6F,
+						]
+			},
+			// I = 2
+			Test {
+					key:
+						vec![
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00
+						],
+					plaintext:
+						vec![
+							0x57, 0xFF, 0x73, 0x9D,
+							0x4D, 0xC9, 0x2C, 0x1B,
+							0xD7, 0xFC, 0x01, 0x70,
+							0x0C, 0xC8, 0x21, 0x6F,
+						],
+					ciphertext:
+						vec![
+							0xD4, 0x3B, 0xB7, 0x55,
+							0x6E, 0xA3, 0x2E, 0x46,
+							0xF2, 0xA2, 0x82, 0xB7,
+							0xD4, 0x5B, 0x4E, 0x0D,
+						]
+			},
+			// I = 3
+			Test {
+					key:
+						vec![
+							0x57, 0xFF, 0x73, 0x9D,
+							0x4D, 0xC9, 0x2C, 0x1B,
+							0xD7, 0xFC, 0x01, 0x70,
+							0x0C, 0xC8, 0x21, 0x6F,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00
+						],
+					plaintext:
+						vec![
+							0xD4, 0x3B, 0xB7, 0x55,
+							0x6E, 0xA3, 0x2E, 0x46,
+							0xF2, 0xA2, 0x82, 0xB7,
+							0xD4, 0x5B, 0x4E, 0x0D,
+						],
+					ciphertext:
+						vec![
+							0x90, 0xAF, 0xE9, 0x1B,
+							0xB2, 0x88, 0x54, 0x4F,
+							0x2C, 0x32, 0xDC, 0x23,
+							0x9B, 0x26, 0x35, 0xE6,
+						]
+			},
+			// I = 4
+			Test {
+					key:
+						vec![
+							0xD4, 0x3B, 0xB7, 0x55,
+							0x6E, 0xA3, 0x2E, 0x46,
+							0xF2, 0xA2, 0x82, 0xB7,
+							0xD4, 0x5B, 0x4E, 0x0D,
+							0x57, 0xFF, 0x73, 0x9D,
+							0x4D, 0xC9, 0x2C, 0x1B,
+							0xD7, 0xFC, 0x01, 0x70,
+							0x0C, 0xC8, 0x21, 0x6F
+						],
+					plaintext:
+						vec![
+							0x90, 0xAF, 0xE9, 0x1B,
+							0xB2, 0x88, 0x54, 0x4F,
+							0x2C, 0x32, 0xDC, 0x23,
+							0x9B, 0x26, 0x35, 0xE6,
+						],
+					ciphertext:
+						vec![
+							0x6C, 0xB4, 0x56, 0x1C,
+							0x40, 0xBF, 0x0A, 0x97,
+							0x05, 0x93, 0x1C, 0xB6,
+							0xD4, 0x08, 0xE7, 0xFA,
+						]
+			},
+			// I = 5
+			Test {
+					key:
+						vec![
+							0x90, 0xAF, 0xE9, 0x1B,
+							0xB2, 0x88, 0x54, 0x4F,
+							0x2C, 0x32, 0xDC, 0x23,
+							0x9B, 0x26, 0x35, 0xE6,
+							0xD4, 0x3B, 0xB7, 0x55,
+							0x6E, 0xA3, 0x2E, 0x46,
+							0xF2, 0xA2, 0x82, 0xB7,
+							0xD4, 0x5B, 0x4E, 0x0D
+						],
+					plaintext:
+						vec![
+							0x6C, 0xB4, 0x56, 0x1C,
+							0x40, 0xBF, 0x0A, 0x97,
+							0x05, 0x93, 0x1C, 0xB6,
+							0xD4, 0x08, 0xE7, 0xFA,
+						],
+					ciphertext:
+						vec![
+							0x30, 0x59, 0xD6, 0xD6,
+							0x17, 0x53, 0xB9, 0x58,
+							0xD9, 0x2F, 0x47, 0x81,
+							0xC8, 0x64, 0x0E, 0x58,
+						]
+			},
+			// ...
+			// I = 45
+			Test {
+					key:
+						vec![
+							0x5C, 0xFA, 0x5B, 0xD2,
+							0x13, 0xA7, 0x4F, 0x02,
+							0xE6, 0x53, 0x90, 0xA4,
+							0xC1, 0x4A, 0x1D, 0xF6,
+							0x30, 0x0C, 0xC8, 0xB4,
+							0x17, 0x1F, 0x0E, 0x9B,
+							0xD7, 0x57, 0x10, 0xFA,
+							0xD0, 0x33, 0xC5, 0x70
+						],
+					plaintext:
+						vec![
+							0xA4, 0x43, 0xEA, 0x1B,
+							0x2C, 0x57, 0x47, 0xCE,
+							0x7E, 0xC5, 0xF2, 0x1D,
+							0x4F, 0xE0, 0xC1, 0x47,
+						],
+					ciphertext:
+						vec![
+							0xD2, 0xDE, 0xD7, 0x3E,
+							0x59, 0x31, 0x9A, 0x81,
+							0x38, 0xE0, 0x33, 0x1F,
+							0x0E, 0xA1, 0x49, 0xEA,
+						]
+			},
+			// I = 46
+			Test {
+					key:
+						vec![
+							0xA4, 0x43, 0xEA, 0x1B,
+							0x2C, 0x57, 0x47, 0xCE,
+							0x7E, 0xC5, 0xF2, 0x1D,
+							0x4F, 0xE0, 0xC1, 0x47,
+							0x5C, 0xFA, 0x5B, 0xD2,
+							0x13, 0xA7, 0x4F, 0x02,
+							0xE6, 0x53, 0x90, 0xA4,
+							0xC1, 0x4A, 0x1D, 0xF6
+						],
+					plaintext:
+						vec![
+							0xD2, 0xDE, 0xD7, 0x3E,
+							0x59, 0x31, 0x9A, 0x81,
+							0x38, 0xE0, 0x33, 0x1F,
+							0x0E, 0xA1, 0x49, 0xEA,
+						],
+					ciphertext:
+						vec![
+							0x2E, 0x21, 0x58, 0xBC,
+							0x3E, 0x5F, 0xC7, 0x14,
+							0xC1, 0xEE, 0xEC, 0xA0,
+							0xEA, 0x69, 0x6D, 0x48,
+						]
+			},
+			// I = 47
+			Test {
+					key:
+						vec![
+							0xD2, 0xDE, 0xD7, 0x3E,
+							0x59, 0x31, 0x9A, 0x81,
+							0x38, 0xE0, 0x33, 0x1F,
+							0x0E, 0xA1, 0x49, 0xEA,
+							0xA4, 0x43, 0xEA, 0x1B,
+							0x2C, 0x57, 0x47, 0xCE,
+							0x7E, 0xC5, 0xF2, 0x1D,
+							0x4F, 0xE0, 0xC1, 0x47
+						],
+					plaintext:
+						vec![
+							0x2E, 0x21, 0x58, 0xBC,
+							0x3E, 0x5F, 0xC7, 0x14,
+							0xC1, 0xEE, 0xEC, 0xA0,
+							0xEA, 0x69, 0x6D, 0x48,
+						],
+					ciphertext:
+						vec![
+							0x24, 0x8A, 0x7F, 0x35,
+							0x28, 0xB1, 0x68, 0xAC,
+							0xFD, 0xD1, 0x38, 0x6E,
+							0x3F, 0x51, 0xE3, 0x0C,
+						]
+			},
+			// I = 48
+			Test {
+					key:
+						vec![
+							0x2E, 0x21, 0x58, 0xBC,
+							0x3E, 0x5F, 0xC7, 0x14,
+							0xC1, 0xEE, 0xEC, 0xA0,
+							0xEA, 0x69, 0x6D, 0x48,
+							0xD2, 0xDE, 0xD7, 0x3E,
+							0x59, 0x31, 0x9A, 0x81,
+							0x38, 0xE0, 0x33, 0x1F,
+							0x0E, 0xA1, 0x49, 0xEA
+						],
+					plaintext:
+						vec![
+							0x24, 0x8A, 0x7F, 0x35,
+							0x28, 0xB1, 0x68, 0xAC,
+							0xFD, 0xD1, 0x38, 0x6E,
+							0x3F, 0x51, 0xE3, 0x0C,
+						],
+					ciphertext:
+						vec![
+							0x43, 0x10, 0x58, 0xF4,
+							0xDB, 0xC7, 0xF7, 0x34,
+							0xDA, 0x4F, 0x02, 0xF0,
+							0x4C, 0xC4, 0xF4, 0x59,
+						]
+			},
+			// I = 49
+			Test {
+					key:
+						vec![
+							0x24, 0x8A, 0x7F, 0x35,
+							0x28, 0xB1, 0x68, 0xAC,
+							0xFD, 0xD1, 0x38, 0x6E,
+							0x3F, 0x51, 0xE3, 0x0C,
+							0x2E, 0x21, 0x58, 0xBC,
+							0x3E, 0x5F, 0xC7, 0x14,
+							0xC1, 0xEE, 0xEC, 0xA0,
+							0xEA, 0x69, 0x6D, 0x48
+						],
+					plaintext:
+						vec![
+							0x43, 0x10, 0x58, 0xF4,
+							0xDB, 0xC7, 0xF7, 0x34,
+							0xDA, 0x4F, 0x02, 0xF0,
+							0x4C, 0xC4, 0xF4, 0x59,
+						],
+					ciphertext:
+						vec![
+							0x37, 0xFE, 0x26, 0xFF,
+							0x1C, 0xF6, 0x61, 0x75,
+							0xF5, 0xDD, 0xF4, 0xC3,
+							0x3B, 0x97, 0xA2, 0x05,
+						]
+			},
+
+        ]
+    }
+
+    #[test]
+    fn encrypt_test_vectors() {
+        let tests = test_vectors();
+        let mut output = [0u8; 16];
+        for test in tests.iter() {
+            let state = Twofish::new(&test.key);
+            state.encrypt_block(&test.plaintext[..], &mut output[..]);
+            assert!(test.ciphertext[..] == output[..]);
+        }
+    }
+
+    #[test]
+    fn decrypt_test_vectors() {
+        let tests = test_vectors();
+        let mut output = [0u8; 16];
+        for test in tests.iter() {
+            let state = Twofish::new(&test.key);
+            state.decrypt_block(&test.ciphertext[..], &mut output[..]);
+            assert!(test.plaintext[..] == output[..]);
+        }
+    }
+}
+
+#[cfg(all(test, feature = "with-bench"))]
+mod bench {
+    use twofish::Twofish;
+    use test::Bencher;
+
+    #[bench]
+    fn twofish(bh: &mut Bencher) {
+        let key = vec![0u8; 16];
+        let plaintext = vec![1u8; 16];
+        let state = Twofish::new(&key);
+
+        bh.iter(|| {
+            let ciphertext: Vec<u8> = state.block_encrypt(&plaintext[..]);
+        });
+        bh.bytes = 16u64;
+    }
+}
