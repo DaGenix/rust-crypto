@@ -461,10 +461,13 @@ impl FixedBuffer64 {
 impl_fixed_buffer!(FixedBuffer64, 64);
 
 /// A fixed size buffer of 128 bytes useful for cryptographic operations.
+#[derive(Copy)]
 pub struct FixedBuffer128 {
     buffer: [u8; 128],
     buffer_idx: usize,
 }
+
+impl Clone for FixedBuffer128 { fn clone(&self) -> FixedBuffer128 { *self } }
 
 impl FixedBuffer128 {
     /// Create a new buffer

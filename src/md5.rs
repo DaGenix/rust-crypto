@@ -14,6 +14,7 @@ use step_by::RangeExt;
 
 
 // A structure that represents that state of a digest computation for the MD5 digest function
+#[derive(Clone, Copy)]
 struct Md5State {
     s0: u32,
     s1: u32,
@@ -151,6 +152,7 @@ static C4: [u32; 16] = [
 
 
 /// The MD5 Digest algorithm
+#[derive(Clone, Copy)]
 pub struct Md5 {
     length_bytes: u64,
     buffer: FixedBuffer64,
