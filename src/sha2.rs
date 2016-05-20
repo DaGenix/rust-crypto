@@ -644,6 +644,7 @@ pub fn sha512_digest_block(state: &mut [u64; 8], block: &[u8/*; 128*/]) {
 
 // A structure that represents that state of a digest computation for the SHA-2 512 family
 // of digest functions
+#[derive(Copy, Clone)]
 struct Engine512State {
     h: [u64; 8]
 }
@@ -704,6 +705,7 @@ pub const K64X2: [u64x2; 40] = [
 
 // A structure that keeps track of the state of the Sha-512 operation and contains the logic
 // necessary to perform the final calculations.
+#[derive(Copy, Clone)]
 struct Engine512 {
     length_bits: (u64, u64),
     buffer: FixedBuffer128,
@@ -757,6 +759,7 @@ impl Engine512 {
 
 
 /// The SHA-512 hash algorithm with the SHA-512 initial hash value.
+#[derive(Copy, Clone)]
 pub struct Sha512 {
     engine: Engine512
 }
@@ -812,6 +815,7 @@ static H512: [u64; STATE_LEN] = [
 
 
 /// The SHA-512 hash algorithm with the SHA-384 initial hash value. The result is truncated to 384 bits.
+#[derive(Copy, Clone)]
 pub struct Sha384 {
     engine: Engine512
 }
@@ -865,6 +869,7 @@ static H384: [u64; STATE_LEN] = [
 
 
 /// The SHA-512 hash algorithm with the SHA-512/256 initial hash value. The result is truncated to 256 bits.
+#[derive(Clone, Copy)]
 pub struct Sha512Trunc256 {
     engine: Engine512
 }
@@ -916,6 +921,7 @@ static H512_TRUNC_256: [u64; STATE_LEN] = [
 
 
 /// The SHA-512 hash algorithm with the SHA-512/224 initial hash value. The result is truncated to 224 bits.
+#[derive(Clone, Copy)]
 pub struct Sha512Trunc224 {
     engine: Engine512
 }

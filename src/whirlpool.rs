@@ -39,6 +39,7 @@ use std::mem::uninitialized;
 use cryptoutil::{write_u64_be, FixedBuffer64, FixedBuffer};
 use digest::Digest;
 
+#[derive(Clone, Copy)]
 pub struct Whirlpool {
     bit_length: [u8; 32],
     buffer: FixedBuffer64,
