@@ -85,7 +85,7 @@ impl Md4State {
 
 
         // round 2
-        for i in (0..4) {
+        for i in 0..4 {
             a = op2(a, b, c, d, data[i], 3);
             d = op2(d, a, b, c, data[i + 4], 5);
             c = op2(c, d, a, b, data[i + 8], 9);
