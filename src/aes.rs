@@ -78,6 +78,51 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of an EcbDecryptor
+///
+/// # Examples
+///
+/// ```
+/// use self::crypto::aes::{KeySize, ecb_decryptor};
+/// use self::crypto::blockmodes::NoPadding;
+/// use self::crypto::buffer::{BufferResult, ReadBuffer, RefReadBuffer, RefWriteBuffer, WriteBuffer};
+///
+/// let ciphertext = vec![48, 191, 30, 99, 228, 57, 238, 48, 51, 50, 86, 34, 163, 156, 60, 210,
+/// 109, 170, 64, 252, 122, 45, 6, 130, 58, 207, 167, 143, 52, 72, 72, 83, 159, 105, 53, 69, 114,
+/// 221, 88, 41, 193, 164, 242, 145, 150, 146, 125, 173, 177, 113, 174, 211, 124, 238, 9, 73, 184,
+/// 186, 13, 237, 229, 68, 68, 99, 237, 42, 198, 70, 161, 252, 239, 189, 176, 77, 69, 184, 33, 143,
+/// 1, 20];
+///
+/// let key = "YELLOW SUBMARINE";
+/// let mut decryptor = ecb_decryptor(KeySize::KeySize128, key.as_bytes(), NoPadding);
+///
+/// let mut read_buffer = RefReadBuffer::new(ciphertext.as_slice());
+/// let mut plaintext_bytes = Vec::<u8>::new();
+/// let mut buffer = [0; 4096];
+/// let mut write_buffer = RefWriteBuffer::new(&mut buffer);
+///
+/// loop {
+///     match decryptor.decrypt(&mut read_buffer, &mut write_buffer, true) {
+///         Ok(result) => {
+///             println!("Successful decrypt");
+///             plaintext_bytes.extend(write_buffer.take_read_buffer()
+///                                 .take_remaining()
+///                                 .iter()
+///                                 .cloned());
+///             match result {
+///                 BufferResult::BufferUnderflow => break,
+///                 BufferResult::BufferOverflow => { println!("Buffer Overflowed, going for another round") }
+///             }
+///         },
+///         Err(_) => {
+///             println!("Cipher error encountered!");
+///             break;
+///         }
+///     }
+/// }
+///
+/// let plaintext = std::str::from_utf8(&plaintext_bytes[..70]).unwrap();
+/// assert_eq!(plaintext, "This is my sekret value, there are many like it, but this one is mine!");
+/// ```
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
