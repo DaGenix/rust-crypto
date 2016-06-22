@@ -73,12 +73,12 @@ pub fn bcrypt_pbkdf(password: &[u8], salt: &[u8], rounds: u32, output: &mut [u8]
             for i in 0..out.len() {
                 out[i] ^= tmp[i];
             }
+        }
 
-            for i in 0..out.len() {
-                let idx = i * nblocks + (block-1);
-                if idx < output.len() {
-                    output[idx] = out[i];
-                }
+        for i in 0..out.len() {
+            let idx = i * nblocks + (block-1);
+            if idx < output.len() {
+                output[idx] = out[i];
             }
         }
     }
