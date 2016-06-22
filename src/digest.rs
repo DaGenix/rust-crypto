@@ -9,12 +9,15 @@
 // except according to those terms.
 
 use std::iter::repeat;
+use std::io::{Write, Result};
+
+pub struct DigestWrite<'a, D: 'a + Digest + Sized>(&'a mut D);
 
 /**
  * The Digest trait specifies an interface common to digest functions, such as SHA-1 and the SHA-2
  * family of digest functions.
  */
-pub trait Digest {
+pub trait Digest: Sized {
     /**
      * Provide message data.
      *
@@ -77,5 +80,23 @@ pub trait Digest {
         let mut buf: Vec<u8> = repeat(0).take((self.output_bits()+7)/8).collect();
         self.result(&mut buf);
         buf[..].to_hex()
+    }
+
+    /**
+     * Get Write-implementation wrapper for the digest.
+     */
+    fn as_write(&mut self) -> DigestWrite<Self> {
+        DigestWrite(self)
+    }
+}
+
+impl<'a, D: 'a + Digest + Sized> Write for DigestWrite<'a, D> {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.0.input(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
     }
 }
