@@ -27,6 +27,14 @@ pub struct DHPublicKey {
     pub_key: BigUint,
 }
 
+impl DHPublicKey {
+    pub fn new(pub_key: &[u8]) -> DHPublicKey {
+        DHPublicKey {
+            pub_key: BigUint::from_bytes_be(pub_key)
+        }
+    }
+}
+
 pub struct DHPrivateKey<'a> {
     params: &'a DHParameters,
     priv_key: BigUint,
@@ -34,13 +42,13 @@ pub struct DHPrivateKey<'a> {
 
 impl DHPublicKey {
     pub fn key(&self) -> Vec<u8> {
-        self.pub_key.to_bytes_le()
+        self.pub_key.to_bytes_be()
     }
 }
 
 impl<'a> DHPrivateKey<'a> {
     pub fn key(&self) -> Vec<u8> {
-        self.priv_key.to_bytes_le()
+        self.priv_key.to_bytes_be()
     }
 
     pub fn public_key(&self) -> DHPublicKey {
@@ -51,8 +59,9 @@ impl<'a> DHPrivateKey<'a> {
         }
     }
 
-    pub fn exchange(&self, pub_key: &DHPublicKey) -> BigUint {
-        modular_power(pub_key.pub_key.clone(), self.priv_key.clone(), &self.params.p)
+    pub fn exchange(&self, pub_key: &DHPublicKey) -> Vec<u8> {
+        let shared_key = modular_power(pub_key.pub_key.clone(), self.priv_key.clone(), &self.params.p);
+        shared_key.to_bytes_be()
     }
 }
 
@@ -62,6 +71,13 @@ pub struct DHParameters {
 }
 
 impl DHParameters {
+    pub fn new(p: &[u8], g: u64) -> DHParameters {
+        DHParameters {
+            p: BigUint::from_bytes_be(p),
+            g: BigUint::from_u64(g).expect("Could not convert g")
+        }
+    }
+
     pub fn private_key(&self) -> DHPrivateKey {
         let mut rng = match rand::OsRng::new() {
             Ok(g) => g,
@@ -94,10 +110,7 @@ mod tests {
 
     #[test]
     fn test_exchange(){
-        let params = DHParameters {
-            p: BigUint::from_u32(23 as u32).expect("Could not convert p"),
-            g: BigUint::from_u32(5 as u32).expect("Could not convert g")
-        };
+        let params = DHParameters::new(&[0x17], 5);
         let priv_key1 = params.private_key();
         let priv_key2 = params.private_key();
         let pub_key1 = priv_key1.public_key();
