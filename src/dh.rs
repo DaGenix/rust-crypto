@@ -1,6 +1,6 @@
 use rand;
 
-use num::{BigUint, Zero};
+use num::{BigUint, Zero, One};
 use num::bigint::RandBigInt;
 use num::cast::FromPrimitive;
 
@@ -37,11 +37,11 @@ pub const RFC2409_GENERATOR_1024: u64 = 2;
 
 
 fn modular_power(mut base: BigUint, mut exponent: BigUint, modulos: &BigUint) -> BigUint {
-    let one = BigUint::from_u32(1 as u32).expect("Could not convert 1");
+    let one = BigUint::one();
     if modulos == &one {
         return one;
     }
-    let mut result = one.clone();
+    let mut result = BigUint::one();
     base = base % modulos;
     while exponent > BigUint::zero() {
         if &exponent % BigUint::from_u32(2 as u32).expect("Could not convert 2") == one {
@@ -109,13 +109,21 @@ impl DHParameters {
         }
     }
 
+    pub fn key_length(&self) -> usize {
+        self.p.bits()
+    }
+
     pub fn private_key(&self) -> DHPrivateKey {
         let mut rng = match rand::OsRng::new() {
             Ok(g) => g,
             Err(e) => panic!("Could not load the OS' RNG! Error: {}", e)
         };
 
-        let priv_key = rng.gen_biguint_below(&self.p);
+        let mut priv_key = rng.gen_biguint(self.key_length());
+        while (priv_key == BigUint::one()) || (priv_key == BigUint::zero()) {
+            priv_key = rng.gen_biguint(self.key_length());
+        }
+
         DHPrivateKey {
             params: self,
             priv_key: priv_key
