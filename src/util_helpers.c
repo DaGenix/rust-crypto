@@ -101,6 +101,35 @@ uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t
 }
 #endif
 
+#ifdef __aarch64__
+uint32_t rust_crypto_util_fixed_time_eq_asm(uint8_t* lhsp, uint8_t* rhsp, size_t count) {
+    if (count == 0) {
+        return 1;
+    }
+    uint8_t result = 0;
+    asm(
+        " \
+            1: \
+            \
+            ldrb w4, [%1]; \
+            ldrb w5, [%2]; \
+            eor w4, w4, w5; \
+            orr %0, %0, w4; \
+            \
+            add %1, %1, #1; \
+            add %2, %2, #1; \
+            subs %3, %3, #1; \
+            bne 1b; \
+        "
+        : "+&r" (result), "+&r" (lhsp), "+&r" (rhsp), "+&r" (count) // all input and output
+        : // input
+        : "w4", "w5", "cc" // clobbers
+    );
+
+    return result;
+}
+#endif
+
 void rust_crypto_util_secure_memset(uint8_t* dst, uint8_t val, size_t count) {
     memset(dst, val, count);
     asm volatile("" : : "g" (dst) : "memory");
