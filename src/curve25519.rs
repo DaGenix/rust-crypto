@@ -1,3 +1,4 @@
+use rand::{OsRng,Rng};
 use std::ops::{Add, Sub, Mul};
 use std::cmp::{Eq, PartialEq,min};
 use util::{fixed_time_eq};
@@ -2087,23 +2088,34 @@ pub fn sc_muladd(s: &mut[u8], a: &[u8], b: &[u8], c: &[u8]) {
     s[31] = (s11 >> 17) as u8;
 }
 
-
-pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
-    let mut e = [0u8; 32];
+/// Generate a 32-byte curve25519 key, given a 32-byte curve25519 secret key
+/// and a 32-byte curve22519 public key.  If the public argument is the
+/// predefined basepoint value (9 followed by all zeros), then this function
+/// will calculate a curve25519 public key.
+///
+/// ```
+/// use self::crypto::curve25519::curve25519;
+///
+/// let my_secretkey: [u8; 32] = [0; 32];     // Don't really use all zeros as a sk.
+/// let their_publickey: [u8; 32] = [0; 32];  // or a public key of all zeros.
+/// let mut basepoint : [u8; 32] = [0; 32];
+/// basepoint[0] = 9;
+///
+/// // Generate a 32-byte curve25519 shared secret key
+/// let shared_secret = curve25519(my_secretkey, their_publickey);
+///
+/// // Generate a 32-byte curve25519 public key.
+/// let my_publickey = curve25519(my_secretkey, basepoint);
+/// ```
+pub fn curve25519(secret: [u8; 32], public: [u8; 32]) -> [u8; 32] {
+    let e = secret.as_ref();
     let mut x2;
     let mut z2;
     let mut x3;
     let mut z3;
     let mut swap: i32;
     let mut b: i32;
-
-    for (d,s) in e.iter_mut().zip(n.iter()) {
-      *d = *s;
-    }
-    e[0] &= 248;
-    e[31] &= 127;
-    e[31] |= 64;
-    let x1 = Fe::from_bytes(p);
+    let x1 = Fe::from_bytes(public.as_ref());
     x2 = FE_ONE;
     z2 = FE_ZERO;
     x3 = x1;
@@ -2149,15 +2161,67 @@ pub fn curve25519(n: &[u8], p: &[u8]) -> [u8; 32] {
     (z2.invert() * x2).to_bytes()
 }
 
-pub fn curve25519_base(x: &[u8]) -> [u8; 32] {
-    let mut base : [u8; 32] = [0; 32];
-    base[0] = 9;
-    curve25519(x, base.as_ref())
+/// Generate a 32-byte curve25519 secret key.  If you supply a random 32-byte
+/// value, that is used as the base.  If you don't (i.e. use None for the arg),
+/// then a random 32-byte number will be generated with the best OS random
+/// number generator available.
+///
+/// ```
+/// use self::crypto::curve25519::curve25519_sk;
+///
+/// // Let curve25519_sk generate the random 32-byte value.
+/// let sk1 = curve25519_sk(None);
+///
+/// let myrand: [u8; 32] = [0; 32];  // Don't use all zeros as a random value!
+///
+/// // Give curve25519_sk a random 32-byte value.
+/// let sk2 = curve25519_sk(Some(myrand));
+/// ```
+pub fn curve25519_sk(rand: Option<[u8; 32]>) -> [u8; 32] {
+    let mut buf: [u8; 32] = [0; 32];
+
+    // Fill a 32-byte buffer with random values if necessary.  Otherwise,
+    // use the given 32-byte value.
+    let mut rand: [u8; 32]  = match rand {
+        Some(r) => r,
+        None    => {
+            let mut rng = match OsRng::new() {
+                Ok(rng) => rng,
+                Err(e)  => panic!("Failed to create rng! {}", e),
+            };
+
+            rng.fill_bytes(&mut buf);
+            buf
+        }
+    };
+
+    // curve25519 secret key bit manip.
+    rand[0] &= 248;
+    rand[31] &= 127;
+    rand[31] |= 64;
+
+    rand
+}
+
+/// Generate a 32-byte curve25519 public key.  Calls curve25519 with the public
+/// key set to the basepoint value of 9 followed by all zeros.
+///
+/// ```
+/// use self::crypto::curve25519::curve25519_pk;
+///
+/// let mysk: [u8; 32] = [0; 32];  // Don't use all zeros as a secret key!
+///
+/// let my_pk = curve25519_pk(mysk);
+/// ```
+pub fn curve25519_pk(sk: [u8; 32]) -> [u8; 32] {
+    let mut basepoint : [u8; 32] = [0; 32];
+    basepoint[0] = 9;
+    curve25519(sk, basepoint)
 }
 
 #[cfg(test)]
 mod tests {
-    use curve25519::{Fe, curve25519_base};
+    use curve25519::{Fe, curve25519_pk, curve25519_sk};
 
     #[test]
     fn from_to_bytes_preserves() {
@@ -2237,11 +2301,11 @@ mod tests {
 
     #[test]
     fn base_example() {
-        let sk : [u8; 32] = [
+        let sk: [u8; 32] = [
             0x77, 0x07, 0x6d, 0x0a, 0x73, 0x18, 0xa5, 0x7d, 0x3c, 0x16, 0xc1,
             0x72, 0x51, 0xb2, 0x66, 0x45, 0xdf, 0x4c, 0x2f, 0x87, 0xeb, 0xc0,
-            0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a ];
-        let pk = curve25519_base(sk.as_ref());
+            0x99, 0x2a, 0xb1, 0x77, 0xfb, 0xa5, 0x1d, 0xb9, 0x2c, 0x2a];
+        let pk = curve25519_pk(curve25519_sk(Some(sk)));
         let correct : [u8; 32] = [
              0x85,0x20,0xf0,0x09,0x89,0x30,0xa7,0x54
             ,0x74,0x8b,0x7d,0xdc,0xb4,0x3e,0xf7,0x5a
