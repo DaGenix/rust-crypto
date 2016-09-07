@@ -8,6 +8,7 @@
  * This module implements the Hmac function - a Message Authentication Code using a Digest.
  */
 
+use std::io;
 use std::iter::repeat;
 
 use cryptoutil;
@@ -115,6 +116,11 @@ impl <D: Digest> Mac for Hmac<D> {
     }
 
     fn output_bytes(&self) -> usize { self.digest.output_bytes() }
+}
+
+impl <D: Digest> io::Write for Hmac<D> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.input(buf); Ok(buf.len()) }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
 #[cfg(test)]
