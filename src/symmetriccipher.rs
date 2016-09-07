@@ -68,3 +68,48 @@ impl Decryptor for Box<SynchronousStreamCipher + 'static> {
         symm_enc_or_dec(self, input, output)
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum SeekError {
+    InvalidOffset,
+}
+
+pub trait SeekableStreamCipher {
+    fn seek(&mut self, byte_offset: u64) -> Result<(), SeekError>;
+}
+
+#[cfg(test)]
+pub mod test {
+    use std::iter;
+    use super::{SynchronousStreamCipher, SeekableStreamCipher};
+
+    fn zero_vec(size: usize) -> Vec<u8> {
+        iter::repeat(0).take(size).collect()
+    }
+
+    /// For a new cipher, ready to generate its first byte, make sure the results without
+    /// doing any seeking are consistent with the results when we seek around.
+    pub fn test_seek<C: SynchronousStreamCipher+SeekableStreamCipher>(cipher: &mut C) {
+        let zeros = zero_vec(1000);
+        let mut initial_bytes = zero_vec(1000);
+        cipher.process(&zeros[..], &mut initial_bytes[..]);
+
+        let subsequence_bounds = [(0, 40), (768, 1000), (33, 79)];
+        for &(start, end) in subsequence_bounds.into_iter() {
+            let mut subseqence: Vec<u8> = zero_vec(end-start);
+            cipher.seek(start as u64).unwrap();
+            cipher.process(&zeros[start..end], &mut subseqence[..]);
+            assert_eq!(subseqence, initial_bytes[start..end].to_vec());
+        }
+
+        cipher.seek(0xffff_ffff_ffff1234).unwrap();
+        let mut far_1 = zero_vec(1000);
+        cipher.process(&zeros[..], &mut far_1[..]);
+
+        let mut far_2 = zero_vec(999);
+        cipher.seek(0xffff_ffff_ffff1234 + 1).unwrap();
+        cipher.process(&zeros[1..], &mut far_2[..]);
+
+        assert_eq!(far_1[1..].to_vec(), far_2);
+    }
+}
