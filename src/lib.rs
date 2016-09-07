@@ -10,6 +10,7 @@ extern crate rand;
 extern crate rustc_serialize as serialize;
 extern crate time;
 extern crate libc;
+extern crate num;
 
 #[cfg(all(test, feature = "with-bench"))]
 extern crate test;
@@ -53,6 +54,7 @@ mod step_by;
 pub mod symmetriccipher;
 pub mod util;
 pub mod whirlpool;
+pub mod dh;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub mod aesni;
