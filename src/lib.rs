@@ -27,6 +27,7 @@ pub mod blowfish;
 pub mod buffer;
 pub mod chacha20;
 pub mod chacha20poly1305;
+pub mod cmac;
 mod cryptoutil;
 pub mod curve25519;
 pub mod digest;
