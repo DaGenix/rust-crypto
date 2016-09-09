@@ -165,6 +165,7 @@ pub fn read_u32_le(input: &[u8]) -> u32 {
 }
 
 /// Read the value of a vector of bytes as a u32 value in big-endian format.
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 pub fn read_u32_be(input: &[u8]) -> u32 {
     assert!(input.len() == 4);
     unsafe {

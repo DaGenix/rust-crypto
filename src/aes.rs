@@ -4,13 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 use aesni;
 
 use aessafe;
-use blockmodes::{PaddingProcessor, EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode,
+use blockmodes::{PaddingProcessor, EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor,
     CtrModeX8};
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
+use blockmodes::CtrMode;
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher};
+
+#[cfg(feature = "with-asm")]
 use util;
 
 /// AES key size
@@ -22,7 +26,7 @@ pub enum KeySize {
 }
 
 /// Get the best implementation of an EcbEncryptor
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -53,7 +57,7 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of an EcbEncryptor
-#[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
+#[cfg(any(not(feature = "with-asm"), all(not(target_arch = "x86"), not(target_arch = "x86_64"))))]
 pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -78,7 +82,7 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of an EcbDecryptor
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -109,7 +113,7 @@ pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of an EcbDecryptor
-#[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
+#[cfg(any(not(feature = "with-asm"), all(not(target_arch = "x86"), not(target_arch = "x86_64"))))]
 pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -134,7 +138,7 @@ pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of a CbcEncryptor
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -166,7 +170,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of a CbcEncryptor
-#[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
+#[cfg(any(not(feature = "with-asm"), all(not(target_arch = "x86"), not(target_arch = "x86_64"))))]
 pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -192,7 +196,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of a CbcDecryptor
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -224,7 +228,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of a CbcDecryptor
-#[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
+#[cfg(any(not(feature = "with-asm"), all(not(target_arch = "x86"), not(target_arch = "x86_64"))))]
 pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
@@ -250,7 +254,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
 }
 
 /// Get the best implementation of a Ctr
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
 pub fn ctr(
         key_size: KeySize,
         key: &[u8],
@@ -281,7 +285,7 @@ pub fn ctr(
 }
 
 /// Get the best implementation of a Ctr
-#[cfg(all(not(target_arch = "x86"), not(target_arch = "x86_64")))]
+#[cfg(any(not(feature = "with-asm"), all(not(target_arch = "x86"), not(target_arch = "x86_64"))))]
 pub fn ctr(
         key_size: KeySize,
         key: &[u8],
@@ -309,14 +313,16 @@ pub fn ctr(
 mod test {
     use std::iter::repeat;
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     use aesni;
 
     use aessafe;
     use symmetriccipher::{BlockEncryptor, BlockDecryptor, BlockEncryptorX8, BlockDecryptorX8,
             SynchronousStreamCipher};
+    #[cfg(feature = "with-asm")]
     use util;
     use aes;
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 
     // Test vectors from:
@@ -472,7 +478,7 @@ mod test {
         }
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     #[test]
     fn test_aesni_128() {
         if util::supports_aesni() {
@@ -485,7 +491,7 @@ mod test {
         }
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     #[test]
     fn test_aesni_192() {
         if util::supports_aesni() {
@@ -498,7 +504,7 @@ mod test {
         }
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     #[test]
     fn test_aesni_256() {
         if util::supports_aesni() {
@@ -709,7 +715,7 @@ mod test {
 mod bench {
     use test::Bencher;
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     use aesni;
 
     use aessafe;
@@ -717,25 +723,25 @@ mod bench {
     use util;
     use aes::KeySize::{self, KeySize128, KeySize192, KeySize256};
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     #[bench]
     pub fn aesni_128_bench(bh: &mut Bencher) {
         aesni_bench(bh, KeySize128);
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     #[bench]
     pub fn aesni_192_bench(bh: &mut Bencher) {
         aesni_bench(bh, KeySize192);
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     #[bench]
     pub fn aesni_256_bench(bh: &mut Bencher) {
         aesni_bench(bh, KeySize256);
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "with-asm", any(target_arch = "x86", target_arch = "x86_64")))]
     fn aesni_bench(bh: &mut Bencher, key_size: KeySize) {
         if util::supports_aesni() {
             let key: [u8; 16] = [1u8; 16];
