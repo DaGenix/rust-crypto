@@ -14,6 +14,13 @@ If you are having issues while using an older version, please try upgrading to t
 Rust-Crypto has not been thoroughly
 audited for correctness, so any use where security is important is not recommended at this time.
 
+Weaknesses have been found in cryptographic algorithms over the years that are not due to
+programming errors, but inherent to the algorithms themselves. Those weaknesses are shared among all
+correct implementations of those algorithms, across all programming languages and platforms.
+Some of the algorithms implemented in Rust-Crypto have known vulnerabilities of that kind
+and are kept for compatibility. Developers should do some research before picking a suitable
+algorithm for new applications.
+
 ## Usage
 
 To use Rust-Crypto, add the following to your Cargo.toml:
