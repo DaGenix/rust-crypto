@@ -13,7 +13,7 @@ use std::hash::{Hash, Hasher};
 
 /*
  * The purpose of this type is to implement `Hasher` so that it can extract data from any type
- * which implements `Hash` and write the dataa to a `Digest`. This type is private to this module
+ * which implements `Hash` and write the data to a `Digest`. This type is private to this module
  * and used to implement the `input_hashable` method.
  */
 struct DigestHasher<'a, T: 'a + ?Sized> {
