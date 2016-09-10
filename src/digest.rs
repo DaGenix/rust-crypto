@@ -9,6 +9,27 @@
 // except according to those terms.
 
 use std::iter::repeat;
+use std::hash::{Hash, Hasher};
+
+/*
+ * The purpose of this type is to implement `Hasher` so that it can extract data from any type
+ * which implements `Hash` and write the data to a `Digest`. This type is private to this module
+ * and used to implement the `input_hashable` method.
+ */
+struct DigestHasher<'a, T: 'a + ?Sized> {
+    digest: &'a mut T,
+}
+
+impl<'a, T: ?Sized + Digest> Hasher for DigestHasher<'a, T> {
+    fn finish(&self) -> u64 {
+        // This should never be called.
+        panic!()
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        self.digest.input(bytes);
+    }
+}
 
 /**
  * The Digest trait specifies an interface common to digest functions, such as SHA-1 and the SHA-2
@@ -77,5 +98,15 @@ pub trait Digest {
         let mut buf: Vec<u8> = repeat(0).take((self.output_bits()+7)/8).collect();
         self.result(&mut buf);
         buf[..].to_hex()
+    }
+
+    /**
+     * Provide data from anything that implements `Hash`.
+     */
+    fn input_hashable<H: Hash>(&mut self, hashable: &H) {
+        let mut digest_hasher = DigestHasher {
+            digest: self,
+        };
+        hashable.hash(&mut digest_hasher);
     }
 }
