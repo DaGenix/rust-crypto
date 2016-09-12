@@ -18,6 +18,7 @@ pub mod aead;
 pub mod aes;
 pub mod aes_gcm;
 pub mod aessafe;
+pub mod argon2;
 pub mod bcrypt;
 pub mod bcrypt_pbkdf;
 pub mod blake2b;
