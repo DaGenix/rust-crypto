@@ -8,10 +8,19 @@ use cryptoutil::{read_u32v_be, write_u32_be};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 use step_by::RangeExt;
 
-#[derive(Clone,Copy)]
+#[derive(Copy)]
 pub struct Blowfish {
     s: [[u32; 256]; 4],
     p: [u32; 18]
+}
+
+impl Clone for Blowfish {
+    fn clone(&self) -> Self {
+        Blowfish {
+            s: self.s,
+            p: self.p,
+        }
+    }
 }
 
 fn next_u32_wrap(buf: &[u8], offset: &mut usize) -> u32 {
