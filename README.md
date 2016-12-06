@@ -72,4 +72,5 @@ it will support even more in the future. Currently supported algorithms include:
 * Sha2 (All fixed output size variants)
 * Sha3
 * Sosemanuk
+* Threefish
 * Whirlpool

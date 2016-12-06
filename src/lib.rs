@@ -50,6 +50,7 @@ pub mod sha3;
 mod simd;
 pub mod sosemanuk;
 mod step_by;
+pub mod threefish;
 pub mod symmetriccipher;
 pub mod util;
 pub mod whirlpool;
