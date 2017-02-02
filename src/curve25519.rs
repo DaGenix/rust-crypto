@@ -2200,6 +2200,7 @@ mod tests {
 
         fn next(&mut self) -> Option<Fe> {
             let mut e: Vec<u8> = (0..32).map(|idx| (idx*(1289+self.which*761)) as u8).collect();
+            self.which += 1;
             e[0] &= 248;
             e[31] &= 127;
             e[31] |= 64;
