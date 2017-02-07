@@ -49,7 +49,8 @@ it will support even more in the future. Currently supported algorithms include:
 
 * AES
 * Bcrypt
-* Blake2B
+* BLAKE2b
+* BLAKE2s
 * Blowfish
 * ChaCha20
 * Curve25519
@@ -69,5 +70,6 @@ it will support even more in the future. Currently supported algorithms include:
 * Scrypt
 * Sha1
 * Sha2 (All fixed output size variants)
+* Sha3
 * Sosemanuk
 * Whirlpool
