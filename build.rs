@@ -7,7 +7,32 @@
 extern crate gcc;
 
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+const ANDROID_AARCH64_COMPILER: &'static str = "toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/bin";
+const ANDROID_ARM_COMPILER: &'static str = "toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin";
+const ANDROID_I686_COMPILER: &'static str = "toolchains/x86-4.9/prebuilt/darwin-x86_64/bin";
+const ANDROID_INCLUDE: &'static str = "platforms/android-21/arch-arm64/usr/include";
+
+fn concat_paths(first: &str, second: &str) -> PathBuf {
+    let mut path = PathBuf::from(first);
+    path.push(second);
+    path
+}
+
+fn setup_android(config: &mut gcc::Config) {
+    let path = env::var_os("PATH").unwrap();
+    let ndk_home = env::var("NDK_HOME").expect("NDK_HOME is not set");
+    let mut paths = env::split_paths(&path).collect::<Vec<_>>();
+    paths.push(concat_paths(&ndk_home, ANDROID_AARCH64_COMPILER));
+    paths.push(concat_paths(&ndk_home, ANDROID_ARM_COMPILER));
+    paths.push(concat_paths(&ndk_home, ANDROID_I686_COMPILER));
+
+    let new_path = env::join_paths(paths).unwrap();
+    env::set_var("PATH", new_path);
+
+    config.include(&concat_paths(&ndk_home, ANDROID_INCLUDE));
+}
 
 fn main() {
     let target = env::var("TARGET").unwrap();
@@ -25,6 +50,10 @@ fn main() {
         let mut cfg = gcc::Config::new();
         cfg.file("src/util_helpers.c");
         cfg.file("src/aesni_helpers.c");
+        if target.contains("android") {
+            setup_android(&mut cfg);
+        }
+
         if env::var_os("CC").is_none() {
             if host.contains("openbsd") {
                 // Use clang on openbsd since there have been reports that
