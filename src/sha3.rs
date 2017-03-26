@@ -92,11 +92,6 @@ const M5: [usize; 10] = [
     0, 1, 2, 3, 4, 0, 1, 2, 3, 4
 ];
 
-#[inline]
-fn rotl64(v: u64, n: usize) -> u64 {
-    ((v << (n % 64)) & 0xffffffffffffffff) ^ (v >> (64 - (n % 64)))
-}
-
 // Code based on Keccak-compact64.c from ref implementation.
 fn keccak_f(state: &mut [u8]) {
     assert!(state.len() == B);
@@ -113,7 +108,7 @@ fn keccak_f(state: &mut [u8]) {
             c[x] = s[x] ^ s[5 + x] ^ s[10 + x] ^ s[15 + x] ^ s[20 + x];
         }
         for x in 0..5 {
-            t[0] = c[M5[x + 4]] ^ rotl64(c[M5[x + 1]], 1);
+            t[0] = c[M5[x + 4]] ^ c[M5[x + 1]].rotate_left(1);
             for y in 0..5 {
                 s[y * 5 + x] = s[y * 5 + x] ^ t[0];
             }
@@ -123,7 +118,7 @@ fn keccak_f(state: &mut [u8]) {
         t[0] = s[1];
         for x in 0..24 {
             c[0] = s[PIL[x]];
-            s[PIL[x]] = rotl64(t[0], ROTC[x]);
+            s[PIL[x]] = t[0].rotate_left(ROTC[x] as u32);
             t[0] = c[0];
         }
 
