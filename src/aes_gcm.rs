@@ -49,7 +49,6 @@ impl<'a> AesGcm<'a> {
             end_tag: final_block
         }
     }
-    
 }
 
 impl<'a> AeadEncryptor for AesGcm<'static> {
@@ -88,10 +87,10 @@ mod test {
     use aes::KeySize;
     use aes_gcm::AesGcm;
     use aead::{AeadEncryptor, AeadDecryptor};
-    use serialize::hex::FromHex;
+    use hex;
     use std::iter::repeat;
     fn hex_to_bytes(raw_hex: &str) -> Vec<u8> {
-        raw_hex.from_hex().ok().unwrap()
+        hex::FromHex::from_hex(raw_hex).ok().unwrap()
     }
     struct TestVector {
                 key:  Vec<u8>,
@@ -213,6 +212,7 @@ mod bench {
     use aes::KeySize;
     use aes_gcm::AesGcm;
     use aead::{AeadEncryptor, AeadDecryptor};
+    use hex::FromHex;
 
     #[bench]
     pub fn gsm_10(bh: & mut Bencher) {
