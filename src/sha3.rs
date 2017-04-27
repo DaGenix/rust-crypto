@@ -459,17 +459,23 @@ impl Clone for Sha3 {
 mod tests {
     use digest::Digest;
     use sha3::{Sha3, Sha3Mode};
-    use serialize::hex::{FromHex, ToHex};
+    use hex::{self, ToHex};
 
     struct Test {
         input: &'static str,
         output_str: &'static str,
     }
 
+    impl Test {
+        fn input_bytes(&self) -> Vec<u8> {
+            hex::FromHex::from_hex(self.input).unwrap()
+        }
+    }
+
     fn test_hash<D: Digest>(sh: &mut D, tests: &[Test]) {
         // Test that it works when accepting the message all at once
         for t in tests.iter() {
-            sh.input(&t.input.from_hex().unwrap());
+            sh.input(&t.input_bytes());
 
             let mut out_str = vec![0u8; t.output_str.len() / 2];
 
@@ -486,7 +492,7 @@ mod tests {
             let mut left = len;
             while left > 0 {
                 let take = (left + 1) / 2;
-                sh.input(&t.input.from_hex().unwrap()[len - left..take + len - left]);
+                sh.input(&t.input_bytes()[len - left..take + len - left]);
                 left = left - take;
             }
 
