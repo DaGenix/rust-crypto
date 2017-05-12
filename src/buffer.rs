@@ -89,7 +89,7 @@ impl <'a> ReadBuffer for RefReadBuffer<'a> {
     }
     fn reset(&mut self) { self.pos = 0; }
 
-    fn peek_next(&self, count: usize) -> &[u8] { &self.buff[self.pos..count] }
+    fn peek_next(&self, count: usize) -> &[u8] { &self.buff[self.pos..self.pos + count] }
 
     fn take_next(&mut self, count: usize) -> &[u8] {
         let r = &self.buff[self.pos..self.pos + count];
