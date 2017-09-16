@@ -1,6 +1,6 @@
 # Rust-Crypto
 
-[![Build Status](https://travis-ci.org/DaGenix/rust-crypto.png?branch=master)](https://travis-ci.org/DaGenix/rust-crypto)
+[![Build Status](https://travis-ci.org/DaGenix/rust-crypto.png?branch=master)](https://travis-ci.org/DaGenix/rust-crypto) [![docs.rs](https://docs.rs/rust-crypto/badge.svg)](https://docs.rs/rust-crypto)
 
 A (mostly) pure-Rust implementation of various common cryptographic algorithms.
 
@@ -13,6 +13,8 @@ If you are having issues while using an older version, please try upgrading to t
 
 Rust-Crypto has not been thoroughly
 audited for correctness, so any use where security is important is not recommended at this time.
+
+[Documentation on docs.rs](https://docs.rs/rust-crypto)
 
 ## Usage
 
