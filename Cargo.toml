@@ -17,7 +17,7 @@ name = "crypto"
 with-bench = []
 
 [build-dependencies]
-gcc = "^0.3"
+cc = "^1.0"
 
 [dependencies]
 libc = "^0.2"
