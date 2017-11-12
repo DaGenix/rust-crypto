@@ -17,6 +17,7 @@ use mac::{Mac, MacResult};
 /**
  * The Hmac struct represents an Hmac function - a Message Authentication Code using a Digest.
  */
+#[derive(Clone)]
 pub struct Hmac<D> {
     digest: D,
     i_key: Vec<u8>,
