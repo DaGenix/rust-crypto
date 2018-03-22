@@ -123,7 +123,6 @@ mod test {
 
     use mac::{Mac, MacResult};
     use hmac::Hmac;
-    use digest::Digest;
     use md5::Md5;
 
     struct Test {

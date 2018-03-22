@@ -207,7 +207,6 @@ fn process_buffer(hash: &mut[u64; 8], buffer: &[u8]) {
 mod test {
     use super::*;
     use digest::Digest;
-    use std::ascii::AsciiExt;
 
     static TESTS: [(&'static str, &'static str); 18] = [
         ("", "19FA61D75522A4669B44E39C1D2E1726C530232130D407F89AFEE0964997F7A73E83BE698B288FEBCF88E3E03C4F0757EA8964E59B63D93708B138CC42A66EB3"),
