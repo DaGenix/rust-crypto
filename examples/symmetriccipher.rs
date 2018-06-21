@@ -45,7 +45,7 @@ fn encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, symmetricciphe
     // or more output space), the operation is guaranteed to get closer to
     // completing the full operation - ie: "make progress".
     //
-    // Here, we pass the data to encrypt to the enryptor along with a fixed-size
+    // Here, we pass the data to encrypt to the encryptor along with a fixed-size
     // output buffer. The 'true' flag indicates that the end of the data that
     // is to be encrypted is included in the input buffer (which is true, since
     // the input data includes all the data to encrypt). After each call, we copy
