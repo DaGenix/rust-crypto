@@ -11,6 +11,7 @@ use crypto::{ symmetriccipher, buffer, aes, blockmodes };
 use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
 
 use rand::{ Rng, OsRng };
+use rand::RngCore;
 
 // Encrypt a buffer with the given key and iv using
 // AES-256/CBC/Pkcs encryption.
