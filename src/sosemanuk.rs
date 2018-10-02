@@ -197,8 +197,8 @@ impl Sosemanuk {
         let mut v3 : u32;
         let mut tt : u32;
 
-        let ref mul_alpha = ALPHA_MUL_TABLE;
-        let ref div_alpha = ALPHA_DIV_TABLE;
+        let mul_alpha = &ALPHA_MUL_TABLE;
+        let div_alpha = &ALPHA_DIV_TABLE;
 
         tt = r1;
         //r1 = r2 + (s1 ^ ((r1 & 0x01) != 0 ? s8 : 0));
