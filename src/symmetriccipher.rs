@@ -33,6 +33,21 @@ pub enum SymmetricCipherError {
     InvalidPadding,
 }
 
+impl std::fmt::Display for SymmetricCipherError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Symmetric cipher error: {}",
+            match self {
+                SymmetricCipherError::InvalidLength => "Invalid input length",
+                SymmetricCipherError::InvalidPadding => "Invalid padding",
+            }
+        )
+    }
+}
+
+impl std::error::Error for SymmetricCipherError {}
+
 pub trait Encryptor {
     fn encrypt(
         &mut self,
