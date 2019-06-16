@@ -30,17 +30,40 @@ pub trait BlockDecryptorX8 {
 #[derive(Debug, Clone, Copy)]
 pub enum SymmetricCipherError {
     InvalidLength,
-    InvalidPadding
+    InvalidPadding,
 }
 
+impl std::fmt::Display for SymmetricCipherError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Symmetric cipher error: {}",
+            match self {
+                SymmetricCipherError::InvalidLength => "Invalid input length",
+                SymmetricCipherError::InvalidPadding => "Invalid padding",
+            }
+        )
+    }
+}
+
+impl std::error::Error for SymmetricCipherError {}
+
 pub trait Encryptor {
-    fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, eof: bool)
-        -> Result<BufferResult, SymmetricCipherError>;
+    fn encrypt(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        eof: bool,
+    ) -> Result<BufferResult, SymmetricCipherError>;
 }
 
 pub trait Decryptor {
-    fn decrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, eof: bool)
-        -> Result<BufferResult, SymmetricCipherError>;
+    fn decrypt(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        eof: bool,
+    ) -> Result<BufferResult, SymmetricCipherError>;
 }
 
 pub trait SynchronousStreamCipher {
@@ -56,15 +79,23 @@ impl SynchronousStreamCipher for Box<SynchronousStreamCipher + 'static> {
 }
 
 impl Encryptor for Box<SynchronousStreamCipher + 'static> {
-    fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
-            -> Result<BufferResult, SymmetricCipherError> {
+    fn encrypt(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        _: bool,
+    ) -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
 }
 
 impl Decryptor for Box<SynchronousStreamCipher + 'static> {
-    fn decrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
-            -> Result<BufferResult, SymmetricCipherError> {
+    fn decrypt(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        _: bool,
+    ) -> Result<BufferResult, SymmetricCipherError> {
         symm_enc_or_dec(self, input, output)
     }
 }
