@@ -6,8 +6,9 @@
 
 #![cfg_attr(feature = "with-bench", feature(test))]
 
+extern crate base64;
+extern crate hex;
 extern crate rand;
-extern crate rustc_serialize as serialize;
 extern crate time;
 extern crate libc;
 
