@@ -3,6 +3,12 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
+/*!
+An enchanced version of the Salsa20 cipher. Common as an AES replacement for machines lacking AES hardware acceleration.
+
+*/
+
 use std::cmp;
 
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};

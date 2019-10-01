@@ -4,6 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+The AES cipher using Galois-Counter key mode. This provides authenticated encryption. 
+
+*/
+
 use aes::{ctr, KeySize};
 use aead::{AeadEncryptor,AeadDecryptor};
 use cryptoutil::copy_memory;

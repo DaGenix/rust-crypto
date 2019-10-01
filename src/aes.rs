@@ -4,6 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+AES EBC, CBC, and CTR modes
+
+*/
+
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use aesni;
 

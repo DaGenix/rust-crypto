@@ -4,6 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+An authenticated version of the ChaCha20 cipher. Used in TLS 1.2 and standardized in RFC7539.
+
+*/
+
 use aead::{AeadEncryptor,AeadDecryptor};
 
 use chacha20::ChaCha20;
