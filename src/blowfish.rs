@@ -4,6 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+The Blowfish block cipher. Key sizes from 32 to 448 bits (4 - 56 bytes) are supported.
+ 
+*/
+
 use cryptoutil::{read_u32v_be, write_u32_be};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
 use step_by::RangeExt;

@@ -4,6 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+A stream cipher built on the add-rotate-xor (ARX) model. The predecessor to ChaCha20.
+
+*/
+
 use buffer::{BufferResult, RefReadBuffer, RefWriteBuffer};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher, SymmetricCipherError};
 use cryptoutil::{read_u32_le, symm_enc_or_dec, write_u32_le, xor_keystream};

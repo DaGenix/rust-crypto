@@ -8,6 +8,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+The MD5 hashing function. No longer considered secure, but present for compatability.
+
+*/
+
 use cryptoutil::{write_u32_le, read_u32v_le, FixedBuffer, FixedBuffer64, StandardPadding};
 use digest::Digest;
 use step_by::RangeExt;

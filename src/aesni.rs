@@ -4,6 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+/*!
+AES New Instruction functions for hardware accelerated usage.
+
+*/
+
 use aes::KeySize;
 use aes::KeySize::{KeySize128, KeySize192, KeySize256};
 use symmetriccipher::{BlockEncryptor, BlockDecryptor};
