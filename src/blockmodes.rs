@@ -809,12 +809,81 @@ impl <A: BlockEncryptorX8> Decryptor for CtrModeX8<A> {
     }
 }
 
+/// CFB Mode
+pub struct CfbMode<A> {
+    algo: A,
+    cfb: OwnedWriteBuffer,
+    bytes: OwnedReadBuffer,
+}
+
+impl <A: BlockEncryptor> CfbMode<A> {
+    /// Create a new CFB object
+    pub fn new(algo: A, cfb: Vec<u8>) -> CfbMode<A> {
+        let block_size = algo.block_size();
+        assert!(cfb.len() == block_size);
+        let mut cfb = OwnedWriteBuffer::new(cfb);
+        cfb.take_remaining();
+        CfbMode {
+            algo,
+            cfb,
+            bytes: OwnedReadBuffer::new_with_len(repeat(0).take(block_size).collect(), 0),
+        }
+    }
+    pub fn reset(&mut self, cfb: &[u8]) {
+        assert!(cfb.len() == self.algo.block_size());
+        self.cfb.reset();
+        cryptoutil::copy_memory(cfb, self.cfb.take_remaining());
+        self.bytes.reset();
+    }
+    fn process(&mut self, input: &[u8], output: &mut [u8]) {
+        assert!(input.len() == output.len());
+        let len = input.len();
+        let mut i = 0;
+        while i < len {
+            if self.bytes.is_empty() {
+                let mut wb = self.bytes.borrow_write_buffer();
+                let mut rb = self.cfb.take_read_buffer();
+                self.algo.encrypt_block(rb.take_remaining(), wb.take_remaining());
+            }
+            let count = cmp::min(self.bytes.remaining(), len - i);
+            let bytes_it = self.bytes.take_next(count).iter();
+            let in_it = input[i..].iter();
+            let out_it = output[i..].iter_mut();
+            for ((&x, &y), o) in bytes_it.zip(in_it).zip(out_it) {
+                *o = x ^ y;
+            }
+            cryptoutil::copy_memory(&output[i..i+count], self.cfb.take_next(count));
+            i += count;
+        }
+    }
+}
+
+impl <A: BlockEncryptor> SynchronousStreamCipher for CfbMode<A> {
+    fn process(&mut self, input: &[u8], output: &mut [u8]) {
+        self.process(input, output);
+    }
+}
+
+impl <A: BlockEncryptor> Encryptor for CfbMode<A> {
+    fn encrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
+            -> Result<BufferResult, SymmetricCipherError> {
+        symm_enc_or_dec(self, input, output)
+    }
+}
+
+impl <A: BlockEncryptor> Decryptor for CfbMode<A> {
+    fn decrypt(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, _: bool)
+            -> Result<BufferResult, SymmetricCipherError> {
+        symm_enc_or_dec(self, input, output)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::iter::repeat;
 
     use aessafe;
-    use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8,
+    use blockmodes::{EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode, CtrModeX8, CfbMode,
         NoPadding, PkcsPadding};
     use buffer::{ReadBuffer, WriteBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
     use buffer::BufferResult::{BufferUnderflow, BufferOverflow};
@@ -867,6 +936,22 @@ mod test {
     }
 
     impl CipherTest for CtrTest {
+        fn get_plain<'a>(&'a self) -> &'a [u8] {
+            &self.plain[..]
+        }
+        fn get_cipher<'a>(&'a self) -> &'a [u8] {
+            &self.cipher[..]
+        }
+    }
+
+    struct CfbTest {
+        key: Vec<u8>,
+        cfb: Vec<u8>,
+        plain: Vec<u8>,
+        cipher: Vec<u8>
+    }
+
+    impl CipherTest for CfbTest {
         fn get_plain<'a>(&'a self) -> &'a [u8] {
             &self.plain[..]
         }
@@ -971,6 +1056,22 @@ mod test {
                     0xa9, 0x10, 0x5f, 0xd8, 0x4c, 0xd7, 0xe6, 0xb1,
                     0x5f, 0x66, 0xc6, 0x17, 0x4b, 0x25, 0xea, 0x24,
                     0xe6, 0xf9, 0x19, 0x09, 0xb7, 0xdd, 0x84, 0xfb,
+                    0x86 ]
+            }
+        ]
+    }
+
+    fn aes_cfb_tests() -> Vec<CfbTest> {
+        vec![
+            CfbTest {
+                key: repeat(1).take(16).collect(),
+                cfb: repeat(3).take(16).collect(),
+                plain: repeat(2).take(33).collect(),
+                cipher: vec![
+                    0x64, 0x3e, 0x5, 0x19, 0x79, 0x78, 0xd7, 0x45,
+                    0xa9, 0x10, 0x5f, 0xd8, 0x4c, 0xd7, 0xe6, 0xb1,
+                    0xdd, 0x8d, 0xe, 0x1b, 0x79, 0xd1, 0xb7, 0x2a,
+                    0x2a, 0xf6, 0xd9, 0x22, 0xdc, 0xbd, 0x39, 0x42,
                     0x86 ]
             }
         ]
@@ -1300,6 +1401,24 @@ mod test {
                     let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[..]);
                     CtrMode::new(aes_enc, test.ctr.clone())
                 });
+        }
+    }
+
+    #[test]
+    fn aes_cfb() {
+        let tests = aes_cfb_tests();
+        for test in tests.iter() {
+            run_test(
+                test,
+                || {
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[..]);
+                    CfbMode::new(aes_enc, test.cfb.clone())
+                },
+                || {
+                    let aes_enc = aessafe::AesSafe128Encryptor::new(&test.key[..]);
+                    CfbMode::new(aes_enc, test.cfb.clone())
+                }
+            )
         }
     }
 
