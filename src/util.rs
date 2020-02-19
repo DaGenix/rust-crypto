@@ -41,7 +41,7 @@ pub fn secure_memset(dst: &mut [u8], val: u8) {
 /// Compare two vectors using a fixed number of operations. If the two vectors are not of equal
 /// length, the function returns false immediately.
 pub fn fixed_time_eq(lhs: &[u8], rhs: &[u8]) -> bool {
-    if lhs.len() != rhs.len() {
+    if lhs.len() != rhs.len() || lhs.len() == 0 {
         false
     } else {
         let count = lhs.len() as libc::size_t;
@@ -76,5 +76,6 @@ mod test {
         assert!(!fixed_time_eq(&a, &e));
         assert!(!fixed_time_eq(&a, &f));
         assert!(!fixed_time_eq(&a, &g));
+        assert!(!fixed_time_eq(&[], &[]));
     }
 }
