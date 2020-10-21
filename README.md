@@ -4,6 +4,14 @@
 
 A (mostly) pure-Rust implementation of various common cryptographic algorithms.
 
+---
+
+# Deprecation warning
+
+This project is no longer maintained. You can use: [https://github.com/RustCrypto/](https://github.com/RustCrypto/).
+
+---
+
 Rust-Crypto seeks to create practical, auditable, pure-Rust implementations of common cryptographic
 algorithms with a minimum amount of assembly code where appropriate. The x86-64, x86, and
 ARM architectures are supported, although the x86-64 architecture receives the most testing.
