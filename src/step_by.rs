@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// This module just implements a simple verison of step_by() since
+/// This module just implements a simple version of step_by() since
 /// the function from the standard library is currently unstable.
 /// This should be removed once that function becomes stable.
 
@@ -14,7 +14,7 @@ use std::ops::{Add, Range};
 pub struct StepUp<T> {
     next: T,
     end: T,
-    ammount: T
+    amount: T
 }
 
 impl <T> Iterator for StepUp<T> where
@@ -25,7 +25,7 @@ impl <T> Iterator for StepUp<T> where
     fn next(&mut self) -> Option<T> {
         if self.next < self.end {
             let n = self.next;
-            self.next = self.next + self.ammount;
+            self.next = self.next + self.amount;
             Some(n)
         } else {
             None
@@ -34,16 +34,16 @@ impl <T> Iterator for StepUp<T> where
 }
 
 pub trait RangeExt<T> {
-    fn step_up(self, ammount: T) -> StepUp<T>;
+    fn step_up(self, amount: T) -> StepUp<T>;
 }
 
 impl <T> RangeExt<T> for Range<T> where
         T: Add<T, Output = T> + PartialOrd + Copy {
-    fn step_up(self, ammount: T) -> StepUp<T> {
+    fn step_up(self, amount: T) -> StepUp<T> {
         StepUp {
             next: self.start,
             end: self.end,
-            ammount: ammount
+            amount: amount
         }
     }
 }

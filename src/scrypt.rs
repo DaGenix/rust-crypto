@@ -332,7 +332,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         None => return Err(ERR_STR)
     }
 
-    // Parse format - currenlty only version 0 (compact) and 1 (expanded) are supported
+    // Parse format - currently only version 0 (compact) and 1 (expanded) are supported
     let params: ScryptParams;
     match iter.next() {
         Some(fstr) => {

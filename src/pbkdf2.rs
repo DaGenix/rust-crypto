@@ -182,7 +182,7 @@ pub fn pbkdf2_check(password: &str, hashed_value: &str) -> Result<bool, &'static
         None => return Err(ERR_STR)
     }
 
-    // Parse format - currenlty only version 0 is supported
+    // Parse format - currently only version 0 is supported
     match iter.next() {
         Some(fstr) => {
             match fstr {

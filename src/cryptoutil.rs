@@ -272,10 +272,10 @@ pub fn add_bytes_to_bits(bits: u64, bytes: u64) -> u64 {
     let (new_high_bits, new_low_bits) = to_bits(bytes);
 
     if new_high_bits > 0 {
-        panic!("Numeric overflow occured.")
+        panic!("Numeric overflow occurred.")
     }
 
-    bits.checked_add(new_low_bits).expect("Numeric overflow occured.")
+    bits.checked_add(new_low_bits).expect("Numeric overflow occurred.")
 }
 
 /// Adds the specified number of bytes to the bit count, which is a tuple where the first element is
@@ -297,25 +297,25 @@ pub fn add_bytes_to_bits_tuple
             } else {
                 match hi.checked_add(new_high_bits) {
                     Some(y) => return (y, x),
-                    None => panic!("Numeric overflow occured.")
+                    None => panic!("Numeric overflow occurred.")
                 }
             }
         },
         None => {
             let z = match new_high_bits.checked_add(1) {
                 Some(w) => w,
-                None => panic!("Numeric overflow occured.")
+                None => panic!("Numeric overflow occurred.")
             };
             match hi.checked_add(z) {
                 // This re-executes the addition that was already performed earlier when overflow
-                // occured, this time allowing the overflow to happen. Technically, this could be
+                // occurred, this time allowing the overflow to happen. Technically, this could be
                 // avoided by using the checked add intrinsic directly, but that involves using
                 // unsafe code and is not really worthwhile considering how infrequently code will
                 // run in practice. This is the reason that this function requires that the type T
                 // be UnsignedInt - overflow is not defined for Signed types. This function could
                 // be implemented for signed types as well if that were needed.
                 Some(y) => return (y, low.wrapping_add(new_low_bits)),
-                None => panic!("Numeric overflow occured.")
+                None => panic!("Numeric overflow occurred.")
             }
         }
     }
@@ -394,7 +394,7 @@ macro_rules! impl_fixed_buffer( ($name:ident, $size:expr) => (
                 i += size;
             }
 
-            // Copy any input data into the buffer. At this point in the method, the ammount of
+            // Copy any input data into the buffer. At this point in the method, the amount of
             // data left in the input vector will be less than the buffer size and the buffer will
             // be empty.
             let input_remaining = input.len() - i;
