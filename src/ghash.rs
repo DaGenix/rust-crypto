@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// This is an implementaiton of GHASH as used in GCM [1].
+/// This is an implementation of GHASH as used in GCM [1].
 /// It is defined as GHASH(H, A, C), where H is a MAC key, A is authenticated data,
 /// and C is the ciphertext. GHASH can be used as a keyed MAC, if C is left empty.
 ///

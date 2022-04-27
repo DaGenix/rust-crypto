@@ -62,7 +62,7 @@ impl Digest for Whirlpool {
     fn input(&mut self, source: &[u8]) {
         assert!(!self.finalized);
 
-        // (byte length * 8) = (bit lenght) converted in a 72 bit uint
+        // (byte length * 8) = (bit length) converted in a 72 bit uint
         let len = source.len() as u64;
         let len_bits = [
             ((len >> (56 + 5))       ) as u8,

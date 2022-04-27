@@ -7,7 +7,7 @@
 /*!
 
 The `aessafe` module implements the AES algorithm completely in software without using any table
-lookups or other timing dependant mechanisms. This module actually contains two seperate
+lookups or other timing dependant mechanisms. This module actually contains two separate
 implementations - an implementation that works on a single block at a time and a second
 implementation that processes 8 blocks in parallel. Some block encryption modes really only work if
 you are processing a single blocks (CFB, OFB, and CBC encryption for example) while other modes
@@ -88,7 +88,7 @@ is first processed to create all of the round keys where each round key is just 
 data that is combined into the AES state by the AddRoundKey step as part of each encryption or
 decryption round. Processing the round key can be expensive, so this is done before encryption or
 decryption. Before encrypting or decrypting data, the data to be processed by be Bit Sliced into 8
-seperate variables where each variable holds equivalent bytes from the state. This Bit Sliced state
+separate variables where each variable holds equivalent bytes from the state. This Bit Sliced state
 is stored as a Bs8State<T>, where T is the type that stores each set of bits. The first
 implementation stores these bits in a u32 which permits up to 8 * 32 = 1024 bits of data to be
 processed at once. This implementation only processes a single block at a time, so, in reality, only
@@ -97,7 +97,7 @@ implementation uses u32x4s - vectors of 4 u32s. Thus, we can process 8 * 128 = 4
 which corresponds exactly to 8 blocks.
 
 The Bs8State struct implements the AesOps trait, which contains methods for each of the 4 main steps
-of the AES algorithm. The types, T, each implement the AesBitValueOps trait, which containts methods
+of the AES algorithm. The types, T, each implement the AesBitValueOps trait, which contains methods
 necessary for processing a collection or bit values and the AesOps trait relies heavily on this
 trait to perform its operations.
 
