@@ -29,13 +29,11 @@ extern {
             count: libc::size_t);
 }
 
-pub fn secure_memset(dst: &mut [u8], val: u8) {
-    unsafe {
-        rust_crypto_util_secure_memset(
-            dst.as_mut_ptr(),
-            val,
-            dst.len() as libc::size_t);
-    }
+pub unsafe fn secure_memset(dst: &mut [u8], val: u8) {
+    rust_crypto_util_secure_memset(
+        dst.as_mut_ptr(),
+        val,
+        dst.len() as libc::size_t);
 }
 
 /// Compare two vectors using a fixed number of operations. If the two vectors are not of equal
